@@ -9,6 +9,8 @@ INCLUDEPATH += \
 
 SOURCES += \
     src/udp_connection.cpp \
+    src/tcp_connection.cpp
+
 DISTFILES += \
     CMakeLists.txt \
     LICENSE \
@@ -17,3 +19,4 @@ DISTFILES += \
 HEADERS += \
     src/connection_type.h \
     src/udp_connection.h \
+    src/tcp_connection.h
