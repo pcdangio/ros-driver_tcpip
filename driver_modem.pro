@@ -8,6 +8,7 @@ INCLUDEPATH += \
     /opt/ros/melodic/include
 
 SOURCES += \
+    src/driver.cpp \
     src/udp_connection.cpp \
     src/tcp_connection.cpp
 
@@ -18,5 +19,6 @@ DISTFILES += \
 
 HEADERS += \
     src/connection_type.h \
+    src/driver.h \
     src/udp_connection.h \
     src/tcp_connection.h
