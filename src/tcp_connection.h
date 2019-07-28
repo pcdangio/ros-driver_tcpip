@@ -36,15 +36,28 @@ public:
     bool connect();
     ///
     /// \brief attach_rx_callback Attaches a callback for handling received messages.
-    /// \param callback The callback to handle receieved messages.
+    /// \param callback The callback to handle received messages.
     ///
     void attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback);
+    ///
+    /// \brief attach_disconnect_callback Attaches a callback for handling when the connected is lost or closed.
+    /// \param callback The callback to handle a closed/lost connection.
+    ///
+    void attach_disconnect_callback(std::function<void()> callback);
     ///
     /// \brief tx Transmits data to the remote endpoint.
     /// \param data The data to transmit.
     /// \param length The length of the data in bytes.
+    /// \return TRUE if the data was transmitted, otherwise FALSE.
     ///
-    void tx(uint8_t* data, uint32_t length);
+    bool tx(uint8_t* data, uint32_t length);
+
+    // PROPERTIES
+    ///
+    /// \brief p_connected Gets if the socket is connected.
+    /// \return TRUE if connected, otherwise FALSE.
+    ///
+    bool p_connected();
 
 private:
     // VARIABLES
@@ -65,9 +78,17 @@ private:
     ///
     uint32_t m_buffer_size;
     ///
+    /// \brief m_connected Internal flag storing if socket is connected.
+    ///
+    bool m_connected;
+    ///
     /// \brief m_rx_callback The callback to raise when a message is received.
     ///
     std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> m_rx_callback;
+    ///
+    /// \brief m_disconnect_callback The callback to raise when the connection is closed.
+    ///
+    std::function<void()> m_disconnect_callback;
 
     // METHODS
     ///
