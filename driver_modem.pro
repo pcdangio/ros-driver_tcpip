@@ -3,9 +3,17 @@ CONFIG += console c++11
 CONFIG -= app_bundle
 CONFIG -= qt
 
-SOURCES +=
+INCLUDEPATH += \
+    /usr/include
+    /opt/ros/melodic/include
 
+SOURCES += \
+    src/udp_connection.cpp \
 DISTFILES += \
     CMakeLists.txt \
     LICENSE \
     package.xml
+
+HEADERS += \
+    src/connection_type.h \
+    src/udp_connection.h \
