@@ -43,7 +43,7 @@ public:
     /// \brief attach_disconnect_callback Attaches a callback for handling when the connected is lost or closed.
     /// \param callback The callback to handle a closed/lost connection.
     ///
-    void attach_disconnect_callback(std::function<void()> callback);
+    void attach_disconnect_callback(std::function<void(uint16_t)> callback);
     ///
     /// \brief tx Transmits data to the remote endpoint.
     /// \param data The data to transmit.
@@ -88,7 +88,7 @@ private:
     ///
     /// \brief m_disconnect_callback The callback to raise when the connection is closed.
     ///
-    std::function<void()> m_disconnect_callback;
+    std::function<void(uint16_t)> m_disconnect_callback;
 
     // METHODS
     ///
