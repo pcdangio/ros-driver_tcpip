@@ -18,8 +18,10 @@ SOURCES += \
 DISTFILES += \
     CMakeLists.txt \
     LICENSE \
+    msg/ActiveConnections.msg \
     msg/DataPacket.msg \
     package.xml \
+    srv/ModifyConnection.srv \
     srv/TCPtx.srv
 
 HEADERS += \

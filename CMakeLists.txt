@@ -49,11 +49,13 @@ find_package(catkin REQUIRED COMPONENTS
 add_message_files(
   FILES
   DataPacket.msg
+  ActiveConnections.msg
 )
 
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
+  ModifyConnection.srv
   TCPtx.srv
 )
 
