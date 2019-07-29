@@ -4,8 +4,9 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 INCLUDEPATH += \
-    /usr/include
-    /opt/ros/melodic/include
+    /usr/include \
+    /opt/ros/melodic/include \
+    ../../devel/include
 
 SOURCES += \
     src/driver.cpp \
@@ -15,7 +16,9 @@ SOURCES += \
 DISTFILES += \
     CMakeLists.txt \
     LICENSE \
-    package.xml
+    msg/DataPacket.msg \
+    package.xml \
+    srv/TCPtx.srv
 
 HEADERS += \
     src/connection_type.h \
