@@ -1,7 +1,6 @@
 #include "tcp_connection.h"
 
 #include <boost/bind.hpp>
-#include <boost/shared_array.hpp>
 
 // CONSTRUCTORS
 tcp_connection::tcp_connection(boost::asio::io_service& io_service, tcp::endpoint local_endpoint, tcp::endpoint remote_endpoint, uint32_t buffer_size)

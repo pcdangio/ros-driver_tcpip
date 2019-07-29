@@ -6,7 +6,6 @@
 #include "connection_type.h"
 
 #include <boost/asio.hpp>
-#include <boost/shared_array.hpp>
 #include <functional>
 
 using namespace boost::asio::ip;

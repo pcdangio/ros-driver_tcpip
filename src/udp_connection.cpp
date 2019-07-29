@@ -1,7 +1,6 @@
 #include "udp_connection.h"
 
 #include <boost/bind.hpp>
-#include <boost/shared_array.hpp>
 
 // CONSTRUCTORS
 udp_connection::udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, udp::endpoint remote_endpoint, uint32_t buffer_size)
