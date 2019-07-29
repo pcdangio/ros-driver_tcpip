@@ -12,6 +12,7 @@
 class driver
 {
 public:
+    // CONSTRUCTORS
     ///
     /// \brief driver Instantiates a new driver instance.
     /// \param local_ip The local IP address to bind to.
@@ -22,6 +23,7 @@ public:
     driver(std::string local_ip, std::string remote_ip, std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> rx_callback, std::function<void(connection_type, uint16_t)> disconnect_callback);
     ~driver();
 
+    // METHODS
     ///
     /// \brief add_connection Adds a new TCP/UDP connection.
     /// \param type The type of connection to add (TCP or UDP).
@@ -41,7 +43,18 @@ public:
     /// \brief spin_once Spins the driver for a single iteration, raising callbacks.
     ///
     void spin_once();
+    ///
+    /// \brief tx Transmits data over a connection.
+    /// \param type The connection type to transmit via.
+    /// \param local_port The local port to transmit from.
+    /// \param data The array of data to transmit.
+    /// \param length The length of the data to transmit.
+    /// \return TRUE if the transmit operation succeeded, otherwise FALSE.
+    /// \note This method takes ownership of the data pointer.
+    ///
+    bool tx(connection_type type, uint16_t local_port, uint8_t* data, uint32_t length);
 
+    // PROPERTIES
     ///
     /// \brief p_connections Gets a list of active connections.
     /// \return A std::vector of active connections.
@@ -49,6 +62,7 @@ public:
     std::vector<std::pair<connection_type, uint16_t>> p_connections();
 
 private:
+    // VARIABLES
     ///
     /// \brief m_service Stores the driver's io_service instance.
     ///
@@ -69,7 +83,6 @@ private:
     /// \brief m_remote_ip Stores the remote IP address for all connections.
     ///
     boost::asio::ip::address m_remote_ip;
-
     ///
     /// \brief m_rx_callback The callback for handling received messages.
     ///
@@ -79,6 +92,7 @@ private:
     ///
     std::function<void(connection_type, uint16_t)> m_disconnect_callback;
 
+    // CALLBACKS
     ///
     /// \brief disconnect_callback The internal callback for handling TCP disconnect events.
     /// \param local_port The port of the TCP connection that has been disconnected.

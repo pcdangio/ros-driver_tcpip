@@ -1,5 +1,6 @@
 #include "driver.h"
 
+// CONSTRUCTORS
 driver::driver(std::string local_ip, std::string remote_ip, std::function<void(connection_type, uint16_t, uint8_t *, uint32_t)> rx_callback, std::function<void(connection_type, uint16_t)> disconnect_callback)
 {
     // Create and store local/remote IP addresses.
@@ -39,6 +40,7 @@ driver::~driver()
     }
 }
 
+// METHODS
 bool driver::add_connection(connection_type type, uint16_t local_port, uint16_t remote_port)
 {
     switch(type)
@@ -144,12 +146,41 @@ bool driver::remove_connection(connection_type type, uint16_t local_port)
     }
     }
 }
-
 void driver::spin_once()
 {
     driver::m_service.run_one();
 }
+bool driver::tx(connection_type type, uint16_t local_port, uint8_t *data, uint32_t length)
+{
+    switch(type)
+    {
+    case connection_type::TCP:
+    {
+        if(driver::m_tcp_connections.count(local_port) > 0)
+        {
+            return driver::m_tcp_connections.at(local_port)->tx(data, length);
+        }
+        else
+        {
+            return false;
+        }
+    }
+    case connection_type::UDP:
+    {
+        if(driver::m_udp_connections.count(local_port) > 0)
+        {
+            driver::m_udp_connections.at(local_port)->tx(data, length);
+            return true;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    }
+}
 
+// PROPERTIES
 std::vector<std::pair<connection_type, uint16_t>> driver::p_connections()
 {
     std::vector<std::pair<connection_type, uint16_t>> output;
@@ -167,6 +198,7 @@ std::vector<std::pair<connection_type, uint16_t>> driver::p_connections()
     return output;
 }
 
+// CALLBACKS
 void driver::disconnect_callback(uint16_t local_port)
 {
     // One of the tcp connections has disconnected.
