@@ -38,7 +38,7 @@ public:
     /// \param data The data to transmit.
     /// \param length The length of the data in bytes.
     ///
-    void tx(uint8_t* data, uint32_t length);
+    void tx(const uint8_t *data, uint32_t length);
 
 private:
     // VARIABLES

@@ -61,7 +61,7 @@ void tcp_connection::attach_disconnect_callback(std::function<void(uint16_t)> ca
 {
     tcp_connection::m_disconnect_callback = callback;
 }
-bool tcp_connection::tx(uint8_t *data, uint32_t length)
+bool tcp_connection::tx(const uint8_t *data, uint32_t length)
 {
     // Check if connection is active.
     if(tcp_connection::m_connected == true)
@@ -80,9 +80,6 @@ bool tcp_connection::tx(uint8_t *data, uint32_t length)
                 tcp_connection::m_disconnect_callback(tcp_connection::m_socket.local_endpoint().port());
             }
         }
-
-        // Clean up the data.
-        delete [] data;
 
         return true;
     }

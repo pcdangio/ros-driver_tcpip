@@ -27,11 +27,9 @@ void udp_connection::attach_rx_callback(std::function<void(connection_type, uint
 {
     udp_connection::m_rx_callback = callback;
 }
-void udp_connection::tx(uint8_t *data, uint32_t length)
+void udp_connection::tx(const uint8_t *data, uint32_t length)
 {
     udp_connection::m_socket.send_to(boost::asio::buffer(data, length), udp_connection::m_remote_endpoint);
-
-    delete [] data;
 }
 void udp_connection::async_rx()
 {

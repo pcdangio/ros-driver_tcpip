@@ -49,7 +49,7 @@ public:
     /// \param length The length of the data in bytes.
     /// \return TRUE if the data was transmitted, otherwise FALSE.
     ///
-    bool tx(uint8_t* data, uint32_t length);
+    bool tx(const uint8_t *data, uint32_t length);
 
     // PROPERTIES
     ///
