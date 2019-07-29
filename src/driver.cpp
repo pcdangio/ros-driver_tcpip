@@ -155,7 +155,7 @@ bool driver::remove_connection(connection_type type, uint16_t local_port)
     }
     }
 }
-bool driver::tx(connection_type type, uint16_t local_port, uint8_t *data, uint32_t length)
+bool driver::tx(connection_type type, uint16_t local_port, const uint8_t *data, uint32_t length)
 {
     switch(type)
     {
