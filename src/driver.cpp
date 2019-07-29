@@ -41,6 +41,15 @@ driver::~driver()
 }
 
 // METHODS
+void driver::start()
+{
+    driver::m_thread = boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(driver::m_service)));
+}
+void driver::stop()
+{
+    driver::m_service.stop();
+    driver::m_thread.join();
+}
 bool driver::add_connection(connection_type type, uint16_t local_port, uint16_t remote_port)
 {
     switch(type)
@@ -145,10 +154,6 @@ bool driver::remove_connection(connection_type type, uint16_t local_port)
         }
     }
     }
-}
-void driver::spin_once()
-{
-    driver::m_service.run_one();
 }
 bool driver::tx(connection_type type, uint16_t local_port, uint8_t *data, uint32_t length)
 {

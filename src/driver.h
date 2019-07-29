@@ -6,6 +6,8 @@
 #include "tcp_connection.h"
 #include "udp_connection.h"
 
+#include <boost/thread.hpp>
+
 ///
 /// \brief A driver for TCP/UDP communications over a network interface.
 ///
@@ -25,6 +27,14 @@ public:
 
     // METHODS
     ///
+    /// \brief start Starts the IO service event loop in a separate thread.
+    ///
+    void start();
+    ///
+    /// \brief stop Stops the IO service event loop running in the separate thread.
+    ///
+    void stop();
+    ///
     /// \brief add_connection Adds a new TCP/UDP connection.
     /// \param type The type of connection to add (TCP or UDP).
     /// \param local_port The local port to listen on.
@@ -39,10 +49,6 @@ public:
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
     bool remove_connection(connection_type type, uint16_t local_port);
-    ///
-    /// \brief spin_once Spins the driver for a single iteration, raising callbacks.
-    ///
-    void spin_once();
     ///
     /// \brief tx Transmits data over a connection.
     /// \param type The connection type to transmit via.
@@ -67,6 +73,10 @@ private:
     /// \brief m_service Stores the driver's io_service instance.
     ///
     boost::asio::io_service m_service;
+    ///
+    /// \brief m_thread A separate thread for running the IO service event loop.
+    ///
+    boost::thread m_thread;
     ///
     /// \brief m_tcp_connections Stores the map of current TCP connections.
     ///
