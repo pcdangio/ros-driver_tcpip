@@ -10,6 +10,8 @@ INCLUDEPATH += \
 
 SOURCES += \
     src/driver.cpp \
+    src/main.cpp \
+    src/ros_node.cpp \
     src/udp_connection.cpp \
     src/tcp_connection.cpp
 
@@ -23,5 +25,6 @@ DISTFILES += \
 HEADERS += \
     src/connection_type.h \
     src/driver.h \
+    src/ros_node.h \
     src/udp_connection.h \
     src/tcp_connection.h
