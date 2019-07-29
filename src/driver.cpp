@@ -24,7 +24,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < tcp_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::TCP, tcp_ports.at(i));
+        driver::remove_connection(connection_type::TCP, tcp_ports.at(i), false);
     }
 
     // Get list of UDP ports that are open.
@@ -36,7 +36,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < udp_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::UDP, udp_ports.at(i));
+        driver::remove_connection(connection_type::UDP, udp_ports.at(i), false);
     }
 }
 
@@ -103,7 +103,7 @@ bool driver::add_connection(connection_type type, uint16_t local_port, uint16_t 
     }
     }
 }
-bool driver::remove_connection(connection_type type, uint16_t local_port)
+bool driver::remove_connection(connection_type type, uint16_t local_port, bool signal)
 {
     switch(type)
     {
@@ -121,8 +121,10 @@ bool driver::remove_connection(connection_type type, uint16_t local_port)
             delete tcp;
 
             // Raise the external disconnect callback.
-            driver::m_disconnect_callback(type, local_port);
-
+            if(signal)
+            {
+                driver::m_disconnect_callback(type, local_port);
+            }
             return true;
         }
         else
@@ -144,7 +146,10 @@ bool driver::remove_connection(connection_type type, uint16_t local_port)
             delete udp;
 
             // Raise the external disconnect callback.
-            driver::m_disconnect_callback(type, local_port);
+            if(signal)
+            {
+                driver::m_disconnect_callback(type, local_port);
+            }
 
             return true;
         }

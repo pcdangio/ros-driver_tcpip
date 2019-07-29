@@ -46,9 +46,10 @@ public:
     /// \brief remove_connection Removes an existing TCP/UDP connection.
     /// \param type The type of connection to remove (TCP or UDP).
     /// \param local_port The local port of the connection.
+    /// \param signal Indicates if the method should signal the disconnect callback.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
-    bool remove_connection(connection_type type, uint16_t local_port);
+    bool remove_connection(connection_type type, uint16_t local_port, bool signal = true);
     ///
     /// \brief tx Transmits data over a connection.
     /// \param type The connection type to transmit via.
