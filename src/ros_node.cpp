@@ -18,10 +18,14 @@ ros_node::ros_node(int argc, char **argv)
     ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.243");
 
     // Read connect port parameters.
-    std::vector<int> param_tcp_ports = {4000, 4002, 4004};
-    //ros_node::m_node->getParam("tcp_ports", param_tcp_ports);
-    std::vector<int> param_udp_ports = {3000, 3002, 3004};
-    //ros_node::m_node->getParam("udp_ports", param_udp_ports);
+    std::vector<int> param_tcp_local_ports = {4000, 4002, 4004};
+    //ros_node::m_node->getParam("tcp_local_ports", param_tcp_local_ports);
+    std::vector<int> param_tcp_remote_ports = {4001, 4003, 4005};
+    //ros_node::m_node->getParam("tcp_remote_ports", param_tcp_remote_ports);
+    std::vector<int> param_udp_local_ports = {3000, 3002, 3004};
+    //ros_node::m_node->getParam("udp_local_ports", param_udp_local_ports);
+    std::vector<int> param_udp_remote_ports = {3001, 3003, 3005};
+    //ros_node::m_node->getParam("udp_remote_ports", param_udp_remote_ports);
 
     // Initialize driver.
     ros_node::m_driver = new driver(param_local_ip,
@@ -38,54 +42,72 @@ ros_node::ros_node(int argc, char **argv)
     ros_node::m_service_modify_connection = ros_node::m_node->advertiseService("modify_connection", &ros_node::modify_connection, this);
 
     // Set up tx/rx publishers, subscribers, and services.
-    // Also add connections to driver.
+
     // TCP:
-    for(uint32_t i = 0; i < param_tcp_ports.size(); i++)
+    // Verify that equal amount of local and remote ports were provided as parameters.
+    if(param_tcp_local_ports.size() == param_tcp_remote_ports.size())
     {
-        // Get local port from vector.
-        uint16_t local_port = static_cast<uint16_t>(param_tcp_ports.at(i));
-
-        // Add connection to driver.
-        if(ros_node::m_driver->add_connection(connection_type::TCP, local_port, local_port + 1))
+        for(uint32_t i = 0; i < param_tcp_local_ports.size(); i++)
         {
-            // RX Publisher:
-            // Generate topic name.
-            std::stringstream rx_topic;
-            rx_topic << "tcp/" << local_port << "/rx";
-            // Add new rx publisher to the map.
-            ros_node::m_tcp_rx.insert(std::make_pair(local_port, ros_node::m_node->advertise<driver_modem::DataPacket>(rx_topic.str(), 1)));
+            // Get local/remote port from vectors.
+            uint16_t local_port = static_cast<uint16_t>(param_tcp_local_ports.at(i));
+            uint16_t remote_port = static_cast<uint16_t>(param_tcp_remote_ports.at(i));
 
-            // TX Service:
-            // Generate topic name.
-            std::stringstream tx_topic;
-            tx_topic << "tcp/" << local_port << "/tx";
-            // Add new tx service server to the map.
-            ros_node::m_tcp_tx.insert(std::make_pair(local_port, ros_node::m_node->advertiseService<driver_modem::TCPtxRequest, driver_modem::TCPtxResponse>(tx_topic.str(), std::bind(&ros_node::tcp_tx, this, std::placeholders::_1, std::placeholders::_2, local_port))));
+            // Add connection to driver.
+            if(ros_node::m_driver->add_connection(connection_type::TCP, local_port, remote_port))
+            {
+                // RX Publisher:
+                // Generate topic name.
+                std::stringstream rx_topic;
+                rx_topic << "tcp/" << local_port << "/rx";
+                // Add new rx publisher to the map.
+                ros_node::m_tcp_rx.insert(std::make_pair(local_port, ros_node::m_node->advertise<driver_modem::DataPacket>(rx_topic.str(), 1)));
+
+                // TX Service:
+                // Generate topic name.
+                std::stringstream tx_topic;
+                tx_topic << "tcp/" << local_port << "/tx";
+                // Add new tx service server to the map.
+                ros_node::m_tcp_tx.insert(std::make_pair(local_port, ros_node::m_node->advertiseService<driver_modem::TCPtxRequest, driver_modem::TCPtxResponse>(tx_topic.str(), std::bind(&ros_node::tcp_tx, this, std::placeholders::_1, std::placeholders::_2, local_port))));
+            }
         }
     }
-    // UDP:
-    for(uint32_t i = 0; i < param_udp_ports.size(); i++)
+    else
     {
-        // Get local port from vector.
-        uint16_t local_port = static_cast<uint16_t>(param_udp_ports.at(i));
+        ROS_ERROR_STREAM("Invalid parameters: Number of tcp_local_ports differs from number of tcp_remote_ports.");
+    }
 
-        // Add connection to driver.
-        if(ros_node::m_driver->add_connection(connection_type::UDP, local_port, local_port + 1))
+    // UDP:
+    if(param_udp_local_ports.size() == param_udp_remote_ports.size())
+    {
+        for(uint32_t i = 0; i < param_udp_local_ports.size(); i++)
         {
-            // RX Publisher:
-            // Generate topic name.
-            std::stringstream rx_topic;
-            rx_topic << "udp/" << local_port << "/rx";
-            // Add new rx publisher to the map.
-            ros_node::m_udp_rx.insert(std::make_pair(local_port, ros_node::m_node->advertise<driver_modem::DataPacket>(rx_topic.str(), 1)));
+            // Get local/remote ports from vectors.
+            uint16_t local_port = static_cast<uint16_t>(param_udp_local_ports.at(i));
+            uint16_t remote_port = static_cast<uint16_t>(param_udp_remote_ports.at(i));
 
-            // TX Subscriber:
-            // Generate topic name.
-            std::stringstream tx_topic;
-            tx_topic << "udp/" << local_port << "/tx";
-            // Add new tx subscriber to the map.
-            ros_node::m_udp_tx.insert(std::make_pair(local_port, ros_node::m_node->subscribe<driver_modem::DataPacket>(tx_topic.str(), 1, std::bind(&ros_node::udp_tx, this, std::placeholders::_1, local_port))));
+            // Add connection to driver.
+            if(ros_node::m_driver->add_connection(connection_type::UDP, local_port, remote_port))
+            {
+                // RX Publisher:
+                // Generate topic name.
+                std::stringstream rx_topic;
+                rx_topic << "udp/" << local_port << "/rx";
+                // Add new rx publisher to the map.
+                ros_node::m_udp_rx.insert(std::make_pair(local_port, ros_node::m_node->advertise<driver_modem::DataPacket>(rx_topic.str(), 1)));
+
+                // TX Subscriber:
+                // Generate topic name.
+                std::stringstream tx_topic;
+                tx_topic << "udp/" << local_port << "/tx";
+                // Add new tx subscriber to the map.
+                ros_node::m_udp_tx.insert(std::make_pair(local_port, ros_node::m_node->subscribe<driver_modem::DataPacket>(tx_topic.str(), 1, std::bind(&ros_node::udp_tx, this, std::placeholders::_1, local_port))));
+            }
         }
+    }
+    else
+    {
+        ROS_ERROR_STREAM("Invalid parameters: Number of udp_local_ports differs from number of udp_remote_ports.");
     }
 
     // Publish active connections now that all are initialized.
