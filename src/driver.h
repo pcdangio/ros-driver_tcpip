@@ -34,39 +34,33 @@ public:
     /// \brief stop Stops the IO service event loop running in the separate thread.
     ///
     void stop();
-    ///
-    /// \brief add_connection Adds a new TCP/UDP connection.
-    /// \param type The type of connection to add (TCP or UDP).
-    /// \param local_port The local port to listen on.
-    /// \param remote_port The remote port to communicate with.
-    /// \return TRUE if the connection was added, otherwise FALSE.
-    ///
-    bool add_connection(connection_type type, uint16_t local_port, uint16_t remote_port);
+
+
+    bool add_udp_connection(uint16_t local_port, uint16_t remote_port);
+    bool add_tcp_connection(tcp_connection::role role, uint16_t port);
     ///
     /// \brief remove_connection Removes an existing TCP/UDP connection.
     /// \param type The type of connection to remove (TCP or UDP).
-    /// \param local_port The local port of the connection.
+    /// \param port The port of the connection.
     /// \param signal Indicates if the method should signal the disconnect callback.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
-    bool remove_connection(connection_type type, uint16_t local_port, bool signal = true);
+    bool remove_connection(connection_type type, uint16_t port, bool signal = true);
     ///
     /// \brief tx Transmits data over a connection.
     /// \param type The connection type to transmit via.
-    /// \param local_port The local port to transmit from.
+    /// \param port The port to transmit from.
     /// \param data The array of data to transmit.
     /// \param length The length of the data to transmit.
     /// \return TRUE if the transmit operation succeeded, otherwise FALSE.
     /// \note This method takes ownership of the data pointer.
     ///
-    bool tx(connection_type type, uint16_t local_port, const uint8_t* data, uint32_t length);
+    bool tx(connection_type type, uint16_t port, const uint8_t* data, uint32_t length);
 
     // PROPERTIES
-    ///
-    /// \brief p_connections Gets a list of active connections.
-    /// \return A std::vector of active connections.
-    ///
-    std::vector<std::pair<connection_type, uint16_t>> p_connections();
+    std::vector<uint16_t> p_pending_tcp_connection() const;
+    std::vector<uint16_t> p_active_tcp_connection() const;
+    std::vector<uint16_t> p_active_udp_connection() const;
 
 private:
     // VARIABLES
@@ -78,14 +72,10 @@ private:
     /// \brief m_thread A separate thread for running the IO service event loop.
     ///
     boost::thread m_thread;
-    ///
-    /// \brief m_tcp_connections Stores the map of current TCP connections.
-    ///
-    std::map<uint16_t, tcp_connection*> m_tcp_connections;
-    ///
-    /// \brief m_udp_connections Stores the map of current UDP connections.
-    ///
-    std::map<uint16_t, udp_connection*> m_udp_connections;
+
+    std::map<uint16_t, tcp_connection*> m_tcp_active;
+    std::map<uint16_t, tcp_connection*> m_tcp_pending;
+    std::map<uint16_t, udp_connection*> m_udp_active;
     ///
     /// \brief m_local_ip Stores the local IP address for all connections.
     ///
@@ -104,11 +94,8 @@ private:
     std::function<void(connection_type, uint16_t)> m_disconnect_callback;
 
     // CALLBACKS
-    ///
-    /// \brief disconnect_callback The internal callback for handling TCP disconnect events.
-    /// \param local_port The port of the TCP connection that has been disconnected.
-    ///
-    void disconnect_callback(uint16_t local_port);
+    void callback_tcp_connected(uint16_t port);
+    void callback_tcp_disconnected(uint16_t port);
 };
 
 #endif // DRIVER_H
