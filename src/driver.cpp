@@ -227,7 +227,7 @@ bool driver::tx(connection_type type, uint16_t port, const uint8_t *data, uint32
 }
 
 // PROPERTIES
-std::vector<uint16_t> driver::p_pending_tcp_connection() const
+std::vector<uint16_t> driver::p_pending_tcp_connections() const
 {
     std::vector<uint16_t> output;
 
@@ -238,7 +238,7 @@ std::vector<uint16_t> driver::p_pending_tcp_connection() const
 
     return output;
 }
-std::vector<uint16_t> driver::p_active_tcp_connection() const
+std::vector<uint16_t> driver::p_active_tcp_connections() const
 {
     std::vector<uint16_t> output;
 
@@ -249,7 +249,7 @@ std::vector<uint16_t> driver::p_active_tcp_connection() const
 
     return output;
 }
-std::vector<uint16_t> driver::p_active_udp_connection() const
+std::vector<uint16_t> driver::p_active_udp_connections() const
 {
     std::vector<uint16_t> output;
 

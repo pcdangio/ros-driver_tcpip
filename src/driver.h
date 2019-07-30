@@ -58,9 +58,9 @@ public:
     bool tx(connection_type type, uint16_t port, const uint8_t* data, uint32_t length);
 
     // PROPERTIES
-    std::vector<uint16_t> p_pending_tcp_connection() const;
-    std::vector<uint16_t> p_active_tcp_connection() const;
-    std::vector<uint16_t> p_active_udp_connection() const;
+    std::vector<uint16_t> p_pending_tcp_connections() const;
+    std::vector<uint16_t> p_active_tcp_connections() const;
+    std::vector<uint16_t> p_active_udp_connections() const;
 
 private:
     // VARIABLES
