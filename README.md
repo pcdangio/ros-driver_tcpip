@@ -49,62 +49,70 @@ Any data that is read from the network device will be published on the "rx" topi
 
 
 #### Published Topics
+* **`~/active_connections`** ([driver_modem/ActiveConnections](https://github.com/pcdangio/ros-driver_modem/blob/master/msg/ActiveConnections.msg))
+
+        Publishes (with latching) a list of all active connections manged by the driver each time a new connection is added or an existing connection is removed.
+
 * **`~/PROTOCOL_TYPE/PORT/rx`** ([driver_modem/DataPacket](https://github.com/pcdangio/ros-driver_modem/blob/master/msg/DataPacket.msg))
 
         Publishes data that has been received over a particular protocol and port.
         PROTOCOL_TYPE: Either "tcp" or "udp" depending on the connection protocol
         PORT: The port number of the connection.
 
-* **`gps/time`** ([sensor_msgs/TimeReference](http://docs.ros.org/api/sensor_msgs/html/msg/TimeReference.html))
+#### Subscribed Topics
+* **`~/udp/PORT/tx`** ([driver_modem/DataPacket](https://github.com/pcdangio/ros-driver_modem/blob/master/msg/DataPacket.msg))
 
-        The current UTC time measured by the sensor.
+        Accepts data to send via UDP over a particular port.
+        PORT: The port number of the connection.
+
+#### Services
+* **`~/modify_connection`** ([driver_modem/ModifyConnection](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/ModifyConnection.srv))
+
+        Adds or removes a connection to the driver.
+
+* **`~/tcp/PORT/tx`** ([driver_modem/TCPtx](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/TCPtx.srv))
+
+        Accepts data to send via TCP over a particular port.  This is implemented as a service to indicate success.
+        PORT: The port number of the connection.
 
 
 #### Runtime Parameters
 
-* **`~/serial_port`** (string, default: /dev/ttyAMA0)
+* **`~/local_ip`** (string, default: 192.168.1.2)
 
-        The serial port connected to the sensor.
+        The IP address of the local network interface to use for communication.
 
-* **`~/baud_rate`** (uint32, default: 9600)
+* **`~/remote_ip`** (string, default: 192.168.1.3)
 
-        The baud rate to use for serial communication with the sensor.
+        The IP address of the remote device to communicate with.
 
-* **`~/scan_rate`** (double, default: 15)
+#### Connection Parameters
 
-        The rate in Hz at which to scan the serial port for new NMEA messages.
+These parameters are optional and can be used to create TCP and/or UDP connections on node startup.
 
-* **`~/uere`** (double, default: 6.74)
+* **`~/tcp_local_ports`** (vector<uint16>, default: empty)
 
-        The User Equivalent Range Error (UERE) representing the total pseudorange error budget.  This is typically 6.74 for C/A, and 6.0 for P(Y).
+        The list of local TCP ports to open for connections.
+        NOTE: The modem acts as a TCP client and only sends connection requests.  The connection will fail if a TCP server is not at the remote IP.
 
-#### Configuration Parameters
+* **`~/tcp_remote_ports`** (vector<uint16>, default: empty)
 
-These parameters should only be changed when needed, and not set prior to every run.  These parameters will be updated in the sensor's flash memory and will be preserved over power cycles.
+        The corresponding list of remote TCP ports to communicate with.
+        NOTE: This list must be the same size as the tcp_local_ports parameter.
 
-* **`~/update_baud`** (int, default: -1)
+* **`~/udp_local_ports`** (vector<uint16>, default: empty)
 
-        Changes the baud rate of the MT3339 GPS.  Possible values are:
-        4800 bps
-        9600 bps
-        14400 bps
-        19200 bps
-        38400 bps
-        57600 bps
-        115200 bps
-        The default value of -1 instructs the node to ignore updating the baud rate.
+        The list of local UDP ports to open for connections.
 
-* **`~/update_nmea_rate`** (unsigned int, default: -1)
+* **`~/udp_remote_ports`** (vector<uint16>, default: empty)
 
-        Changes the position update rate of the MT3339 GPS in milliseconds.
-        The acceptable rates are between 100ms and 10,000ms.
-        Position fixes are output once every period specified, so 100ms = 10Hz.
-        The default value of -1 instructs the node to ignore updating the update rate.
+        The corresponding list of remote UDP ports to communicate with.
+        NOTE: This list must be the same size as the udp_local_ports parameter.
+
 
 ## Bugs & Feature Requests
 
-Please report bugs and request features using the [Issue Tracker](https://github.com/pcdangio/ros-driver_mt3339/issues).
+Please report bugs and request features using the [Issue Tracker](https://github.com/pcdangio/ros-driver_modem/issues).
 
 
 [ROS]: http://www.ros.org
-[MT3339]: https://cdn-shop.adafruit.com/datasheets/GlobalTop-FGPMMOPA6H-Datasheet-V0A.pdf
