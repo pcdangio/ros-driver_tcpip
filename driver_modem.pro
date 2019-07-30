@@ -18,6 +18,7 @@ SOURCES += \
 DISTFILES += \
     CMakeLists.txt \
     LICENSE \
+    README.md \
     msg/ActiveConnections.msg \
     msg/DataPacket.msg \
     package.xml \
