@@ -4,6 +4,7 @@
 #define TCP_CONNECTION_H
 
 #include "connection_type.h"
+#include "tcp_role.h"
 
 #include <boost/asio.hpp>
 #include <functional>
@@ -16,6 +17,14 @@ using namespace boost::asio::ip;
 class tcp_connection
 {
 public:
+    // ENUMERATIONS
+    enum class status
+    {
+        DISCONNECTED = 0,
+        CONNECTED = 1,
+        PENDING = 2
+    };
+
     // CONSTRUCTORS
     ///
     /// \brief tcp_connection Creates a new instance for the TCP connection.
@@ -28,11 +37,8 @@ public:
     ~tcp_connection();
 
     // METHODS
-    ///
-    /// \brief connect Attempts to create the TCP connection.
-    /// \return TRUE if the connection was successful, otherwise false.
-    ///
-    bool connect();
+
+    status connect(tcp_role connection_role);
     ///
     /// \brief attach_rx_callback Attaches a callback for handling received messages.
     /// \param callback The callback to handle received messages.
@@ -43,6 +49,7 @@ public:
     /// \param callback The callback to handle a closed/lost connection.
     ///
     void attach_disconnect_callback(std::function<void(uint16_t)> callback);
+    void attach_connect_callback(std::function<void(uint16_t)> callback);
     ///
     /// \brief tx Transmits data to the remote endpoint.
     /// \param data The data to transmit.
@@ -52,11 +59,7 @@ public:
     bool tx(const uint8_t *data, uint32_t length);
 
     // PROPERTIES
-    ///
-    /// \brief p_connected Gets if the socket is connected.
-    /// \return TRUE if connected, otherwise FALSE.
-    ///
-    bool p_connected();
+    status p_status() const;
 
 private:
     // VARIABLES
@@ -64,6 +67,7 @@ private:
     /// \brief m_socket The socket implementing the TCP connection.
     ///
     tcp::socket m_socket;
+    tcp::acceptor m_acceptor;
     ///
     /// \brief m_remote_endpoint The remote endpoint to communicate with.
     ///
@@ -76,26 +80,29 @@ private:
     /// \brief m_buffer_size The size of the internal buffer in bytes.
     ///
     uint32_t m_buffer_size;
-    ///
-    /// \brief m_connected Internal flag storing if socket is connected.
-    ///
-    bool m_connected;
+
+    status m_status;
+
     ///
     /// \brief m_rx_callback The callback to raise when a message is received.
     ///
     std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> m_rx_callback;
+
+    std::function<void(uint16_t)> m_connect_callback;
     ///
     /// \brief m_disconnect_callback The callback to raise when the connection is closed.
     ///
     std::function<void(uint16_t)> m_disconnect_callback;
 
     // METHODS
+    void async_accept();
     ///
     /// \brief async_rx Initiates an asynchronous read of a single TCP packet.
     ///
     void async_rx();
 
     // CALLBACKS
+    void accept_callback(const boost::system::error_code& error);
     ///
     /// \brief rx_callback The internal callback for handling messages received asynchronously.
     /// \param error The error code provided by the async read operation.
