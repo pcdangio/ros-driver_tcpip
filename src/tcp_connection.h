@@ -4,7 +4,6 @@
 #define TCP_CONNECTION_H
 
 #include "connection_type.h"
-#include "tcp_role.h"
 
 #include <boost/asio.hpp>
 #include <functional>
@@ -18,6 +17,12 @@ class tcp_connection
 {
 public:
     // ENUMERATIONS
+    enum class role
+    {
+        UNASSIGNED = 0,
+        SERVER = 1,
+        CLIENT = 2
+    };
     enum class status
     {
         DISCONNECTED = 0,
@@ -30,26 +35,23 @@ public:
     /// \brief tcp_connection Creates a new instance for the TCP connection.
     /// \param io_service The global IO Service to run the connection on.
     /// \param local_endpoint The local endpoint to bind to.
-    /// \param remote_endpoint The remote endpoint to communicate with.
     /// \param buffer_size The size of the RX buffer in bytes.
     ///
-    tcp_connection(boost::asio::io_service& io_service, tcp::endpoint local_endpoint, tcp::endpoint remote_endpoint, uint32_t buffer_size=1024);
+    tcp_connection(boost::asio::io_service& io_service, tcp::endpoint local_endpoint, uint32_t buffer_size=1024);
     ~tcp_connection();
 
     // METHODS
+    bool start_client(tcp::endpoint remote_endpoint);
+    bool start_server();
 
-    status connect(tcp_role connection_role);
     ///
     /// \brief attach_rx_callback Attaches a callback for handling received messages.
     /// \param callback The callback to handle received messages.
     ///
     void attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback);
-    ///
-    /// \brief attach_disconnect_callback Attaches a callback for handling when the connected is lost or closed.
-    /// \param callback The callback to handle a closed/lost connection.
-    ///
-    void attach_disconnect_callback(std::function<void(uint16_t)> callback);
-    void attach_connect_callback(std::function<void(uint16_t)> callback);
+
+    void attach_disconnected_callback(std::function<void(uint16_t)> callback);
+    void attach_connected_callback(std::function<void(uint16_t)> callback);
     ///
     /// \brief tx Transmits data to the remote endpoint.
     /// \param data The data to transmit.
@@ -59,7 +61,9 @@ public:
     bool tx(const uint8_t *data, uint32_t length);
 
     // PROPERTIES
+    role p_role() const;
     status p_status() const;
+    tcp::endpoint p_remote_endpoint() const;
 
 private:
     // VARIABLES
@@ -81,6 +85,7 @@ private:
     ///
     uint32_t m_buffer_size;
 
+    role m_role;
     status m_status;
 
     ///
@@ -88,11 +93,9 @@ private:
     ///
     std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> m_rx_callback;
 
-    std::function<void(uint16_t)> m_connect_callback;
-    ///
-    /// \brief m_disconnect_callback The callback to raise when the connection is closed.
-    ///
-    std::function<void(uint16_t)> m_disconnect_callback;
+    std::function<void(uint16_t)> m_connected_callback;
+
+    std::function<void(uint16_t)> m_disconnected_callback;
 
     // METHODS
     void async_accept();
@@ -100,6 +103,8 @@ private:
     /// \brief async_rx Initiates an asynchronous read of a single TCP packet.
     ///
     void async_rx();
+
+    void update_status(status new_status, bool signal = true);
 
     // CALLBACKS
     void accept_callback(const boost::system::error_code& error);

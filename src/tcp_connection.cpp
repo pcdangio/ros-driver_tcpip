@@ -3,19 +3,17 @@
 #include <boost/bind.hpp>
 
 // CONSTRUCTORS
-tcp_connection::tcp_connection(boost::asio::io_service& io_service, tcp::endpoint local_endpoint, tcp::endpoint remote_endpoint, uint32_t buffer_size)
+tcp_connection::tcp_connection(boost::asio::io_service& io_service, tcp::endpoint local_endpoint, uint32_t buffer_size)
     // Initialize socket and acceptor
     : m_socket(io_service, local_endpoint),
       m_acceptor(io_service, local_endpoint)
 {
-    // Store remote endpoint.
-    tcp_connection::m_remote_endpoint = remote_endpoint;
-
     // Dynamically allocate buffer.
     tcp_connection::m_buffer_size = buffer_size;
     tcp_connection::m_buffer = new uint8_t[buffer_size];
 
-    // Set internal connection flag.
+    // Initialize role and status.
+    tcp_connection::m_role = tcp_connection::role::UNASSIGNED;
     tcp_connection::m_status = tcp_connection::status::DISCONNECTED;
 }
 tcp_connection::~tcp_connection()
@@ -24,55 +22,73 @@ tcp_connection::~tcp_connection()
 }
 
 // METHODS
-tcp_connection::status tcp_connection::connect(tcp_role connection_role)
+bool tcp_connection::start_server()
 {
     if(tcp_connection::m_status == tcp_connection::status::DISCONNECTED)
     {
-        switch(connection_role)
-        {
-        case tcp_role::SERVER:
-        {
-            // Start asynchronously accepting connections.
-            tcp_connection::async_accept();
+        // Start asynchronously accepting connections.
+        tcp_connection::async_accept();
 
-            // Update connection status flag.
-            tcp_connection::m_status = tcp_connection::status::PENDING;
+        // Set role.
+        tcp_connection::m_role = tcp_connection::role::SERVER;
 
-            break;
+        // Update status.
+        tcp_connection::update_status(tcp_connection::status::PENDING);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+bool tcp_connection::start_client(tcp::endpoint remote_endpoint)
+{
+    if(tcp_connection::m_status == tcp_connection::status::DISCONNECTED)
+    {
+        try
+        {
+            // Start connection.
+            tcp_connection::m_socket.connect(remote_endpoint);
+
+            // Store remote endpoint.
+            tcp_connection::m_remote_endpoint = remote_endpoint;
+
+            // Set role.
+            tcp_connection::m_role = tcp_connection::role::CLIENT;
+
+            // Update status.
+            tcp_connection::update_status(tcp_connection::status::CONNECTED);
+
+            // Start first asynchronous read.
+            tcp_connection::async_rx();
+
+            return true;
         }
-        case tcp_role::CLIENT:
+        catch (...)
         {
-            try
-            {
-                // Start connection.
-                tcp_connection::m_socket.connect(tcp_connection::m_remote_endpoint);
+            // Update status.
+            tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
 
-                // Update connection status flag.
-                tcp_connection::m_status = tcp_connection::status::CONNECTED;
-
-                // Start first asynchronous read.
-                tcp_connection::async_rx();
-            }
-            catch (...)
-            {
-                // Update connection status flag.
-                tcp_connection::m_status = tcp_connection::status::DISCONNECTED;
-            }
-
-            break;
-        }
+            return false;
         }
     }
-
-    return tcp_connection::m_status;
+    else
+    {
+        return false;
+    }
 }
 void tcp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback)
 {
     tcp_connection::m_rx_callback = callback;
 }
-void tcp_connection::attach_disconnect_callback(std::function<void(uint16_t)> callback)
+void tcp_connection::attach_connected_callback(std::function<void (uint16_t)> callback)
 {
-    tcp_connection::m_disconnect_callback = callback;
+    tcp_connection::m_connected_callback = callback;
+}
+void tcp_connection::attach_disconnected_callback(std::function<void(uint16_t)> callback)
+{
+    tcp_connection::m_disconnected_callback = callback;
 }
 bool tcp_connection::tx(const uint8_t *data, uint32_t length)
 {
@@ -86,12 +102,8 @@ bool tcp_connection::tx(const uint8_t *data, uint32_t length)
         // Check if error is broken_pipe, indicating connection broken.
         if(error.value() == boost::system::errc::broken_pipe)
         {
-            // Connection is broken.
-            tcp_connection::m_status = tcp_connection::status::DISCONNECTED;
-            if(tcp_connection::m_disconnect_callback)
-            {
-                tcp_connection::m_disconnect_callback(tcp_connection::m_socket.local_endpoint().port());
-            }
+            // Connection is broken.  Update status.
+            tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
         }
 
         return true;
@@ -103,18 +115,66 @@ bool tcp_connection::tx(const uint8_t *data, uint32_t length)
 }
 void tcp_connection::async_accept()
 {
-    tcp_connection::m_acceptor.async_accept(tcp_connection::m_socket, boost::bind(&tcp_connection::accept_callback, this, boost::placeholders::_1));
+    tcp_connection::m_acceptor.async_accept(tcp_connection::m_socket, tcp_connection::m_remote_endpoint, boost::bind(&tcp_connection::accept_callback, this, boost::placeholders::_1));
 }
 void tcp_connection::async_rx()
 {
     tcp_connection::m_socket.async_receive(boost::asio::buffer(tcp_connection::m_buffer, tcp_connection::m_buffer_size),
                                            boost::bind(&tcp_connection::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
+void tcp_connection::update_status(status new_status, bool signal)
+{
+    // Update status flag.
+    tcp_connection::m_status = new_status;
+
+    switch(new_status)
+    {
+    case tcp_connection::status::DISCONNECTED:
+    {
+        // Reset role to unassigned.
+        tcp_connection::m_role = tcp_connection::role::UNASSIGNED;
+
+        // Reset remote endpoint.
+        tcp_connection::m_remote_endpoint = tcp::endpoint();
+
+        // Raise disconnect callback.
+        if(signal && tcp_connection::m_disconnected_callback)
+        {
+            tcp_connection::m_disconnected_callback(tcp_connection::m_socket.local_endpoint().port());
+        }
+
+        break;
+    }
+    case tcp_connection::status::CONNECTED:
+    {
+        // Raise connected handler.
+        if(signal && tcp_connection::m_connected_callback)
+        {
+            tcp_connection::m_connected_callback(tcp_connection::m_socket.local_endpoint().port());
+        }
+
+        break;
+    }
+    case tcp_connection::status::PENDING:
+    {
+        // Do nothing else specific.
+        break;
+    }
+    }
+}
 
 // PROPERTIES
+tcp_connection::role tcp_connection::p_role() const
+{
+    return tcp_connection::m_role;
+}
 tcp_connection::status tcp_connection::p_status() const
 {
     return tcp_connection::m_status;
+}
+tcp::endpoint tcp_connection::p_remote_endpoint() const
+{
+    return tcp_connection::m_remote_endpoint;
 }
 
 // CALLBACKS
@@ -122,16 +182,8 @@ void tcp_connection::accept_callback(const boost::system::error_code &error)
 {
     if(!error)
     {
-        // Connection has been made.
-
-        // Update connection status flag.
-        tcp_connection::m_status = tcp_connection::status::CONNECTED;
-
-        // Raise connected callback to signal external code.
-        if(tcp_connection::m_connect_callback)
-        {
-            tcp_connection::m_connect_callback(tcp_connection::m_socket.local_endpoint().port());
-        }
+        // Connection has been made.  Update status.
+        tcp_connection::update_status(tcp_connection::status::CONNECTED);
 
         // Start first asynchronous read.
         tcp_connection::async_rx();
@@ -163,10 +215,6 @@ void tcp_connection::rx_callback(const boost::system::error_code &error, std::si
     else if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted)
     {
         // Connection has been closed.
-        tcp_connection::m_status = tcp_connection::status::DISCONNECTED;
-        if(tcp_connection::m_disconnect_callback)
-        {
-            tcp_connection::m_disconnect_callback(tcp_connection::m_socket.local_endpoint().port());
-        }
+        tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
     }
 }
