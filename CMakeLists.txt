@@ -55,8 +55,10 @@ add_message_files(
 ## Generate services in the 'srv' folder
 add_service_files(
   FILES
-  ModifyConnection.srv
-  TCPtx.srv
+  AddTCPConnection.srv
+  AddUDPConnection.srv
+  RemoveConnection.srv
+  SendTCP.srv
 )
 
 ## Generate actions in the 'action' folder

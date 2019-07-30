@@ -1,0 +1,9 @@
+# Adds a new TCP connection to the modem.
+
+uint8   ROLE_SERVER = 0     # TCP connection will act as a server and wait for incoming connections
+uint8   ROLE_CLIENT = 1     # TCP connection will act as a client and attempt to connect to the remote endpoint
+
+uint8   role                # The role (server or client) the new TCP connection will assume when created
+uint16  port                # The port that the TCP connection will communicate over
+---
+bool    success             # Indicates if the addition of the connection was successful

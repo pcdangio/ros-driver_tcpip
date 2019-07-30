@@ -1,0 +1,5 @@
+# A service for transmitting data over a TCP network
+
+DataPacket  packet      # The data packet to transmit
+---
+bool        success     # Indicates if the transmission was successful

@@ -22,8 +22,10 @@ DISTFILES += \
     msg/ActiveConnections.msg \
     msg/DataPacket.msg \
     package.xml \
-    srv/ModifyConnection.srv \
-    srv/TCPtx.srv
+    srv/AddTCPConnection.srv \
+    srv/AddUDPConnection.srv \
+    srv/RemoveConnection.srv \
+    srv/SendTCP.srv
 
 HEADERS += \
     src/connection_type.h \

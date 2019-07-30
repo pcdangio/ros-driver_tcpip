@@ -1,0 +1,9 @@
+# Removes an active TCP or UDP connection from the modem
+
+uint8   PROTOCOL_TCP    # TCP Protocol
+uint8   PROTOCOL_UDP    # UDP Protocol
+
+uint8   protocol        # The protocol of the connection to remove
+uint16  port            # The port of the connection to remove
+---
+bool    success         # Indicates if the removal of the connection was successful
