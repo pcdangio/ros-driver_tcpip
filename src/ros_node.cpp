@@ -28,7 +28,7 @@ ros_node::ros_node(int argc, char **argv)
     // Initialize driver.
     ros_node::m_driver = new driver(param_local_ip,
                                     param_remote_ip,
-                                    std::bind(&ros_node::callback_rx, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
+                                    std::bind(&ros_node::callback_rx, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
                                     std::bind(&ros_node::callback_tcp_connected, this, std::placeholders::_1),
                                     std::bind(&ros_node::callback_tcp_disconnected, this, std::placeholders::_1));
 
@@ -295,11 +295,12 @@ void ros_node::callback_tcp_disconnected(uint16_t port)
     // Publish updated connections.
     ros_node::publish_active_connections();
 }
-void ros_node::callback_rx(connection_type type, uint16_t port, uint8_t *data, uint32_t length)
+void ros_node::callback_rx(connection_type type, uint16_t port, uint8_t *data, uint32_t length, address source)
 {
     // Deep copy data into new DataPacket message.
     driver_modem::DataPacket message;
     message.header.stamp = ros::Time::now();
+    message.source_ip = source.to_string();
     for(uint32_t i = 0; i < length; i++)
     {
         message.data.push_back(data[i]);

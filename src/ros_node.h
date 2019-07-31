@@ -142,8 +142,9 @@ private:
     /// \param port The local port that received the data.
     /// \param data The data that was received.
     /// \param length The length of the data that was received.
+    /// \param source The IP address of the data source.
     ///
-    void callback_rx(connection_type type, uint16_t port, uint8_t* data, uint32_t length);
+    void callback_rx(connection_type type, uint16_t port, uint8_t* data, uint32_t length, address source);
 
     // CALLBACKS: SUBSCRIBERS
     ///
