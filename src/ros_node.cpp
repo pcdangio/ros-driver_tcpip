@@ -18,12 +18,12 @@ ros_node::ros_node(int argc, char **argv)
     ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.253");
 
     // Read connect port parameters.
-    std::vector<int> param_tcp_server_ports = {3000};
-    //ros_node::m_node->getParam("tcp_server_ports", param_tcp_server_ports);
-    std::vector<int> param_tcp_client_ports = {3100};
-    //ros_node::m_node->getParam("tcp_client_ports", param_tcp_client_ports);
-    std::vector<int> param_udp_ports = {3200};
-    //ros_node::m_node->getParam("udp_ports", param_udp_ports);
+    std::vector<int> param_tcp_server_ports;
+    ros_node::m_node->getParam("tcp_server_ports", param_tcp_server_ports);
+    std::vector<int> param_tcp_client_ports;
+    ros_node::m_node->getParam("tcp_client_ports", param_tcp_client_ports);
+    std::vector<int> param_udp_ports;
+    ros_node::m_node->getParam("udp_ports", param_udp_ports);
 
     // Initialize driver.
     ros_node::m_driver = new driver(param_local_ip,
