@@ -43,6 +43,7 @@ public:
     // METHODS
     bool start_client(tcp::endpoint remote_endpoint);
     bool start_server();
+    void disconnect();
 
     ///
     /// \brief attach_rx_callback Attaches a callback for handling received messages.
@@ -72,10 +73,8 @@ private:
     ///
     tcp::socket m_socket;
     tcp::acceptor m_acceptor;
-    ///
-    /// \brief m_remote_endpoint The remote endpoint to communicate with.
-    ///
-    tcp::endpoint m_remote_endpoint;
+    tcp::endpoint m_local_endpoint;
+
     ///
     /// \brief m_buffer The internal buffer for storing received messages.
     ///
@@ -107,6 +106,7 @@ private:
     void update_status(status new_status, bool signal = true);
 
     // CALLBACKS
+    void connect_callback(const boost::system::error_code& error);
     void accept_callback(const boost::system::error_code& error);
     ///
     /// \brief rx_callback The internal callback for handling messages received asynchronously.
