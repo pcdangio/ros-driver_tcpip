@@ -3,7 +3,7 @@
 #ifndef TCP_CONNECTION_H
 #define TCP_CONNECTION_H
 
-#include "connection_type.h"
+#include "protocol.h"
 
 #include <boost/asio.hpp>
 #include <functional>
@@ -81,7 +81,7 @@ public:
     /// \brief attach_rx_callback Attaches a callback for handling received messages.
     /// \param callback The callback to handle received messages.
     ///
-    void attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t, address)> callback);
+    void attach_rx_callback(std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> callback);
 
     // METHODS: IO
     ///
@@ -156,7 +156,7 @@ private:
     ///
     /// \brief m_rx_callback The callback to raise when a message is received.
     ///
-    std::function<void(connection_type, uint16_t, uint8_t*, uint32_t, address)> m_rx_callback;
+    std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> m_rx_callback;
 
     // METHODS: SOCKET
     ///
