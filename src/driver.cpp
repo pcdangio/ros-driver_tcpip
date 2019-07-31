@@ -107,16 +107,16 @@ bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
         return false;
     }
 }
-bool driver::add_udp_connection(uint16_t local_port, uint16_t remote_port)
+bool driver::add_udp_connection(uint16_t port)
 {
-    if(driver::m_udp_active.count(local_port) == 0)
+    if(driver::m_udp_active.count(port) == 0)
     {
         // Create the UDP connection.
-        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, local_port), udp::endpoint(driver::m_remote_ip, remote_port));
+        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port));
         // Attach the rx callback.
         new_udp->attach_rx_callback(driver::m_callback_rx);
         // Add connection to map.
-        driver::m_udp_active.insert(std::make_pair(local_port, new_udp));
+        driver::m_udp_active.insert(std::make_pair(port, new_udp));
 
         return true;
     }
