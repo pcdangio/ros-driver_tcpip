@@ -20,7 +20,7 @@ udp_connection::~udp_connection()
 }
 
 // METHODS
-void udp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback)
+void udp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t *, uint32_t, address)> callback)
 {
     udp_connection::m_rx_callback = callback;
 }
@@ -47,7 +47,11 @@ void udp_connection::rx_callback(const boost::system::error_code &error, std::si
         std::memcpy(output_array, udp_connection::m_buffer, bytes_read);
 
         // Raise the callback.
-        udp_connection::m_rx_callback(connection_type::UDP, udp_connection::m_socket.local_endpoint().port(), output_array, static_cast<uint32_t>(bytes_read));
+        // NOTE: async_recieve_from stores the remote_endpoint in m_remote_endpoint.
+        udp_connection::m_rx_callback(connection_type::UDP,
+                                      udp_connection::m_socket.local_endpoint().port(),
+                                      output_array, static_cast<uint32_t>(bytes_read),
+                                      udp_connection::m_remote_endpoint.address());
     }
 
     // Start a new asynchronous receive.
