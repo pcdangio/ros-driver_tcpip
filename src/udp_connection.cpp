@@ -3,13 +3,10 @@
 #include <boost/bind.hpp>
 
 // CONSTRUCTORS
-udp_connection::udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, udp::endpoint remote_endpoint, uint32_t buffer_size)
+udp_connection::udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, uint32_t buffer_size)
     // Initialize socket.
     :m_socket(io_service, local_endpoint)
 {
-    // Store remote endpoint.
-    udp_connection::m_remote_endpoint = remote_endpoint;
-
     // Dynamically allocate buffer.
     udp_connection::m_buffer_size = buffer_size;
     udp_connection::m_buffer = new uint8_t[buffer_size];
@@ -33,6 +30,7 @@ void udp_connection::tx(const uint8_t *data, uint32_t length)
 }
 void udp_connection::async_rx()
 {
+    // Start asynchronous receive, and store the source endpoint in m_remote_endpoint.
     udp_connection::m_socket.async_receive_from(boost::asio::buffer(udp_connection::m_buffer, udp_connection::m_buffer_size),
                                                 udp_connection::m_remote_endpoint,
                                                 boost::bind(&udp_connection::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));

@@ -21,10 +21,9 @@ public:
     /// \brief udp_connection Creates a new instance for the UDP connection.
     /// \param io_service The global IO Service to run the connection on.
     /// \param local_endpoint The local endpoint to bind to.
-    /// \param remote_endpoint The remote endpoint to communicate with.
     /// \param buffer_size The size of the RX buffer in bytes.
     ///
-    udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, udp::endpoint remote_endpoint, uint32_t buffer_size=1024);
+    udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, uint32_t buffer_size=1024);
     ~udp_connection();
 
     // METHODS
@@ -41,15 +40,17 @@ public:
     void tx(const uint8_t *data, uint32_t length);
 
 private:
-    // VARIABLES
+    // VARIABLES: SOCKET
     ///
     /// \brief m_socket The socket implementing the UDP connection.
     ///
     udp::socket m_socket;
     ///
-    /// \brief m_remote_endpoint The remote endpoint to communicate with.
+    /// \brief m_remote_endpoint Stores the remote endpoint information of received messages.
     ///
     udp::endpoint m_remote_endpoint;
+
+    // VARIABLES: RX BUFFER
     ///
     /// \brief m_buffer The internal buffer for storing received messages.
     ///
@@ -58,6 +59,8 @@ private:
     /// \brief m_buffer_size The size of the internal buffer in bytes.
     ///
     uint32_t m_buffer_size;
+
+    // VARIABLES: CALLBACKS
     ///
     /// \brief m_rx_callback The callback to raise when a message is received.
     ///
