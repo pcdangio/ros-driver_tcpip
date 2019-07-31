@@ -83,7 +83,7 @@ ros_node::~ros_node()
     delete ros_node::m_driver;
 }
 
-// METHODS
+// PUBLIC METHODS
 void ros_node::spin()
 {
     // Start the driver thread.
@@ -96,6 +96,7 @@ void ros_node::spin()
     ros_node::m_driver->stop();
 }
 
+// PRIVATE METHODS: CONNECTION MANAGEMENT
 bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port)
 {
     if(ros_node::m_driver->add_tcp_connection(role, port))
@@ -149,6 +150,7 @@ bool ros_node::remove_connection(connection_type type, uint16_t port)
     }
 }
 
+// PRIVATE METHODS: TOPIC MANAGEMENT
 void ros_node::add_connection_topics(connection_type type, uint16_t port)
 {
     switch(type)
@@ -241,6 +243,8 @@ void ros_node::remove_connection_topics(connection_type type, uint16_t port)
     // Publish updated connections.
     ros_node::publish_active_connections();
 }
+
+// PRIVATE METHODS: MISC
 void ros_node::publish_active_connections()
 {
     // Convert current connections into ActiveConnections message.
@@ -272,42 +276,25 @@ void ros_node::publish_active_connections()
     ros_node::m_publisher_active_connections.publish(message);
 }
 
-// MESSAGE CALLBACKS
-void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, uint16_t port)
+// CALLBACKS: DRIVER
+void ros_node::callback_tcp_connected(uint16_t port)
 {
-    ros_node::m_driver->tx(connection_type::UDP, port, message->data.data(), static_cast<uint32_t>(message->data.size()));
-}
+    // TCP has transitioned from pending to active.
 
-// SERVICE CALLBACKS
-bool ros_node::service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response)
+    // Add the associated topic/service.
+    ros_node::add_connection_topics(connection_type::TCP, port);
+
+    // Publish updated connections.
+    ros_node::publish_active_connections();
+}
+void ros_node::callback_tcp_disconnected(uint16_t port)
 {
-    bool result = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
-    response.success = result;
+    // Remove the associated topic/service.  Driver has already internally removed connection.
+    ros_node::remove_connection_topics(connection_type::TCP, port);
 
-    return result;
+    // Publish updated connections.
+    ros_node::publish_active_connections();
 }
-bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response)
-{
-    bool result = ros_node::add_udp_connection(request.port);
-    response.success = result;
-
-    return result;
-}
-bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
-{
-    bool result = ros_node::remove_connection(static_cast<connection_type>(request.protocol), request.port);
-    response.success = result;
-
-    return result;
-}
-bool ros_node::service_tcp_tx(driver_modem::SendTCPRequest &request, driver_modem::SendTCPResponse &response, uint16_t port)
-{
-    bool result = ros_node::m_driver->tx(connection_type::TCP, port, request.packet.data.data(), static_cast<uint32_t>(request.packet.data.size()));
-    response.success = result;
-    return result;
-}
-
-// DRIVER CALLBACKS
 void ros_node::callback_rx(connection_type type, uint16_t port, uint8_t *data, uint32_t length)
 {
     // Deep copy data into new DataPacket message.
@@ -335,21 +322,38 @@ void ros_node::callback_rx(connection_type type, uint16_t port, uint8_t *data, u
     }
     }
 }
-void ros_node::callback_tcp_connected(uint16_t port)
+
+// CALLBACKS: SUBSCRIBERS
+void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, uint16_t port)
 {
-    // TCP has transitioned from pending to active.
-
-    // Add the associated topic/service.
-    ros_node::add_connection_topics(connection_type::TCP, port);
-
-    // Publish updated connections.
-    ros_node::publish_active_connections();
+    ros_node::m_driver->tx(connection_type::UDP, port, message->data.data(), static_cast<uint32_t>(message->data.size()));
 }
-void ros_node::callback_tcp_disconnected(uint16_t port)
-{
-    // Remove the associated topic/service.  Driver has already internally removed connection.
-    ros_node::remove_connection_topics(connection_type::TCP, port);
 
-    // Publish updated connections.
-    ros_node::publish_active_connections();
+// CALLBACKS: SERVICES
+bool ros_node::service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response)
+{
+    bool result = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
+    response.success = result;
+
+    return result;
+}
+bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response)
+{
+    bool result = ros_node::add_udp_connection(request.port);
+    response.success = result;
+
+    return result;
+}
+bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
+{
+    bool result = ros_node::remove_connection(static_cast<connection_type>(request.protocol), request.port);
+    response.success = result;
+
+    return result;
+}
+bool ros_node::service_tcp_tx(driver_modem::SendTCPRequest &request, driver_modem::SendTCPResponse &response, uint16_t port)
+{
+    bool result = ros_node::m_driver->tx(connection_type::TCP, port, request.packet.data.data(), static_cast<uint32_t>(request.packet.data.size()));
+    response.success = result;
+    return result;
 }
