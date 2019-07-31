@@ -24,7 +24,7 @@ tcp_connection::~tcp_connection()
     delete [] tcp_connection::m_buffer;
 }
 
-// METHODS
+// PUBLIC METHODS:  START/STOP
 bool tcp_connection::start_server()
 {
     if(tcp_connection::m_status == tcp_connection::status::DISCONNECTED)
@@ -99,10 +99,8 @@ void tcp_connection::disconnect()
     // Do not raise signal, since this function is called externally.
     tcp_connection::update_status(tcp_connection::status::DISCONNECTED, false);
 }
-void tcp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback)
-{
-    tcp_connection::m_rx_callback = callback;
-}
+
+// PUBLIC METHODS: CALLBACK ATTACHMENT
 void tcp_connection::attach_connected_callback(std::function<void (uint16_t)> callback)
 {
     tcp_connection::m_connected_callback = callback;
@@ -111,6 +109,12 @@ void tcp_connection::attach_disconnected_callback(std::function<void(uint16_t)> 
 {
     tcp_connection::m_disconnected_callback = callback;
 }
+void tcp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback)
+{
+    tcp_connection::m_rx_callback = callback;
+}
+
+// PUBLIC METHODS: IO
 bool tcp_connection::tx(const uint8_t *data, uint32_t length)
 {
     // Check if connection is active.
@@ -134,6 +138,8 @@ bool tcp_connection::tx(const uint8_t *data, uint32_t length)
         return false;
     }
 }
+
+// PRIVATE METHODS
 void tcp_connection::async_accept()
 {
     tcp_connection::m_acceptor.async_accept(tcp_connection::m_socket, boost::bind(&tcp_connection::accept_callback, this, boost::placeholders::_1));
@@ -203,22 +209,6 @@ tcp::endpoint tcp_connection::p_remote_endpoint() const
 }
 
 // CALLBACKS
-void tcp_connection::connect_callback(const boost::system::error_code &error)
-{
-    if(!error)
-    {
-        // Client has successfully connected to a server.  Update status.
-        tcp_connection::update_status(tcp_connection::status::CONNECTED);
-
-        // Start first asynchronous read.
-        tcp_connection::async_rx();
-    }
-    else
-    {
-        // Connection failed.  Update status.
-        tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
-    }
-}
 void tcp_connection::accept_callback(const boost::system::error_code &error)
 {
     if(!error)
@@ -233,6 +223,22 @@ void tcp_connection::accept_callback(const boost::system::error_code &error)
     {
         // Restart async_accept
         tcp_connection::async_accept();
+    }
+}
+void tcp_connection::connect_callback(const boost::system::error_code &error)
+{
+    if(!error)
+    {
+        // Client has successfully connected to a server.  Update status.
+        tcp_connection::update_status(tcp_connection::status::CONNECTED);
+
+        // Start first asynchronous read.
+        tcp_connection::async_rx();
+    }
+    else
+    {
+        // Connection failed.  Update status.
+        tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
     }
 }
 void tcp_connection::rx_callback(const boost::system::error_code &error, std::size_t bytes_read)
