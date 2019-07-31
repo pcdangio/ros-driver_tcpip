@@ -2,7 +2,7 @@
 
 // CONSTRUCTORS
 driver::driver(std::string local_ip, std::string remote_ip,
-               std::function<void(connection_type, uint16_t, uint8_t *, uint32_t)> rx_callback,
+               std::function<void(connection_type, uint16_t, uint8_t *, uint32_t, address)> rx_callback,
                std::function<void(uint16_t)> tcp_connected_callback,
                std::function<void(uint16_t)> tcp_disconnected_callback)
 {

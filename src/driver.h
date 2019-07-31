@@ -24,7 +24,7 @@ public:
     /// \param tcp_disconnected_callback A callback for handling TCP disconnection events.
     ///
     driver(std::string local_ip, std::string remote_ip,
-           std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> rx_callback,
+           std::function<void(connection_type, uint16_t, uint8_t*, uint32_t, address)> rx_callback,
            std::function<void(uint16_t)> tcp_connected_callback,
            std::function<void(uint16_t)> tcp_disconnected_callback);
     ~driver();
@@ -135,7 +135,7 @@ private:
     ///
     /// \brief m_callback_rx The callback to raise when messages are received.
     ///
-    std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> m_callback_rx;
+    std::function<void(connection_type, uint16_t, uint8_t*, uint32_t, address)> m_callback_rx;
 
     // CALLBACKS
     ///

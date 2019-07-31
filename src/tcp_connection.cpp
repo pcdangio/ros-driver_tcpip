@@ -109,7 +109,7 @@ void tcp_connection::attach_disconnected_callback(std::function<void(uint16_t)> 
 {
     tcp_connection::m_disconnected_callback = callback;
 }
-void tcp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback)
+void tcp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t *, uint32_t, address)> callback)
 {
     tcp_connection::m_rx_callback = callback;
 }
@@ -253,7 +253,12 @@ void tcp_connection::rx_callback(const boost::system::error_code &error, std::si
             std::memcpy(output_array, tcp_connection::m_buffer, bytes_read);
 
             // Raise the callback.
-            tcp_connection::m_rx_callback(connection_type::TCP, tcp_connection::m_socket.local_endpoint().port(), output_array, static_cast<uint32_t>(bytes_read));
+            // NOTE: Upon connection, the remote endpoint is stored in m_socket.
+            tcp_connection::m_rx_callback(connection_type::TCP,
+                                          tcp_connection::m_socket.local_endpoint().port(),
+                                          output_array,
+                                          static_cast<uint32_t>(bytes_read),
+                                          tcp_connection::m_socket.remote_endpoint().address());
         }
 
         // Start a new asynchronous receive.
