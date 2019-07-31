@@ -49,11 +49,10 @@ public:
     bool add_tcp_connection(tcp_connection::role role, uint16_t port);
     ///
     /// \brief add_udp_connection Adds a UDP connection to the driver.
-    /// \param local_port The local port for the connection to communicate through.
-    /// \param remote_port The remote port for the connection to communicate through.
+    /// \param port The port that the connection shall communicate through.
     /// \return TRUE if the connection was added, otherwise FALSE.
     ///
-    bool add_udp_connection(uint16_t local_port, uint16_t remote_port);
+    bool add_udp_connection(uint16_t port);
     ///
     /// \brief remove_connection Removes an existing TCP/UDP connection.
     /// \param type The type of connection to remove (TCP or UDP).
