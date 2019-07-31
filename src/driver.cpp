@@ -1,15 +1,19 @@
 #include "driver.h"
 
 // CONSTRUCTORS
-driver::driver(std::string local_ip, std::string remote_ip, std::function<void(connection_type, uint16_t, uint8_t *, uint32_t)> rx_callback, std::function<void(connection_type, uint16_t)> disconnect_callback)
+driver::driver(std::string local_ip, std::string remote_ip,
+               std::function<void(connection_type, uint16_t, uint8_t *, uint32_t)> rx_callback,
+               std::function<void(uint16_t)> tcp_connected_callback,
+               std::function<void(uint16_t)> tcp_disconnected_callback)
 {
     // Create and store local/remote IP addresses.
     driver::m_local_ip = boost::asio::ip::address::from_string(local_ip);
     driver::m_remote_ip = boost::asio::ip::address::from_string(remote_ip);
 
-    // Store local copy of rx/disconnect callbacks.
-    driver::m_rx_callback = rx_callback;
-    driver::m_disconnect_callback = disconnect_callback;
+    // Store local copy of callbacks.
+    driver::m_callback_rx = rx_callback;
+    driver::m_callback_tcp_connected = tcp_connected_callback;
+    driver::m_callback_tcp_disconnected = tcp_disconnected_callback;
 }
 driver::~driver()
 {
@@ -24,7 +28,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < tcp_pending_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::TCP, tcp_pending_ports.at(i), false);
+        driver::remove_connection(connection_type::TCP, tcp_pending_ports.at(i));
     }
 
     // Get list of active TCP ports.
@@ -36,7 +40,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < tcp_active_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::TCP, tcp_active_ports.at(i), false);
+        driver::remove_connection(connection_type::TCP, tcp_active_ports.at(i));
     }
 
     // Get list of UDP ports that are open.
@@ -48,7 +52,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < udp_active_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::UDP, udp_active_ports.at(i), false);
+        driver::remove_connection(connection_type::UDP, udp_active_ports.at(i));
     }
 }
 
@@ -69,7 +73,7 @@ bool driver::add_udp_connection(uint16_t local_port, uint16_t remote_port)
         // Create the UDP connection.
         udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, local_port), udp::endpoint(driver::m_remote_ip, remote_port));
         // Attach the rx callback.
-        new_udp->attach_rx_callback(driver::m_rx_callback);
+        new_udp->attach_rx_callback(driver::m_callback_rx);
         // Add connection to map.
         driver::m_udp_active.insert(std::make_pair(local_port, new_udp));
 
@@ -92,7 +96,7 @@ bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
         new_tcp->attach_connected_callback(std::bind(&driver::callback_tcp_connected, this, std::placeholders::_1));
         new_tcp->attach_disconnected_callback(std::bind(&driver::callback_tcp_disconnected, this, std::placeholders::_1));
         // NOTE: rx callback is forwarded from external.
-        new_tcp->attach_rx_callback(driver::m_rx_callback);
+        new_tcp->attach_rx_callback(driver::m_callback_rx);
 
         // Add connection to pending.
         driver::m_tcp_pending.insert(std::make_pair(port, new_tcp));
@@ -119,7 +123,7 @@ bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
         return false;
     }
 }
-bool driver::remove_connection(connection_type type, uint16_t port, bool signal)
+bool driver::remove_connection(connection_type type, uint16_t port)
 {
     switch(type)
     {
@@ -131,17 +135,13 @@ bool driver::remove_connection(connection_type type, uint16_t port, bool signal)
             // Get a pointer to the tcp connection.
             tcp_connection* tcp = driver::m_tcp_pending.at(port);
 
+            // Stop the connection.
+            // NOTE: This function causes the tcp_connection pointer to self delete.
+            tcp->disconnect();
+
             // Remove the entry from the map.
             driver::m_tcp_pending.erase(port);
 
-            // Delete the connection.
-            delete tcp;
-
-            // Raise the external disconnect callback.
-            if(signal)
-            {
-                driver::m_disconnect_callback(type, port);
-            }
             return true;
         }
         // Check active map.
@@ -150,17 +150,13 @@ bool driver::remove_connection(connection_type type, uint16_t port, bool signal)
             // Get a pointer to the tcp connection.
             tcp_connection* tcp = driver::m_tcp_active.at(port);
 
+            // Stop the connection.
+            // NOTE: This function causes the tcp_connection pointer to self delete.
+            tcp->disconnect();
+
             // Remove the entry from the map.
             driver::m_tcp_active.erase(port);
 
-            // Delete the connection.
-            delete tcp;
-
-            // Raise the external disconnect callback.
-            if(signal)
-            {
-                driver::m_disconnect_callback(type, port);
-            }
             return true;
         }
         else
@@ -180,12 +176,6 @@ bool driver::remove_connection(connection_type type, uint16_t port, bool signal)
 
             // Delete the connection.
             delete udp;
-
-            // Raise the external disconnect callback.
-            if(signal)
-            {
-                driver::m_disconnect_callback(type, port);
-            }
 
             return true;
         }
@@ -270,9 +260,15 @@ void driver::callback_tcp_connected(uint16_t port)
         driver::m_tcp_active.insert(std::make_pair(port, driver::m_tcp_pending.at(port)));
         driver::m_tcp_pending.erase(port);
     }
+
+    // Pass connected callback/signal externally.
+    driver::m_callback_tcp_connected(port);
 }
 void driver::callback_tcp_disconnected(uint16_t port)
 {
     // Remove the TCP connection from whichever map it's in.
     driver::remove_connection(connection_type::TCP, port);
+
+    // Pass disconnect callback/signal externally.
+    driver::m_callback_tcp_disconnected(port);
 }

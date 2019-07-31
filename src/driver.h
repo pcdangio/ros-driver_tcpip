@@ -15,14 +15,11 @@ class driver
 {
 public:
     // CONSTRUCTORS
-    ///
-    /// \brief driver Instantiates a new driver instance.
-    /// \param local_ip The local IP address to bind to.
-    /// \param remote_ip The remote IP address to communicate with.
-    /// \param rx_callback A callback function for handling received messages.
-    /// \param disconnect_callback A callback function for handling disconnect events.
-    ///
-    driver(std::string local_ip, std::string remote_ip, std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> rx_callback, std::function<void(connection_type, uint16_t)> disconnect_callback);
+
+    driver(std::string local_ip, std::string remote_ip,
+           std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> rx_callback,
+           std::function<void(uint16_t)> tcp_connected_callback,
+           std::function<void(uint16_t)> tcp_disconnected_callback);
     ~driver();
 
     // METHODS
@@ -42,10 +39,9 @@ public:
     /// \brief remove_connection Removes an existing TCP/UDP connection.
     /// \param type The type of connection to remove (TCP or UDP).
     /// \param port The port of the connection.
-    /// \param signal Indicates if the method should signal the disconnect callback.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
-    bool remove_connection(connection_type type, uint16_t port, bool signal = true);
+    bool remove_connection(connection_type type, uint16_t port);
     ///
     /// \brief tx Transmits data over a connection.
     /// \param type The connection type to transmit via.
@@ -84,14 +80,10 @@ private:
     /// \brief m_remote_ip Stores the remote IP address for all connections.
     ///
     boost::asio::ip::address m_remote_ip;
-    ///
-    /// \brief m_rx_callback The callback for handling received messages.
-    ///
-    std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> m_rx_callback;
-    ///
-    /// \brief m_disconnect_callback The callback for handling disconnect events.
-    ///
-    std::function<void(connection_type, uint16_t)> m_disconnect_callback;
+
+    std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> m_callback_rx;
+    std::function<void(uint16_t)> m_callback_tcp_connected;
+    std::function<void(uint16_t)> m_callback_tcp_disconnected;
 
     // CALLBACKS
     void callback_tcp_connected(uint16_t port);
