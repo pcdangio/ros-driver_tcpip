@@ -55,7 +55,7 @@ public:
     bool add_udp_connection(uint16_t port);
     ///
     /// \brief remove_connection Removes an existing TCP/UDP connection.
-    /// \param type The type of connection to remove (TCP or UDP).
+    /// \param type The protocol type of connection to remove (TCP or UDP).
     /// \param port The port of the connection.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
