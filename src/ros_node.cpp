@@ -13,9 +13,9 @@ ros_node::ros_node(int argc, char **argv)
 
     // Read standard parameters.
     std::string param_local_ip;
-    ros_node::m_node->param<std::string>("local_ip", param_local_ip, "192.168.1.243");
+    ros_node::m_node->param<std::string>("local_ip", param_local_ip, "192.168.1.2");
     std::string param_remote_ip;
-    ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.253");
+    ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.3");
 
     // Read connect port parameters.
     std::vector<int> param_tcp_server_ports;
