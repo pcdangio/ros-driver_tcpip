@@ -96,7 +96,8 @@ void tcp_connection::disconnect()
     tcp_connection::m_socket.close();
 
     // Update status (and ultimately self-delete)
-    tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+    // Do not raise signal, since this function is called externally.
+    tcp_connection::update_status(tcp_connection::status::DISCONNECTED, false);
 }
 void tcp_connection::attach_rx_callback(std::function<void(connection_type, uint16_t, uint8_t*, uint32_t)> callback)
 {
