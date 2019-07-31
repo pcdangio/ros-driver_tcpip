@@ -51,8 +51,7 @@ private:
 
     ros::ServiceServer m_service_add_tcp_connection;
     ros::ServiceServer m_service_add_udp_connection;
-    ros::ServiceServer m_service_remove_tcp_connection;
-    ros::ServiceServer m_service_remove_udp_connection;
+    ros::ServiceServer m_service_remove_connection;
     ///
     /// \brief m_tcp_rx The map of TCP RX publishers.
     ///
@@ -74,6 +73,9 @@ private:
     bool add_tcp_connection(tcp_connection::role role, uint16_t port);
     bool add_udp_connection(uint16_t port);
     bool remove_connection(connection_type type, uint16_t port);
+
+    void add_connection_topics(connection_type type, uint16_t port);
+    void remove_connection_topics(connection_type type, uint16_t port);
     ///
     /// \brief publish_active_connections Publishes active connections.
     ///
@@ -88,12 +90,8 @@ private:
     /// \param length The length of the data that was received.
     ///
     void callback_rx(connection_type type, uint16_t port, uint8_t* data, uint32_t length);
-    ///
-    /// \brief callback_disconnected Handles disconnect events for active connections.
-    /// \param type The connection type that was disconnected.
-    /// \param port The local port that was disconnected.
-    ///
-    void callback_disconnected(connection_type type, uint16_t port);
+    void callback_tcp_connected(uint16_t port);
+    void callback_tcp_disconnected(uint16_t port);
 
     // MESSAGE CALLBACKS
     ///
@@ -106,7 +104,7 @@ private:
     // SERVICE_CALLBACKS
     bool service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response);
     bool service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response);
-    bool service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response, connection_type type);
+    bool service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response);
     bool service_tcp_tx(driver_modem::SendTCPRequest& request, driver_modem::SendTCPResponse& response, uint16_t port);
 };
 

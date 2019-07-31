@@ -13,23 +13,24 @@ ros_node::ros_node(int argc, char **argv)
 
     // Read standard parameters.
     std::string param_local_ip;
-    ros_node::m_node->param<std::string>("local_ip", param_local_ip, "192.168.1.2");
+    ros_node::m_node->param<std::string>("local_ip", param_local_ip, "192.168.1.243");
     std::string param_remote_ip;
-    ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.3");
+    ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.253");
 
     // Read connect port parameters.
-    std::vector<int> param_tcp_server_ports;
-    ros_node::m_node->getParam("tcp_server_ports", param_tcp_server_ports);
-    std::vector<int> param_tcp_client_ports;
-    ros_node::m_node->getParam("tcp_client_ports", param_tcp_client_ports);
-    std::vector<int> param_udp_ports;
-    ros_node::m_node->getParam("udp_ports", param_udp_ports);
+    std::vector<int> param_tcp_server_ports = {3000};
+    //ros_node::m_node->getParam("tcp_server_ports", param_tcp_server_ports);
+    std::vector<int> param_tcp_client_ports = {3100};
+    //ros_node::m_node->getParam("tcp_client_ports", param_tcp_client_ports);
+    std::vector<int> param_udp_ports = {3200};
+    //ros_node::m_node->getParam("udp_ports", param_udp_ports);
 
     // Initialize driver.
     ros_node::m_driver = new driver(param_local_ip,
                                     param_remote_ip,
                                     std::bind(&ros_node::callback_rx, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4),
-                                    std::bind(&ros_node::callback_disconnected, this, std::placeholders::_1, std::placeholders::_2));
+                                    std::bind(&ros_node::callback_tcp_connected, this, std::placeholders::_1),
+                                    std::bind(&ros_node::callback_tcp_disconnected, this, std::placeholders::_1));
 
     // Set up active connections publisher.
     // This will publish each time the connections are modified.
@@ -39,8 +40,7 @@ ros_node::ros_node(int argc, char **argv)
     // Set up services for adding/removing connections.
     ros_node::m_service_add_tcp_connection = ros_node::m_node->advertiseService("add_tcp_connection", &ros_node::service_add_tcp_connection, this);
     ros_node::m_service_add_udp_connection = ros_node::m_node->advertiseService("add_udp_connection", &ros_node::service_add_udp_connection, this);
-    ros_node::m_service_remove_tcp_connection = ros_node::m_node->advertiseService<driver_modem::RemoveConnectionRequest, driver_modem::RemoveConnectionResponse>("remove_tcp_connection", std::bind(&ros_node::service_remove_connection, this, std::placeholders::_1, std::placeholders::_2, connection_type::TCP));
-    ros_node::m_service_remove_udp_connection = ros_node::m_node->advertiseService<driver_modem::RemoveConnectionRequest, driver_modem::RemoveConnectionResponse>("remove_udp_connection", std::bind(&ros_node::service_remove_connection, this, std::placeholders::_1, std::placeholders::_2, connection_type::UDP));
+    ros_node::m_service_remove_connection = ros_node::m_node->advertiseService("remove_connection", &ros_node::service_remove_connection, this);
 
     // Set up tx/rx publishers, subscribers, and services.
 
@@ -95,10 +95,65 @@ void ros_node::spin()
     // Stop the driver thread.
     ros_node::m_driver->stop();
 }
+
 bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port)
 {
-    // Add connection to driver.
     if(ros_node::m_driver->add_tcp_connection(role, port))
+    {
+        // Publish active connections, since connection will initially be in PENDING status.
+        ros_node::publish_active_connections();
+
+        // NOTE: TCP will update topics once becoming active through signal on connected tcp callback.
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+bool ros_node::add_udp_connection(uint16_t port)
+{
+    if(ros_node::m_driver->add_udp_connection(port, port))
+    {
+        // Add UDP topic.
+        ros_node::add_connection_topics(connection_type::UDP, port);
+
+        // Publish active connections.
+        ros_node::publish_active_connections();
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+bool ros_node::remove_connection(connection_type type, uint16_t port)
+{
+    // Instruct driver to remove connection.
+    if(ros_node::m_driver->remove_connection(type, port))
+    {
+        // Remove topics.
+        // NOTE: For TCP, driver will not generate disconnected callbacks when driver::remove_connection() is called.
+        ros_node::remove_connection_topics(type, port);
+
+        // Publish active connections.
+        ros_node::publish_active_connections();
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+
+void ros_node::add_connection_topics(connection_type type, uint16_t port)
+{
+    switch(type)
+    {
+    case connection_type::TCP:
     {
         // RX Publisher:
         // Generate topic name.
@@ -114,20 +169,9 @@ bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port)
         // Add new tx service server to the map.
         ros_node::m_tcp_tx.insert(std::make_pair(port, ros_node::m_node->advertiseService<driver_modem::SendTCPRequest, driver_modem::SendTCPResponse>(tx_topic.str(), std::bind(&ros_node::service_tcp_tx, this, std::placeholders::_1, std::placeholders::_2, port))));
 
-        // Publish updated connections.
-        ros_node::publish_active_connections();
-
-        return true;
+        break;
     }
-    else
-    {
-        return false;
-    }
-}
-bool ros_node::add_udp_connection(uint16_t port)
-{
-    // Add connection to driver.
-    if(ros_node::m_driver->add_udp_connection(port, port))
+    case connection_type::UDP:
     {
         // RX Publisher:
         // Generate topic name.
@@ -143,75 +187,59 @@ bool ros_node::add_udp_connection(uint16_t port)
         // Add new tx subscriber to the map.
         ros_node::m_udp_tx.insert(std::make_pair(port, ros_node::m_node->subscribe<driver_modem::DataPacket>(tx_topic.str(), 1, std::bind(&ros_node::callback_udp_tx, this, std::placeholders::_1, port))));
 
-        // Publish updated connections.
-        ros_node::publish_active_connections();
-
-        return true;
+        break;
     }
-    else
-    {
-        return false;
     }
 }
-bool ros_node::remove_connection(connection_type type, uint16_t port)
+void ros_node::remove_connection_topics(connection_type type, uint16_t port)
 {
-    // Remove the connection from the driver.
-    if(ros_node::m_driver->remove_connection(type, port))
+    // Remove publishers/subscribers/callbacks of the connection.
+    switch(type)
     {
-        // Remove publishers/subscribers/callbacks
-        switch(type)
-        {
-        case connection_type::TCP:
-        {
-            // Remove RX publisher
-            if(ros_node::m_tcp_rx.count(port) > 0)
-            {
-                // Cancel topic.
-                ros_node::m_tcp_rx.at(port).shutdown();
-                // Remove from map.
-                ros_node::m_tcp_rx.erase(port);
-            }
-            // Remove TX service
-            if(ros_node::m_tcp_tx.count(port) > 0)
-            {
-                // Cancel service.
-                ros_node::m_tcp_tx.at(port).shutdown();
-                // Remove from map.
-                ros_node::m_tcp_tx.erase(port);
-            }
-            break;
-        }
-        case connection_type::UDP:
-        {
-            // Remove RX publisher
-            if(ros_node::m_udp_rx.count(port) > 0)
-            {
-                // Cancel topic.
-                ros_node::m_udp_rx.at(port).shutdown();
-                // Remove from map.
-                ros_node::m_udp_rx.erase(port);
-            }
-            // Remove TX subscriber
-            if(ros_node::m_udp_tx.count(port) > 0)
-            {
-                // Cancel service.
-                ros_node::m_udp_tx.at(port).shutdown();
-                // Remove from map.
-                ros_node::m_udp_tx.erase(port);
-            }
-            break;
-        }
-        }
-
-        // Publish updated connections.
-        ros_node::publish_active_connections();
-
-        return true;
-    }
-    else
+    case connection_type::TCP:
     {
-        return false;
+        // Remove RX publisher
+        if(ros_node::m_tcp_rx.count(port) > 0)
+        {
+            // Cancel topic.
+            ros_node::m_tcp_rx.at(port).shutdown();
+            // Remove from map.
+            ros_node::m_tcp_rx.erase(port);
+        }
+        // Remove TX service
+        if(ros_node::m_tcp_tx.count(port) > 0)
+        {
+            // Cancel service.
+            ros_node::m_tcp_tx.at(port).shutdown();
+            // Remove from map.
+            ros_node::m_tcp_tx.erase(port);
+        }
+        break;
     }
+    case connection_type::UDP:
+    {
+        // Remove RX publisher
+        if(ros_node::m_udp_rx.count(port) > 0)
+        {
+            // Cancel topic.
+            ros_node::m_udp_rx.at(port).shutdown();
+            // Remove from map.
+            ros_node::m_udp_rx.erase(port);
+        }
+        // Remove TX subscriber
+        if(ros_node::m_udp_tx.count(port) > 0)
+        {
+            // Cancel service.
+            ros_node::m_udp_tx.at(port).shutdown();
+            // Remove from map.
+            ros_node::m_udp_tx.erase(port);
+        }
+        break;
+    }
+    }
+
+    // Publish updated connections.
+    ros_node::publish_active_connections();
 }
 void ros_node::publish_active_connections()
 {
@@ -265,7 +293,7 @@ bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest&
 
     return result;
 }
-bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response, connection_type type)
+bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
 {
     bool result = ros_node::remove_connection(static_cast<connection_type>(request.protocol), request.port);
     response.success = result;
@@ -307,8 +335,21 @@ void ros_node::callback_rx(connection_type type, uint16_t port, uint8_t *data, u
     }
     }
 }
-void ros_node::callback_disconnected(connection_type type, uint16_t port)
+void ros_node::callback_tcp_connected(uint16_t port)
 {
-    // Remove the associated topic/service.
-    ros_node::remove_connection(type, port);
+    // TCP has transitioned from pending to active.
+
+    // Add the associated topic/service.
+    ros_node::add_connection_topics(connection_type::TCP, port);
+
+    // Publish updated connections.
+    ros_node::publish_active_connections();
+}
+void ros_node::callback_tcp_disconnected(uint16_t port)
+{
+    // Remove the associated topic/service.  Driver has already internally removed connection.
+    ros_node::remove_connection_topics(connection_type::TCP, port);
+
+    // Publish updated connections.
+    ros_node::publish_active_connections();
 }
