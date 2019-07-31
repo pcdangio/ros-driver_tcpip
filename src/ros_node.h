@@ -8,8 +8,10 @@
 #include <ros/ros.h>
 
 #include <driver_modem/DataPacket.h>
-#include <driver_modem/ModifyConnection.h>
-#include <driver_modem/TCPtx.h>
+#include <driver_modem/AddTCPConnection.h>
+#include <driver_modem/AddUDPConnection.h>
+#include <driver_modem/RemoveConnection.h>
+#include <driver_modem/SendTCP.h>
 
 ///
 /// \brief Implements the driver's ROS node functionality.
@@ -42,14 +44,12 @@ private:
     /// \brief m_node The node's handle.
     ///
     ros::NodeHandle* m_node;
+
+    // VARIABLES: PUBLISHERS
     ///
     /// \brief m_publisher_active_connections The publisher for ActiveConnection messages.
     ///
     ros::Publisher m_publisher_active_connections;
-    ///
-    /// \brief m_service_modify_connection The service server for modifying connections.
-    ///
-    ros::ServiceServer m_service_modify_connection;
     ///
     /// \brief m_tcp_rx The map of TCP RX publishers.
     ///
@@ -58,6 +58,8 @@ private:
     /// \brief m_udp_rx The map of UDP RX publishers.
     ///
     std::map<uint16_t, ros::Publisher> m_udp_rx;
+
+    // VARIABLES: SUBSCRIBERS
     ///
     /// \brief m_udp_tx The map of UDP TX subscribers.
     ///
@@ -67,50 +69,120 @@ private:
     ///
     std::map<uint16_t, ros::ServiceServer> m_tcp_tx;
 
-    // METHODS
+    // VARIABLES: SERVICES
+    ///
+    /// \brief m_service_add_tcp_connection Service for adding TCP connections.
+    ///
+    ros::ServiceServer m_service_add_tcp_connection;
+    ///
+    /// \brief m_service_add_udp_connection Service for adding UDP connections.
+    ///
+    ros::ServiceServer m_service_add_udp_connection;
+    ///
+    /// \brief m_service_remove_connection Service for removing TCP/UDP connections.
+    ///
+    ros::ServiceServer m_service_remove_connection;
+
+    // METHODS: CONNECTION MANAGEMENT
+    ///
+    /// \brief add_tcp_connection Instructs the driver to add a new TCP connection.
+    /// \param role The role of the new TCP connection.
+    /// \param port The port of the new TCP connection.
+    /// \return TRUE if the new connection was added, otherwise FALSE.
+    ///
+    bool add_tcp_connection(tcp_connection::role role, uint16_t port);
+    ///
+    /// \brief add_udp_connection Instructs the driver to add a new UDP connection.
+    /// \param port The port of the new UDP connection.
+    /// \return TRUE if the new connection was added, otherwise FALSE.
+    ///
+    bool add_udp_connection(uint16_t port);
+    ///
+    /// \brief remove_connection Instructs the driver to remove a TCP or UDP connection
+    /// \param type The type of the connection to remove.
+    /// \param port The port of the connection to remove.
+    /// \return TRUE if the connection was removed, otherwise FALSE.
+    ///
+    bool remove_connection(connection_type type, uint16_t port);
+
+    // METHODS: TOPIC MANAGEMENT
+    ///
+    /// \brief add_connection_topics Sets up publishers, subscribers, and services for new connections.
+    /// \param type The type of connection added.
+    /// \param port The port of the connection added.
+    ///
+    void add_connection_topics(connection_type type, uint16_t port);
+    ///
+    /// \brief remove_connection_topics Removes publishers, subscribers, and services for closed connections.
+    /// \param type The type of connected removed.
+    /// \param port The port of the connection removed.
+    ///
+    void remove_connection_topics(connection_type type, uint16_t port);
+
+    // METHODS: MISC
     ///
     /// \brief publish_active_connections Publishes active connections.
     ///
     void publish_active_connections();
 
-    // CALLBACKS
+    // CALLBACKS: DRIVER
     ///
-    /// \brief rx_callback Handles the RX of data for all connections.
+    /// \brief callback_tcp_connected The callback for handling driver TCP connection events.
+    /// \param port The port of the new TCP connection.
+    ///
+    void callback_tcp_connected(uint16_t port);
+    ///
+    /// \brief callback_tcp_disconnected The callback for handling driver TCP disconnection events.
+    /// \param port The port of the closed TCP connection.
+    ///
+    void callback_tcp_disconnected(uint16_t port);
+    ///
+    /// \brief callback_rx Handles the RX of data for all connections.
     /// \param type The connection type that received the data.
-    /// \param local_port The local port that received the data.
+    /// \param port The local port that received the data.
     /// \param data The data that was received.
     /// \param length The length of the data that was received.
     ///
-    void rx_callback(connection_type type, uint16_t local_port, uint8_t* data, uint32_t length);
-    ///
-    /// \brief disconnect_callback Handles disconnect events for active connections.
-    /// \param type The connection type that was disconnected.
-    /// \param local_port The local port that was disconnected.
-    ///
-    void disconnect_callback(connection_type type, uint16_t local_port);
+    void callback_rx(connection_type type, uint16_t port, uint8_t* data, uint32_t length);
 
-    // MESSAGE CALLBACKS
+    // CALLBACKS: SUBSCRIBERS
     ///
-    /// \brief udp_tx Forwards received DataPacket messages from udp tx topics.
+    /// \brief callback_udp_tx Forwards received DataPacket messages from udp tx topics.
     /// \param message The message to forward.
-    /// \param local_port The local port to forward the message to.
+    /// \param port The local port to forward the message to.
     ///
-    void udp_tx(const driver_modem::DataPacketConstPtr& message, uint16_t local_port);
+    void callback_udp_tx(const driver_modem::DataPacketConstPtr& message, uint16_t port);
+
+    // CALLBACKS: SERVICES
     ///
-    /// \brief tcp_tx A service that forwards DataPacket messages from tcp tx services.
-    /// \param request The service request containing the data to forward.
-    /// \param response The response indicating if the service succeeded.
-    /// \param local_port The local port to forward the data to.
-    /// \return TRUE if the data was forwarded, otherwise FALSE.
+    /// \brief service_add_tcp_connection Service callback for adding TCP connectins.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool tcp_tx(driver_modem::TCPtxRequest& request, driver_modem::TCPtxResponse& response, uint16_t local_port);
+    bool service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response);
     ///
-    /// \brief modify_connection A service that enables connections to be modified.
-    /// \param request The service request containing the modify command.
-    /// \param response The response indicating if the service succeeded.
-    /// \return TRUE if the connection was modified, otherwise FALSE.
+    /// \brief service_add_udp_connection Service callback for adding UDP connections.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool modify_connection(driver_modem::ModifyConnectionRequest& request, driver_modem::ModifyConnectionResponse& response);
+    bool service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response);
+    ///
+    /// \brief service_remove_connection Service callback for removing TCP/UDP connections.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
+    ///
+    bool service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response);
+    ///
+    /// \brief service_tcp_tx Service for transmitting data over a TCP connection.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \param port The TCP port to communicate the data over.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
+    ///
+    bool service_tcp_tx(driver_modem::SendTCPRequest& request, driver_modem::SendTCPResponse& response, uint16_t port);
 };
 
 #endif // ROS_NODE_H

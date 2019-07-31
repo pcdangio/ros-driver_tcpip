@@ -51,7 +51,7 @@ Any data that is read from the network device will be published on the "rx" topi
 #### Published Topics
 * **`~/active_connections`** ([driver_modem/ActiveConnections](https://github.com/pcdangio/ros-driver_modem/blob/master/msg/ActiveConnections.msg))
 
-        Publishes (with latching) a list of all active connections manged by the driver each time a new connection is added or an existing connection is removed.
+        Publishes (with latching) a list of all active connections managed by the driver each time a new connection is added or an existing connection is removed.
 
 * **`~/PROTOCOL_TYPE/PORT/rx`** ([driver_modem/DataPacket](https://github.com/pcdangio/ros-driver_modem/blob/master/msg/DataPacket.msg))
 
@@ -66,15 +66,22 @@ Any data that is read from the network device will be published on the "rx" topi
         PORT: The port number of the connection.
 
 #### Services
-* **`~/modify_connection`** ([driver_modem/ModifyConnection](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/ModifyConnection.srv))
+* **`~/add_tcp_connection`** ([driver_modem/AddTCPConnection](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/AddTCPConnection.srv))
 
-        Adds or removes a connection to the driver.
+        Adds a new TCP connection to the driver.
 
-* **`~/tcp/PORT/tx`** ([driver_modem/TCPtx](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/TCPtx.srv))
+* **`~/add_udp_connection`** ([driver_modem/AddUDPConnection](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/AddUDPConnection.srv))
+
+        Adds a new UDP connection to the driver.
+
+* **`~/remove_connection`** ([driver_modem/RemoveConnection](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/RemoveConnection.srv))
+
+        Removes a TCP or UDP connection from the driver.
+
+* **`~/tcp/PORT/tx`** ([driver_modem/SendTCP](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/SendTCP.srv))
 
         Accepts data to send via TCP over a particular port.  This is implemented as a service to indicate success.
         PORT: The port number of the connection.
-
 
 #### Runtime Parameters
 
@@ -90,24 +97,19 @@ Any data that is read from the network device will be published on the "rx" topi
 
 These parameters are optional and can be used to create TCP and/or UDP connections on node startup.
 
-* **`~/tcp_local_ports`** (vector<uint16>, default: empty)
+* **`~/tcp_server_ports`** (vector<uint16>, default: empty)
 
-        The list of local TCP ports to open for connections.
-        NOTE: The modem acts as a TCP client and only sends connection requests.  The connection will fail if a TCP server is not at the remote IP.
+        The list of TCP ports to open as a TCP server.
+        NOTE: These ports will enter the "pending" state until a TCP client connects.
 
-* **`~/tcp_remote_ports`** (vector<uint16>, default: empty)
+* **`~/tcp_client_ports`** (vector<uint16>, default: empty)
 
-        The corresponding list of remote TCP ports to communicate with.
-        NOTE: This list must be the same size as the tcp_local_ports parameter.
+        The list of TCP ports to open as a TCP client.
+        NOTE: These ports will enter the "pending" state until they are able to connect to a TCP server.
 
-* **`~/udp_local_ports`** (vector<uint16>, default: empty)
+* **`~/udp_ports`** (vector<uint16>, default: empty)
 
-        The list of local UDP ports to open for connections.
-
-* **`~/udp_remote_ports`** (vector<uint16>, default: empty)
-
-        The corresponding list of remote UDP ports to communicate with.
-        NOTE: This list must be the same size as the udp_local_ports parameter.
+        The list of UDP ports to open for communication.
 
 
 ## Bugs & Feature Requests

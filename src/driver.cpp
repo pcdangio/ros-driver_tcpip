@@ -1,46 +1,62 @@
 #include "driver.h"
 
 // CONSTRUCTORS
-driver::driver(std::string local_ip, std::string remote_ip, std::function<void(connection_type, uint16_t, uint8_t *, uint32_t)> rx_callback, std::function<void(connection_type, uint16_t)> disconnect_callback)
+driver::driver(std::string local_ip, std::string remote_ip,
+               std::function<void(connection_type, uint16_t, uint8_t *, uint32_t)> rx_callback,
+               std::function<void(uint16_t)> tcp_connected_callback,
+               std::function<void(uint16_t)> tcp_disconnected_callback)
 {
     // Create and store local/remote IP addresses.
     driver::m_local_ip = boost::asio::ip::address::from_string(local_ip);
     driver::m_remote_ip = boost::asio::ip::address::from_string(remote_ip);
 
-    // Store local copy of rx/disconnect callbacks.
-    driver::m_rx_callback = rx_callback;
-    driver::m_disconnect_callback = disconnect_callback;
+    // Store local copy of callbacks.
+    driver::m_callback_rx = rx_callback;
+    driver::m_callback_tcp_connected = tcp_connected_callback;
+    driver::m_callback_tcp_disconnected = tcp_disconnected_callback;
 }
 driver::~driver()
 {
     // Close and delete any remaining connections.
 
-    // Get list of TCP ports that are open.
-    std::vector<uint16_t> tcp_ports;
-    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_connections.begin(); it != driver::m_tcp_connections.end(); it++)
+    // Get list of pending TCP ports.
+    std::vector<uint16_t> tcp_pending_ports;
+    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_pending.begin(); it != driver::m_tcp_pending.end(); it++)
     {
-        tcp_ports.push_back(it->first);
+        tcp_pending_ports.push_back(it->first);
     }
     // Remove each connection.
-    for(uint32_t i = 0; i < tcp_ports.size(); i++)
+    for(uint32_t i = 0; i < tcp_pending_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::TCP, tcp_ports.at(i), false);
+        driver::remove_connection(connection_type::TCP, tcp_pending_ports.at(i));
+    }
+
+    // Get list of active TCP ports.
+    std::vector<uint16_t> tcp_active_ports;
+    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_active.begin(); it != driver::m_tcp_active.end(); it++)
+    {
+        tcp_active_ports.push_back(it->first);
+    }
+    // Remove each connection.
+    for(uint32_t i = 0; i < tcp_active_ports.size(); i++)
+    {
+        driver::remove_connection(connection_type::TCP, tcp_active_ports.at(i));
     }
 
     // Get list of UDP ports that are open.
-    std::vector<uint16_t> udp_ports;
-    for(std::map<uint16_t, udp_connection*>::iterator it = driver::m_udp_connections.begin(); it != driver::m_udp_connections.end(); it++)
+    std::vector<uint16_t> udp_active_ports;
+    for(std::map<uint16_t, udp_connection*>::iterator it = driver::m_udp_active.begin(); it != driver::m_udp_active.end(); it++)
     {
-        udp_ports.push_back(it->first);
+        udp_active_ports.push_back(it->first);
     }
     // Remove each connection.
-    for(uint32_t i = 0; i < udp_ports.size(); i++)
+    for(uint32_t i = 0; i < udp_active_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::UDP, udp_ports.at(i), false);
+        driver::remove_connection(connection_type::UDP, udp_active_ports.at(i));
     }
 }
 
-// METHODS
+// PUBLIC METHODS: START/STOP
 void driver::start()
 {
     driver::m_thread = boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(driver::m_service)));
@@ -50,81 +66,99 @@ void driver::stop()
     driver::m_service.stop();
     driver::m_thread.join();
 }
-bool driver::add_connection(connection_type type, uint16_t local_port, uint16_t remote_port)
+
+// PUBLIC METHODS: CONNECTION MANAGEMENT
+bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
 {
-    switch(type)
+    // Check if the connection already exists.
+    if(driver::m_tcp_pending.count(port) == 0 && driver::m_tcp_active.count(port) == 0 && role != tcp_connection::role::UNASSIGNED)
     {
-    case connection_type::TCP:
-    {
-        // Check if the connection already exists.
-        if(driver::m_tcp_connections.count(local_port) == 0)
-        {
-            // Create the TCP connection.
-            tcp_connection* new_tcp = new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, local_port), tcp::endpoint(driver::m_remote_ip, remote_port));
-            // Try to connect.
-            if(new_tcp->connect())
-            {
-                // Attach the rx callback.
-                new_tcp->attach_rx_callback(driver::m_rx_callback);
-                // Attach the internal disconnect callback.
-                new_tcp->attach_disconnect_callback(std::bind(&driver::disconnect_callback, this, std::placeholders::_1));
-                // Add connection to map.
-                driver::m_tcp_connections.insert(std::make_pair(local_port, new_tcp));
+        // Create the TCP connection.
+        tcp_connection* new_tcp = new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, port));
 
-                return true;
-            }
-            else
-            {
-                return false;
-            }
-        }
-        else
+        // Add the connected/disconnected/rx callbacks.
+        new_tcp->attach_connected_callback(std::bind(&driver::callback_tcp_connected, this, std::placeholders::_1));
+        new_tcp->attach_disconnected_callback(std::bind(&driver::callback_tcp_disconnected, this, std::placeholders::_1));
+        // NOTE: rx callback is forwarded from external.
+        new_tcp->attach_rx_callback(driver::m_callback_rx);
+
+        // Add connection to pending.
+        driver::m_tcp_pending.insert(std::make_pair(port, new_tcp));
+
+        switch(role)
         {
+        case tcp_connection::role::UNASSIGNED:
+        {
+            // This case will never occur due to if condition.
             return false;
         }
+        case tcp_connection::role::SERVER:
+        {
+            return new_tcp->start_server();
+        }
+        case tcp_connection::role::CLIENT:
+        {
+            return new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
+        }
+        }
     }
-    case connection_type::UDP:
+    else
     {
-        if(driver::m_udp_connections.count(local_port) == 0)
-        {
-            // Create the UDP connection.
-            udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, local_port), udp::endpoint(driver::m_remote_ip, remote_port));
-            // Attach the rx callback.
-            new_udp->attach_rx_callback(driver::m_rx_callback);
-            // Add connection to map.
-            driver::m_udp_connections.insert(std::make_pair(local_port, new_udp));
-
-            return true;
-        }
-        else
-        {
-            return false;
-        }
-    }
+        return false;
     }
 }
-bool driver::remove_connection(connection_type type, uint16_t local_port, bool signal)
+bool driver::add_udp_connection(uint16_t local_port, uint16_t remote_port)
+{
+    if(driver::m_udp_active.count(local_port) == 0)
+    {
+        // Create the UDP connection.
+        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, local_port), udp::endpoint(driver::m_remote_ip, remote_port));
+        // Attach the rx callback.
+        new_udp->attach_rx_callback(driver::m_callback_rx);
+        // Add connection to map.
+        driver::m_udp_active.insert(std::make_pair(local_port, new_udp));
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
+}
+bool driver::remove_connection(connection_type type, uint16_t port)
 {
     switch(type)
     {
     case connection_type::TCP:
     {
-        if(driver::m_tcp_connections.count(local_port) > 0)
+        // Check pending map.
+        if(driver::m_tcp_pending.count(port) > 0)
         {
             // Get a pointer to the tcp connection.
-            tcp_connection* tcp = driver::m_tcp_connections.at(local_port);
+            tcp_connection* tcp = driver::m_tcp_pending.at(port);
+
+            // Stop the connection.
+            // NOTE: This function causes the tcp_connection pointer to self delete.
+            tcp->disconnect();
 
             // Remove the entry from the map.
-            driver::m_tcp_connections.erase(local_port);
+            driver::m_tcp_pending.erase(port);
 
-            // Delete the connection.
-            delete tcp;
+            return true;
+        }
+        // Check active map.
+        else if(driver::m_tcp_active.count(port) > 0)
+        {
+            // Get a pointer to the tcp connection.
+            tcp_connection* tcp = driver::m_tcp_active.at(port);
 
-            // Raise the external disconnect callback.
-            if(signal)
-            {
-                driver::m_disconnect_callback(type, local_port);
-            }
+            // Stop the connection.
+            // NOTE: This function causes the tcp_connection pointer to self delete.
+            tcp->disconnect();
+
+            // Remove the entry from the map.
+            driver::m_tcp_active.erase(port);
+
             return true;
         }
         else
@@ -134,23 +168,17 @@ bool driver::remove_connection(connection_type type, uint16_t local_port, bool s
     }
     case connection_type::UDP:
     {
-        if(driver::m_udp_connections.count(local_port) > 0)
+        if(driver::m_udp_active.count(port) > 0)
         {
             // Get a pointer to the udp connection.
-            udp_connection* udp = driver::m_udp_connections.at(local_port);
+            udp_connection* udp = driver::m_udp_active.at(port);
 
             // Remove the entry from the map.
-            driver::m_udp_connections.erase(local_port);
+            driver::m_udp_active.erase(port);
 
             // Delete the connection.
             delete udp;
 
-            // Raise the external disconnect callback.
-            if(signal)
-            {
-                driver::m_disconnect_callback(type, local_port);
-            }
-
             return true;
         }
         else
@@ -160,15 +188,17 @@ bool driver::remove_connection(connection_type type, uint16_t local_port, bool s
     }
     }
 }
-bool driver::tx(connection_type type, uint16_t local_port, const uint8_t *data, uint32_t length)
+
+// PUBLIC METHODS: IO
+bool driver::tx(connection_type type, uint16_t port, const uint8_t *data, uint32_t length)
 {
     switch(type)
     {
     case connection_type::TCP:
     {
-        if(driver::m_tcp_connections.count(local_port) > 0)
+        if(driver::m_tcp_active.count(port) > 0)
         {
-            return driver::m_tcp_connections.at(local_port)->tx(data, length);
+            return driver::m_tcp_active.at(port)->tx(data, length);
         }
         else
         {
@@ -177,9 +207,9 @@ bool driver::tx(connection_type type, uint16_t local_port, const uint8_t *data, 
     }
     case connection_type::UDP:
     {
-        if(driver::m_udp_connections.count(local_port) > 0)
+        if(driver::m_udp_active.count(port) > 0)
         {
-            driver::m_udp_connections.at(local_port)->tx(data, length);
+            driver::m_udp_active.at(port)->tx(data, length);
             return true;
         }
         else
@@ -191,28 +221,58 @@ bool driver::tx(connection_type type, uint16_t local_port, const uint8_t *data, 
 }
 
 // PROPERTIES
-std::vector<std::pair<connection_type, uint16_t>> driver::p_connections()
+std::vector<uint16_t> driver::p_pending_tcp_connections() const
 {
-    std::vector<std::pair<connection_type, uint16_t>> output;
+    std::vector<uint16_t> output;
 
-    // Iterate over connections and build output list.
-    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_connections.begin(); it != driver::m_tcp_connections.end(); it++)
+    for(std::map<uint16_t, tcp_connection*>::const_iterator it = driver::m_tcp_pending.cbegin(); it != driver::m_tcp_pending.cend(); it++)
     {
-        output.push_back(std::make_pair(connection_type::TCP, it->first));
+        output.push_back(it->first);
     }
-    for(std::map<uint16_t, udp_connection*>::iterator it = driver::m_udp_connections.begin(); it != driver::m_udp_connections.end(); it++)
+
+    return output;
+}
+std::vector<uint16_t> driver::p_active_tcp_connections() const
+{
+    std::vector<uint16_t> output;
+
+    for(std::map<uint16_t, tcp_connection*>::const_iterator it = driver::m_tcp_active.cbegin(); it != driver::m_tcp_active.cend(); it++)
     {
-        output.push_back(std::make_pair(connection_type::UDP, it->first));
+        output.push_back(it->first);
+    }
+
+    return output;
+}
+std::vector<uint16_t> driver::p_active_udp_connections() const
+{
+    std::vector<uint16_t> output;
+
+    for(std::map<uint16_t, udp_connection*>::const_iterator it = driver::m_udp_active.cbegin(); it != driver::m_udp_active.cend(); it++)
+    {
+        output.push_back(it->first);
     }
 
     return output;
 }
 
 // CALLBACKS
-void driver::disconnect_callback(uint16_t local_port)
+void driver::callback_tcp_connected(uint16_t port)
 {
-    // One of the tcp connections has disconnected.
+    // Move TCP connection from pending to active map.
+    if(driver::m_tcp_pending.count(port) > 0)
+    {
+        driver::m_tcp_active.insert(std::make_pair(port, driver::m_tcp_pending.at(port)));
+        driver::m_tcp_pending.erase(port);
+    }
 
-    // Remove the connection from the map.
-    driver::remove_connection(connection_type::TCP, local_port);
+    // Pass connected callback/signal externally.
+    driver::m_callback_tcp_connected(port);
+}
+void driver::callback_tcp_disconnected(uint16_t port)
+{
+    // Remove the TCP connection from whichever map it's in.
+    driver::remove_connection(connection_type::TCP, port);
+
+    // Pass disconnect callback/signal externally.
+    driver::m_callback_tcp_disconnected(port);
 }

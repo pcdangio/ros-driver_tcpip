@@ -1,0 +1,5 @@
+# Adds a new UDP connection to the modem.
+
+uint16  port        # The port that the UDP connection will communicate over
+---
+bool    success     # Indicates if the addition of the connection was successful
