@@ -115,7 +115,7 @@ bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port)
 }
 bool ros_node::add_udp_connection(uint16_t port)
 {
-    if(ros_node::m_driver->add_udp_connection(port, port))
+    if(ros_node::m_driver->add_udp_connection(port))
     {
         // Add UDP topic.
         ros_node::add_connection_topics(connection_type::UDP, port);
