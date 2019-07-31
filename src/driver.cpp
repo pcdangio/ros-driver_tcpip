@@ -56,7 +56,7 @@ driver::~driver()
     }
 }
 
-// METHODS
+// PUBLIC METHODS: START/STOP
 void driver::start()
 {
     driver::m_thread = boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(driver::m_service)));
@@ -66,24 +66,8 @@ void driver::stop()
     driver::m_service.stop();
     driver::m_thread.join();
 }
-bool driver::add_udp_connection(uint16_t local_port, uint16_t remote_port)
-{
-    if(driver::m_udp_active.count(local_port) == 0)
-    {
-        // Create the UDP connection.
-        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, local_port), udp::endpoint(driver::m_remote_ip, remote_port));
-        // Attach the rx callback.
-        new_udp->attach_rx_callback(driver::m_callback_rx);
-        // Add connection to map.
-        driver::m_udp_active.insert(std::make_pair(local_port, new_udp));
 
-        return true;
-    }
-    else
-    {
-        return false;
-    }
-}
+// PUBLIC METHODS: CONNECTION MANAGEMENT
 bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
 {
     // Check if the connection already exists.
@@ -117,6 +101,24 @@ bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
             return new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
         }
         }
+    }
+    else
+    {
+        return false;
+    }
+}
+bool driver::add_udp_connection(uint16_t local_port, uint16_t remote_port)
+{
+    if(driver::m_udp_active.count(local_port) == 0)
+    {
+        // Create the UDP connection.
+        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, local_port), udp::endpoint(driver::m_remote_ip, remote_port));
+        // Attach the rx callback.
+        new_udp->attach_rx_callback(driver::m_callback_rx);
+        // Add connection to map.
+        driver::m_udp_active.insert(std::make_pair(local_port, new_udp));
+
+        return true;
     }
     else
     {
@@ -186,6 +188,8 @@ bool driver::remove_connection(connection_type type, uint16_t port)
     }
     }
 }
+
+// PUBLIC METHODS: IO
 bool driver::tx(connection_type type, uint16_t port, const uint8_t *data, uint32_t length)
 {
     switch(type)
