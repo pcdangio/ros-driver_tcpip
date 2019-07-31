@@ -99,25 +99,25 @@ private:
     bool add_udp_connection(uint16_t port);
     ///
     /// \brief remove_connection Instructs the driver to remove a TCP or UDP connection
-    /// \param type The type of the connection to remove.
+    /// \param type The protocol type of the connection to remove.
     /// \param port The port of the connection to remove.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
-    bool remove_connection(connection_type type, uint16_t port);
+    bool remove_connection(protocol type, uint16_t port);
 
     // METHODS: TOPIC MANAGEMENT
     ///
     /// \brief add_connection_topics Sets up publishers, subscribers, and services for new connections.
-    /// \param type The type of connection added.
+    /// \param type The protocol type of connection added.
     /// \param port The port of the connection added.
     ///
-    void add_connection_topics(connection_type type, uint16_t port);
+    void add_connection_topics(protocol type, uint16_t port);
     ///
     /// \brief remove_connection_topics Removes publishers, subscribers, and services for closed connections.
-    /// \param type The type of connected removed.
+    /// \param type The protocol type of connected removed.
     /// \param port The port of the connection removed.
     ///
-    void remove_connection_topics(connection_type type, uint16_t port);
+    void remove_connection_topics(protocol type, uint16_t port);
 
     // METHODS: MISC
     ///
@@ -144,7 +144,7 @@ private:
     /// \param length The length of the data that was received.
     /// \param source The IP address of the data source.
     ///
-    void callback_rx(connection_type type, uint16_t port, uint8_t* data, uint32_t length, address source);
+    void callback_rx(protocol type, uint16_t port, uint8_t* data, uint32_t length, address source);
 
     // CALLBACKS: SUBSCRIBERS
     ///

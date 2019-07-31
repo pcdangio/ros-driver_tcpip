@@ -24,7 +24,7 @@ public:
     /// \param tcp_disconnected_callback A callback for handling TCP disconnection events.
     ///
     driver(std::string local_ip, std::string remote_ip,
-           std::function<void(connection_type, uint16_t, uint8_t*, uint32_t, address)> rx_callback,
+           std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> rx_callback,
            std::function<void(uint16_t)> tcp_connected_callback,
            std::function<void(uint16_t)> tcp_disconnected_callback);
     ~driver();
@@ -55,11 +55,11 @@ public:
     bool add_udp_connection(uint16_t port);
     ///
     /// \brief remove_connection Removes an existing TCP/UDP connection.
-    /// \param type The type of connection to remove (TCP or UDP).
+    /// \param type The protocol type of connection to remove (TCP or UDP).
     /// \param port The port of the connection.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
-    bool remove_connection(connection_type type, uint16_t port);
+    bool remove_connection(protocol type, uint16_t port);
 
     // METHODS: IO
     ///
@@ -71,7 +71,7 @@ public:
     /// \return TRUE if the transmit operation succeeded, otherwise FALSE.
     /// \note This method takes ownership of the data pointer.
     ///
-    bool tx(connection_type type, uint16_t port, const uint8_t* data, uint32_t length);
+    bool tx(protocol type, uint16_t port, const uint8_t* data, uint32_t length);
 
     // PROPERTIES
     ///
@@ -135,7 +135,7 @@ private:
     ///
     /// \brief m_callback_rx The callback to raise when messages are received.
     ///
-    std::function<void(connection_type, uint16_t, uint8_t*, uint32_t, address)> m_callback_rx;
+    std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> m_callback_rx;
 
     // CALLBACKS
     ///

@@ -2,7 +2,7 @@
 
 // CONSTRUCTORS
 driver::driver(std::string local_ip, std::string remote_ip,
-               std::function<void(connection_type, uint16_t, uint8_t *, uint32_t, address)> rx_callback,
+               std::function<void(protocol, uint16_t, uint8_t *, uint32_t, address)> rx_callback,
                std::function<void(uint16_t)> tcp_connected_callback,
                std::function<void(uint16_t)> tcp_disconnected_callback)
 {
@@ -28,7 +28,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < tcp_pending_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::TCP, tcp_pending_ports.at(i));
+        driver::remove_connection(protocol::TCP, tcp_pending_ports.at(i));
     }
 
     // Get list of active TCP ports.
@@ -40,7 +40,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < tcp_active_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::TCP, tcp_active_ports.at(i));
+        driver::remove_connection(protocol::TCP, tcp_active_ports.at(i));
     }
 
     // Get list of UDP ports that are open.
@@ -52,7 +52,7 @@ driver::~driver()
     // Remove each connection.
     for(uint32_t i = 0; i < udp_active_ports.size(); i++)
     {
-        driver::remove_connection(connection_type::UDP, udp_active_ports.at(i));
+        driver::remove_connection(protocol::UDP, udp_active_ports.at(i));
     }
 }
 
@@ -125,11 +125,11 @@ bool driver::add_udp_connection(uint16_t port)
         return false;
     }
 }
-bool driver::remove_connection(connection_type type, uint16_t port)
+bool driver::remove_connection(protocol type, uint16_t port)
 {
     switch(type)
     {
-    case connection_type::TCP:
+    case protocol::TCP:
     {
         // Check pending map.
         if(driver::m_tcp_pending.count(port) > 0)
@@ -166,7 +166,7 @@ bool driver::remove_connection(connection_type type, uint16_t port)
             return false;
         }
     }
-    case connection_type::UDP:
+    case protocol::UDP:
     {
         if(driver::m_udp_active.count(port) > 0)
         {
@@ -190,11 +190,11 @@ bool driver::remove_connection(connection_type type, uint16_t port)
 }
 
 // PUBLIC METHODS: IO
-bool driver::tx(connection_type type, uint16_t port, const uint8_t *data, uint32_t length)
+bool driver::tx(protocol type, uint16_t port, const uint8_t *data, uint32_t length)
 {
     switch(type)
     {
-    case connection_type::TCP:
+    case protocol::TCP:
     {
         if(driver::m_tcp_active.count(port) > 0)
         {
@@ -205,7 +205,7 @@ bool driver::tx(connection_type type, uint16_t port, const uint8_t *data, uint32
             return false;
         }
     }
-    case connection_type::UDP:
+    case protocol::UDP:
     {
         if(driver::m_udp_active.count(port) > 0)
         {
@@ -271,7 +271,7 @@ void driver::callback_tcp_connected(uint16_t port)
 void driver::callback_tcp_disconnected(uint16_t port)
 {
     // Remove the TCP connection from whichever map it's in.
-    driver::remove_connection(connection_type::TCP, port);
+    driver::remove_connection(protocol::TCP, port);
 
     // Pass disconnect callback/signal externally.
     driver::m_callback_tcp_disconnected(port);

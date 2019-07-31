@@ -28,8 +28,8 @@ DISTFILES += \
     srv/SendTCP.srv
 
 HEADERS += \
-    src/connection_type.h \
     src/driver.h \
+    src/protocol.h \
     src/ros_node.h \
     src/udp_connection.h \
     src/tcp_connection.h
