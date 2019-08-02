@@ -14,8 +14,8 @@ ros_node::ros_node(int argc, char **argv)
     // Read standard parameters.
     std::string param_local_ip;
     ros_node::m_node->param<std::string>("local_ip", param_local_ip, "192.168.1.2");
-    std::string param_remote_ip;
-    ros_node::m_node->param<std::string>("remote_host", param_remote_ip, "192.168.1.3");
+    std::string param_remote_host;
+    ros_node::m_node->param<std::string>("remote_host", param_remote_host, "192.168.1.3");
 
     // Read connect port parameters.
     std::vector<int> param_tcp_server_ports;
@@ -29,7 +29,7 @@ ros_node::ros_node(int argc, char **argv)
     try
     {
         ros_node::m_driver = new driver(param_local_ip,
-                                        param_remote_ip,
+                                        param_remote_host,
                                         std::bind(&ros_node::callback_rx, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
                                         std::bind(&ros_node::callback_tcp_connected, this, std::placeholders::_1),
                                         std::bind(&ros_node::callback_tcp_disconnected, this, std::placeholders::_1));
@@ -87,7 +87,7 @@ ros_node::ros_node(int argc, char **argv)
         ros_node::add_udp_connection(port);
     }
 
-    ROS_INFO_STREAM("Modem initialized.");
+    ROS_INFO_STREAM("Modem initialized with local IP: " << param_local_ip << " and remote host: " << param_remote_host);
 }
 ros_node::~ros_node()
 {
@@ -299,6 +299,8 @@ void ros_node::callback_tcp_connected(uint16_t port)
 
     // Publish updated connections.
     ros_node::publish_active_connections();
+
+    ROS_INFO_STREAM("TCP:" << port << " connected.");
 }
 void ros_node::callback_tcp_disconnected(uint16_t port)
 {
@@ -307,6 +309,8 @@ void ros_node::callback_tcp_disconnected(uint16_t port)
 
     // Publish updated connections.
     ros_node::publish_active_connections();
+
+    ROS_INFO_STREAM("TCP:" << port << " disconnected.");
 }
 void ros_node::callback_rx(protocol type, uint16_t port, uint8_t *data, uint32_t length, address source)
 {
@@ -346,25 +350,99 @@ void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, 
 // CALLBACKS: SERVICES
 bool ros_node::service_set_remote_host(driver_modem::SetRemoteHostRequest &request, driver_modem::SetRemoteHostResponse &response)
 {
-    response.success = ros_node::m_driver->set_remote_host(request.remote_host);
+    bool success = ros_node::m_driver->set_remote_host(request.remote_host);
+
+    if(success)
+    {
+        ROS_INFO_STREAM("Remote host successfully changed to: " << request.remote_host);
+    }
+    else
+    {
+        ROS_ERROR_STREAM("Could not set remote host: failed to resolve " << request.remote_host);
+    }
+
+    response.success = success;
 
     return true;
 }
 bool ros_node::service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response)
 {
-    response.success = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
+    bool success = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
+
+    std::string role;
+    if(request.role == request.ROLE_SERVER)
+    {
+        role = "server";
+    }
+    else if(request.role == request.ROLE_CLIENT)
+    {
+        role = "client";
+    }
+    else
+    {
+        role = std::to_string(request.role);
+    }
+
+    if(success)
+    {
+        ROS_INFO_STREAM("Added a new TCP " << role << " connection on port " << request.port);
+    }
+    else
+    {
+        ROS_ERROR_STREAM("Failed to add a new TCP " << role << " connection on port " << request.port);
+    }
+
+    response.success = success;
 
     return true;
 }
 bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response)
 {
-    response.success = ros_node::add_udp_connection(request.port);
+    bool success = ros_node::add_udp_connection(request.port);
+
+    if(success)
+    {
+        ROS_INFO_STREAM("Added a new UDP connection on port " << request.port);
+    }
+    else
+    {
+        ROS_ERROR_STREAM("Failed to add a new UDP connection on port " << request.port);
+    }
+
+    response.success = success;
 
     return true;
 }
 bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
 {
-    response.success = ros_node::remove_connection(static_cast<protocol>(request.protocol), request.port);
+    bool success = ros_node::remove_connection(static_cast<protocol>(request.protocol), request.port);
+
+    std::string protocol_string;
+
+    switch(static_cast<protocol>(request.protocol))
+    {
+    case protocol::TCP:
+    {
+        protocol_string = "TCP";
+        break;
+    }
+    case protocol::UDP:
+    {
+        protocol_string = "UDP";
+        break;
+    }
+    }
+
+    if(success)
+    {
+        ROS_INFO_STREAM("Removed " << protocol_string << " connection on port " << request.port);
+    }
+    else
+    {
+        ROS_ERROR_STREAM("Failed to remove " << protocol_string << " connection on port " << request.port);
+    }
+
+    response.success = success;
 
     return true;
 }
