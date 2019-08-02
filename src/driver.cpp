@@ -237,6 +237,10 @@ bool driver::tx(protocol type, uint16_t port, const uint8_t *data, uint32_t leng
 }
 
 // PROPERTIES
+std::string driver::p_remote_host()
+{
+    return driver::m_remote_ip.to_string();
+}
 std::vector<uint16_t> driver::p_pending_tcp_connections() const
 {
     std::vector<uint16_t> output;

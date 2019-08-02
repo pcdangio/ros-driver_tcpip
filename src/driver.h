@@ -75,6 +75,11 @@ public:
 
     // PROPERTIES
     ///
+    /// \brief p_remote_host Gets the current remote host of the driver.
+    /// \return The remote host of the driver.
+    ///
+    std::string p_remote_host();
+    ///
     /// \brief p_pending_tcp_connections Gets the list of pending TCP connections.
     /// \return The list of pending TCP connections.
     ///
