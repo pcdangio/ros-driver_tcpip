@@ -66,6 +66,15 @@ Any data that is read from the network device will be published on the "rx" topi
         PORT: The port number of the connection.
 
 #### Services
+* **`~/set_remote_host`** ([driver_modem/SetRemoteHost](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/SetRemoteHost.srv))
+
+        Sets the remote host that outgoing UDP and TCP connections will communicate with.
+        *NOTE* This will close all existing connections.
+
+* **`~/get_remote_host`** ([driver_modem/GetRemoteHost](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/GetRemoteHost.srv))
+
+        Gets the remote host that outgoing UDP and TCP connections will communicate with.
+
 * **`~/add_tcp_connection`** ([driver_modem/AddTCPConnection](https://github.com/pcdangio/ros-driver_modem/blob/master/srv/AddTCPConnection.srv))
 
         Adds a new TCP connection to the driver.
@@ -89,9 +98,9 @@ Any data that is read from the network device will be published on the "rx" topi
 
         The IP address of the local network interface to use for communication.
 
-* **`~/remote_ip`** (string, default: 192.168.1.3)
+* **`~/remote_host`** (string, default: 192.168.1.3)
 
-        The IP address of the remote device to communicate with.
+        The hostname or IP address of the remote device to communicate with.
 
 #### Connection Parameters
 
