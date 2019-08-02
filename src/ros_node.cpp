@@ -47,6 +47,9 @@ ros_node::ros_node(int argc, char **argv)
     // Use latching so new nodes always have the latest information.
     ros_node::m_publisher_active_connections = ros_node::m_node->advertise<driver_modem::ActiveConnections>("active_connections", 1, true);
 
+    // Set up service for setting remote host.
+    ros_node::m_service_set_remote_host = ros_node::m_node->advertiseService("set_remote_host", &ros_node::service_set_remote_host, this);
+
     // Set up services for adding/removing connections.
     ros_node::m_service_add_tcp_connection = ros_node::m_node->advertiseService("add_tcp_connection", &ros_node::service_add_tcp_connection, this);
     ros_node::m_service_add_udp_connection = ros_node::m_node->advertiseService("add_udp_connection", &ros_node::service_add_udp_connection, this);
@@ -341,30 +344,33 @@ void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, 
 }
 
 // CALLBACKS: SERVICES
+bool ros_node::service_set_remote_host(driver_modem::SetRemoteHostRequest &request, driver_modem::SetRemoteHostResponse &response)
+{
+    response.success = ros_node::m_driver->set_remote_host(request.remote_host);
+
+    return true;
+}
 bool ros_node::service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response)
 {
-    bool result = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
-    response.success = result;
+    response.success = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
 
-    return result;
+    return true;
 }
 bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response)
 {
-    bool result = ros_node::add_udp_connection(request.port);
-    response.success = result;
+    response.success = ros_node::add_udp_connection(request.port);
 
-    return result;
+    return true;
 }
 bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
 {
-    bool result = ros_node::remove_connection(static_cast<protocol>(request.protocol), request.port);
-    response.success = result;
+    response.success = ros_node::remove_connection(static_cast<protocol>(request.protocol), request.port);
 
-    return result;
+    return true;
 }
 bool ros_node::service_tcp_tx(driver_modem::SendTCPRequest &request, driver_modem::SendTCPResponse &response, uint16_t port)
 {
-    bool result = ros_node::m_driver->tx(protocol::TCP, port, request.packet.data.data(), static_cast<uint32_t>(request.packet.data.size()));
-    response.success = result;
-    return result;
+    response.success = ros_node::m_driver->tx(protocol::TCP, port, request.packet.data.data(), static_cast<uint32_t>(request.packet.data.size()));
+
+    return true;
 }
