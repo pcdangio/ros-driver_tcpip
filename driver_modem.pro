@@ -25,7 +25,8 @@ DISTFILES += \
     srv/AddTCPConnection.srv \
     srv/AddUDPConnection.srv \
     srv/RemoveConnection.srv \
-    srv/SendTCP.srv
+    srv/SendTCP.srv \
+    srv/SetRemoteHost.srv
 
 HEADERS += \
     src/driver.h \
