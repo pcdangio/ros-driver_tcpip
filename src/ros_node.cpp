@@ -15,7 +15,7 @@ ros_node::ros_node(int argc, char **argv)
     std::string param_local_ip;
     ros_node::m_node->param<std::string>("local_ip", param_local_ip, "192.168.1.2");
     std::string param_remote_ip;
-    ros_node::m_node->param<std::string>("remote_ip", param_remote_ip, "192.168.1.3");
+    ros_node::m_node->param<std::string>("remote_host", param_remote_ip, "192.168.1.3");
 
     // Read connect port parameters.
     std::vector<int> param_tcp_server_ports;
@@ -26,11 +26,21 @@ ros_node::ros_node(int argc, char **argv)
     ros_node::m_node->getParam("udp_ports", param_udp_ports);
 
     // Initialize driver.
-    ros_node::m_driver = new driver(param_local_ip,
-                                    param_remote_ip,
-                                    std::bind(&ros_node::callback_rx, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
-                                    std::bind(&ros_node::callback_tcp_connected, this, std::placeholders::_1),
-                                    std::bind(&ros_node::callback_tcp_disconnected, this, std::placeholders::_1));
+    try
+    {
+        ros_node::m_driver = new driver(param_local_ip,
+                                        param_remote_ip,
+                                        std::bind(&ros_node::callback_rx, this, std::placeholders::_1, std::placeholders::_2, std::placeholders::_3, std::placeholders::_4, std::placeholders::_5),
+                                        std::bind(&ros_node::callback_tcp_connected, this, std::placeholders::_1),
+                                        std::bind(&ros_node::callback_tcp_disconnected, this, std::placeholders::_1));
+    }
+    catch (std::exception& e)
+    {
+        ROS_FATAL_STREAM(e.what());
+        delete ros_node::m_node;
+        exit(1);
+    }
+
 
     // Set up active connections publisher.
     // This will publish each time the connections are modified.

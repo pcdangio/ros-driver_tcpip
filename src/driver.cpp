@@ -1,14 +1,30 @@
 #include "driver.h"
 
+#include <stdexcept>
+
 // CONSTRUCTORS
-driver::driver(std::string local_ip, std::string remote_ip,
+driver::driver(std::string local_ip, std::string remote_host,
                std::function<void(protocol, uint16_t, uint8_t *, uint32_t, address)> rx_callback,
                std::function<void(uint16_t)> tcp_connected_callback,
                std::function<void(uint16_t)> tcp_disconnected_callback)
-{
-    // Create and store local/remote IP addresses.
+{    
+    // Create and store local ip.
     driver::m_local_ip = boost::asio::ip::address::from_string(local_ip);
-    driver::m_remote_ip = boost::asio::ip::address::from_string(remote_ip);
+
+    // Resolve and store remote ip.
+    // Can just use UDP resolver here.
+    udp::resolver::query query(remote_host, "");
+    udp::resolver resolver(driver::m_service);
+    try
+    {
+        driver::m_remote_ip = resolver.resolve(query)->endpoint().address();
+    }
+    catch(...)
+    {
+        std::stringstream message;
+        message << "Could not resolve remote host: " << remote_host;
+        throw std::runtime_error(message.str());
+    }
 
     // Store local copy of callbacks.
     driver::m_callback_rx = rx_callback;
