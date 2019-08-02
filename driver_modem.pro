@@ -24,6 +24,7 @@ DISTFILES += \
     package.xml \
     srv/AddTCPConnection.srv \
     srv/AddUDPConnection.srv \
+    srv/GetRemoteHost.srv \
     srv/RemoveConnection.srv \
     srv/SendTCP.srv \
     srv/SetRemoteHost.srv

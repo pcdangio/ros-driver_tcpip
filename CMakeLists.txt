@@ -56,6 +56,7 @@ add_message_files(
 add_service_files(
   FILES
   SetRemoteHost.srv
+  GetRemoteHost.srv
   AddTCPConnection.srv
   AddUDPConnection.srv
   RemoveConnection.srv
