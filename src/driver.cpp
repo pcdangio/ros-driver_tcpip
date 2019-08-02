@@ -28,41 +28,7 @@ driver::~driver()
 {
     // Close and delete any remaining connections.
 
-    // Get list of pending TCP ports.
-    std::vector<uint16_t> tcp_pending_ports;
-    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_pending.begin(); it != driver::m_tcp_pending.end(); it++)
-    {
-        tcp_pending_ports.push_back(it->first);
-    }
-    // Remove each connection.
-    for(uint32_t i = 0; i < tcp_pending_ports.size(); i++)
-    {
-        driver::remove_connection(protocol::TCP, tcp_pending_ports.at(i));
-    }
-
-    // Get list of active TCP ports.
-    std::vector<uint16_t> tcp_active_ports;
-    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_active.begin(); it != driver::m_tcp_active.end(); it++)
-    {
-        tcp_active_ports.push_back(it->first);
-    }
-    // Remove each connection.
-    for(uint32_t i = 0; i < tcp_active_ports.size(); i++)
-    {
-        driver::remove_connection(protocol::TCP, tcp_active_ports.at(i));
-    }
-
-    // Get list of UDP ports that are open.
-    std::vector<uint16_t> udp_active_ports;
-    for(std::map<uint16_t, udp_connection*>::iterator it = driver::m_udp_active.begin(); it != driver::m_udp_active.end(); it++)
-    {
-        udp_active_ports.push_back(it->first);
-    }
-    // Remove each connection.
-    for(uint32_t i = 0; i < udp_active_ports.size(); i++)
-    {
-        driver::remove_connection(protocol::UDP, udp_active_ports.at(i));
-    }
+    driver::close_all_connections();
 }
 
 // PUBLIC METHODS: START/STOP
@@ -85,7 +51,12 @@ bool driver::set_remote_host(std::string remote_host)
     udp::resolver resolver(driver::m_service);
     try
     {
+        // Resolve IP Address
         driver::m_remote_ip = resolver.resolve(query)->endpoint().address();
+
+        // Close all active connections.
+        driver::close_all_connections();
+
         return true;
     }
     catch(...)
@@ -282,6 +253,46 @@ std::vector<uint16_t> driver::p_active_udp_connections() const
     }
 
     return output;
+}
+
+// PRIVATE METHODS
+void driver::close_all_connections()
+{
+    // Get list of pending TCP ports.
+    std::vector<uint16_t> tcp_pending_ports;
+    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_pending.begin(); it != driver::m_tcp_pending.end(); it++)
+    {
+        tcp_pending_ports.push_back(it->first);
+    }
+    // Remove each connection.
+    for(uint32_t i = 0; i < tcp_pending_ports.size(); i++)
+    {
+        driver::remove_connection(protocol::TCP, tcp_pending_ports.at(i));
+    }
+
+    // Get list of active TCP ports.
+    std::vector<uint16_t> tcp_active_ports;
+    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_active.begin(); it != driver::m_tcp_active.end(); it++)
+    {
+        tcp_active_ports.push_back(it->first);
+    }
+    // Remove each connection.
+    for(uint32_t i = 0; i < tcp_active_ports.size(); i++)
+    {
+        driver::remove_connection(protocol::TCP, tcp_active_ports.at(i));
+    }
+
+    // Get list of UDP ports that are open.
+    std::vector<uint16_t> udp_active_ports;
+    for(std::map<uint16_t, udp_connection*>::iterator it = driver::m_udp_active.begin(); it != driver::m_udp_active.end(); it++)
+    {
+        udp_active_ports.push_back(it->first);
+    }
+    // Remove each connection.
+    for(uint32_t i = 0; i < udp_active_ports.size(); i++)
+    {
+        driver::remove_connection(protocol::UDP, udp_active_ports.at(i));
+    }
 }
 
 // CALLBACKS

@@ -148,6 +148,12 @@ private:
     ///
     std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> m_callback_rx;
 
+    // METHODS
+    ///
+    /// \brief close_all_connections Closes all pending and active connections.
+    ///
+    void close_all_connections();
+
     // CALLBACKS
     ///
     /// \brief callback_tcp_connected The callback for handling TCP connection events.
