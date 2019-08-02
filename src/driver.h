@@ -41,6 +41,12 @@ public:
 
     // METHODS: CONNECTION MANAGEMENT
     ///
+    /// \brief set_remote_host Sets the remote host of the driver.
+    /// \param remote_host The remote host to communicate with.
+    /// \return TRUE if the remove host could be resolved, otheriwse FALSE.
+    ///
+    bool set_remote_host(std::string remote_host);
+    ///
     /// \brief add_tcp_connection Adds a TCP connection to the driver.
     /// \param role The role that the TCP connection should operate as.
     /// \param port The port that the connection shall communicate through.
@@ -74,6 +80,11 @@ public:
     bool tx(protocol type, uint16_t port, const uint8_t* data, uint32_t length);
 
     // PROPERTIES
+    ///
+    /// \brief p_remote_host Gets the current remote host of the driver.
+    /// \return The remote host of the driver.
+    ///
+    std::string p_remote_host();
     ///
     /// \brief p_pending_tcp_connections Gets the list of pending TCP connections.
     /// \return The list of pending TCP connections.
@@ -136,6 +147,12 @@ private:
     /// \brief m_callback_rx The callback to raise when messages are received.
     ///
     std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> m_callback_rx;
+
+    // METHODS
+    ///
+    /// \brief close_all_connections Closes all pending and active connections.
+    ///
+    void close_all_connections();
 
     // CALLBACKS
     ///

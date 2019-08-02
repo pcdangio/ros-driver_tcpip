@@ -8,6 +8,8 @@
 #include <ros/ros.h>
 
 #include <driver_modem/DataPacket.h>
+#include <driver_modem/SetRemoteHost.h>
+#include <driver_modem/GetRemoteHost.h>
 #include <driver_modem/AddTCPConnection.h>
 #include <driver_modem/AddUDPConnection.h>
 #include <driver_modem/RemoveConnection.h>
@@ -70,6 +72,14 @@ private:
     std::map<uint16_t, ros::ServiceServer> m_tcp_tx;
 
     // VARIABLES: SERVICES
+    ///
+    /// \brief m_service_set_remote_host Service for setting the driver's remote host.
+    ///
+    ros::ServiceServer m_service_set_remote_host;
+    ///
+    /// \brief m_service_get_remote_host Service for geting the driver's remote host.
+    ///
+    ros::ServiceServer m_service_get_remote_host;
     ///
     /// \brief m_service_add_tcp_connection Service for adding TCP connections.
     ///
@@ -155,6 +165,20 @@ private:
     void callback_udp_tx(const driver_modem::DataPacketConstPtr& message, uint16_t port);
 
     // CALLBACKS: SERVICES
+    ///
+    /// \brief service_set_remote_host Service callback for setting the driver's remote host.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
+    ///
+    bool service_set_remote_host(driver_modem::SetRemoteHostRequest& request, driver_modem::SetRemoteHostResponse& response);
+    ///
+    /// \brief service_get_remote_host Service callback for getting the driver's remote host.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
+    ///
+    bool service_get_remote_host(driver_modem::GetRemoteHostRequest& request, driver_modem::GetRemoteHostResponse& response);
     ///
     /// \brief service_add_tcp_connection Service callback for adding TCP connectins.
     /// \param request The service request.
