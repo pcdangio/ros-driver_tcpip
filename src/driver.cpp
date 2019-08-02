@@ -11,15 +11,8 @@ driver::driver(std::string local_ip, std::string remote_host,
     // Create and store local ip.
     driver::m_local_ip = boost::asio::ip::address::from_string(local_ip);
 
-    // Resolve and store remote ip.
-    // Can just use UDP resolver here.
-    udp::resolver::query query(remote_host, "");
-    udp::resolver resolver(driver::m_service);
-    try
-    {
-        driver::m_remote_ip = resolver.resolve(query)->endpoint().address();
-    }
-    catch(...)
+    // Try to resolve and set remote host.
+    if(driver::set_remote_host(remote_host) == false)
     {
         std::stringstream message;
         message << "Could not resolve remote host: " << remote_host;
@@ -84,6 +77,22 @@ void driver::stop()
 }
 
 // PUBLIC METHODS: CONNECTION MANAGEMENT
+bool driver::set_remote_host(std::string remote_host)
+{
+    // Resolve and store remote ip.
+    // Can just use UDP resolver here.
+    udp::resolver::query query(remote_host, "");
+    udp::resolver resolver(driver::m_service);
+    try
+    {
+        driver::m_remote_ip = resolver.resolve(query)->endpoint().address();
+        return true;
+    }
+    catch(...)
+    {
+        return false;
+    }
+}
 bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
 {
     // Check if the connection already exists.

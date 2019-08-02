@@ -41,6 +41,12 @@ public:
 
     // METHODS: CONNECTION MANAGEMENT
     ///
+    /// \brief set_remote_host Sets the remote host of the driver.
+    /// \param remote_host The remote host to communicate with.
+    /// \return TRUE if the remove host could be resolved, otheriwse FALSE.
+    ///
+    bool set_remote_host(std::string remote_host);
+    ///
     /// \brief add_tcp_connection Adds a TCP connection to the driver.
     /// \param role The role that the TCP connection should operate as.
     /// \param port The port that the connection shall communicate through.
