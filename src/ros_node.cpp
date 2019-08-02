@@ -65,7 +65,7 @@ ros_node::ros_node(int argc, char **argv)
         uint16_t port = static_cast<uint16_t>(param_tcp_server_ports.at(i));
 
         // Add connection to node.
-        ros_node::add_tcp_connection(tcp_connection::role::SERVER, port);
+        ros_node::add_tcp_connection(tcp_connection::role::SERVER, port, false);
     }
 
     // TCP Clients:
@@ -75,7 +75,7 @@ ros_node::ros_node(int argc, char **argv)
         uint16_t port = static_cast<uint16_t>(param_tcp_client_ports.at(i));
 
         // Add connection to node.
-        ros_node::add_tcp_connection(tcp_connection::role::CLIENT, port);
+        ros_node::add_tcp_connection(tcp_connection::role::CLIENT, port, false);
     }
 
     // UDP:
@@ -85,8 +85,11 @@ ros_node::ros_node(int argc, char **argv)
         uint16_t port = static_cast<uint16_t>(param_udp_ports.at(i));
 
         // Add connection to node.
-        ros_node::add_udp_connection(port);
+        ros_node::add_udp_connection(port, false);
     }
+
+    // Manually publish connections after group add.
+    ros_node::publish_active_connections();
 
     ROS_INFO_STREAM("Modem initialized with local IP: " << param_local_ip << " and remote host: " << param_remote_host);
 }
@@ -111,9 +114,9 @@ void ros_node::spin()
 }
 
 // PRIVATE METHODS: CONNECTION MANAGEMENT
-bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port)
+bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port, bool publish_connections)
 {
-    if(ros_node::m_driver->add_tcp_connection(role, port))
+    if(ros_node::m_driver->add_tcp_connection(role, port) && publish_connections)
     {
         // Publish active connections, since connection will initially be in PENDING status.
         ros_node::publish_active_connections();
@@ -127,9 +130,9 @@ bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port)
         return false;
     }
 }
-bool ros_node::add_udp_connection(uint16_t port)
+bool ros_node::add_udp_connection(uint16_t port, bool publish_connections)
 {
-    if(ros_node::m_driver->add_udp_connection(port))
+    if(ros_node::m_driver->add_udp_connection(port) && publish_connections)
     {
         // Add UDP topic.
         ros_node::add_connection_topics(protocol::UDP, port);
@@ -144,10 +147,10 @@ bool ros_node::add_udp_connection(uint16_t port)
         return false;
     }
 }
-bool ros_node::remove_connection(protocol type, uint16_t port)
+bool ros_node::remove_connection(protocol type, uint16_t port, bool publish_connections)
 {
     // Instruct driver to remove connection.
-    if(ros_node::m_driver->remove_connection(type, port))
+    if(ros_node::m_driver->remove_connection(type, port) && publish_connections)
     {
         // Remove topics.
         // NOTE: For TCP, driver will not generate disconnected callbacks when driver::remove_connection() is called.

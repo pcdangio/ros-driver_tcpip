@@ -98,22 +98,25 @@ private:
     /// \brief add_tcp_connection Instructs the driver to add a new TCP connection.
     /// \param role The role of the new TCP connection.
     /// \param port The port of the new TCP connection.
+    /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
     /// \return TRUE if the new connection was added, otherwise FALSE.
     ///
-    bool add_tcp_connection(tcp_connection::role role, uint16_t port);
+    bool add_tcp_connection(tcp_connection::role role, uint16_t port, bool publish_connections = true);
     ///
     /// \brief add_udp_connection Instructs the driver to add a new UDP connection.
     /// \param port The port of the new UDP connection.
+    /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
     /// \return TRUE if the new connection was added, otherwise FALSE.
     ///
-    bool add_udp_connection(uint16_t port);
+    bool add_udp_connection(uint16_t port, bool publish_connections = true);
     ///
     /// \brief remove_connection Instructs the driver to remove a TCP or UDP connection
     /// \param type The protocol type of the connection to remove.
     /// \param port The port of the connection to remove.
+    /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
-    bool remove_connection(protocol type, uint16_t port);
+    bool remove_connection(protocol type, uint16_t port, bool publish_connections = true);
 
     // METHODS: TOPIC MANAGEMENT
     ///
