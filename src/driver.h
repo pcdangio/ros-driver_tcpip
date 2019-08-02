@@ -18,12 +18,12 @@ public:
     ///
     /// \brief driver Creates a new driver instance.
     /// \param local_ip The local IP address of that the connection shall bind to.
-    /// \param remote_ip The remote IP address that TCP clients should shall connect to.
+    /// \param remote_host The remote IP or hostname to communicate with.
     /// \param rx_callback A callback for handling received TCP/UDP messages.
     /// \param tcp_connected_callback A callback for handling TCP connection events.
     /// \param tcp_disconnected_callback A callback for handling TCP disconnection events.
     ///
-    driver(std::string local_ip, std::string remote_ip,
+    driver(std::string local_ip, std::string remote_host,
            std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> rx_callback,
            std::function<void(uint16_t)> tcp_connected_callback,
            std::function<void(uint16_t)> tcp_disconnected_callback);
