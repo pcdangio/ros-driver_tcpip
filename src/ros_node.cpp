@@ -47,8 +47,9 @@ ros_node::ros_node(int argc, char **argv)
     // Use latching so new nodes always have the latest information.
     ros_node::m_publisher_active_connections = ros_node::m_node->advertise<driver_modem::ActiveConnections>("active_connections", 1, true);
 
-    // Set up service for setting remote host.
+    // Set up service for setting/getting remote host.
     ros_node::m_service_set_remote_host = ros_node::m_node->advertiseService("set_remote_host", &ros_node::service_set_remote_host, this);
+    ros_node::m_service_get_remote_host = ros_node::m_node->advertiseService("get_remote_host", &ros_node::service_get_remote_host, this);
 
     // Set up services for adding/removing connections.
     ros_node::m_service_add_tcp_connection = ros_node::m_node->advertiseService("add_tcp_connection", &ros_node::service_add_tcp_connection, this);
@@ -351,6 +352,12 @@ void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, 
 bool ros_node::service_set_remote_host(driver_modem::SetRemoteHostRequest &request, driver_modem::SetRemoteHostResponse &response)
 {
     response.success = ros_node::m_driver->set_remote_host(request.remote_host);
+
+    return true;
+}
+bool ros_node::service_get_remote_host(driver_modem::GetRemoteHostRequest &request, driver_modem::GetRemoteHostResponse &response)
+{
+    response.remote_host = ros_node::m_driver->p_remote_host();
 
     return true;
 }
