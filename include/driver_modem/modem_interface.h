@@ -6,6 +6,7 @@
 #include <ros/ros.h>
 
 #include <driver_modem/ActiveConnections.h>
+#include <driver_modem/DataPacket.h>
 
 ///
 /// \brief Provides management and control of a driver_modem ROS node.
@@ -94,6 +95,26 @@ public:
     bool send_udp(uint8_t port, const uint8_t* data, uint32_t length);
 
 private:
+    // VARIABLES: Active Connections
+    ///
+    /// \brief m_active_tcp_connections List of active TCP connections.
+    ///
+    std::vector<uint16_t> m_active_tcp_connections;
+    ///
+    /// \brief m_pending_tcp_connections List of pending TCP connections.
+    ///
+    std::vector<uint16_t> m_pending_tcp_connections;
+    ///
+    /// \brief m_active_udp_connections List of active UDP connections.
+    ///
+    std::vector<uint16_t> m_active_udp_connections;
+
+    // VARIABLES: ROS Node
+    ///
+    /// \brief m_node Maintains a copy of the ROS nodehandle for pub/sub/srv creation.
+    ///
+    ros::NodeHandle* m_node;
+
     // VARIABLES: Active Connections Subscriber
     ///
     /// \brief m_subscriber_active_connections Subscriber for ActiveConnections messages.
@@ -126,19 +147,22 @@ private:
     ///
     /// \brief m_services_send_tcp Service clients for sending TCP messages.
     ///
-    std::map<uint8_t, ros::ServiceClient> m_services_send_tcp;
+    std::map<uint16_t, ros::ServiceClient> m_services_send_tcp;
     ///
     /// \brief m_publishers_udp Publishers for sending UDP messages.
     ///
-    std::map<uint8_t, ros::Publisher> m_publishers_udp;
+    std::map<uint16_t, ros::Publisher> m_publishers_udp;
     ///
     /// \brief m_subscribers_tcp_rx Subscribers for TCP RX messages.
     ///
-    std::map<uint8_t, ros::Subscriber> m_subscribers_tcp_rx;
+    std::map<uint16_t, ros::Subscriber> m_subscribers_tcp_rx;
     ///
     /// \brief m_subscribers_udp_rx Subscribers for UDP RX messages.
     ///
-    std::map<uint8_t, ros::Subscriber> m_subscribers_udp_rx;
+    std::map<uint16_t, ros::Subscriber> m_subscribers_udp_rx;
+
+    // METHODS
+    void remove_duplicates(std::list<uint16_t>& a, std::list<uint16_t>& b);
 
     // CALLBACKS: Subscribers
     ///
@@ -146,6 +170,8 @@ private:
     /// \param message
     ///
     void callback_active_connections(const driver_modem::ActiveConnectionsPtr& message);
+    void callback_tcp_rx(const driver_modem::DataPacketPtr& message);
+    void callback_udp_rx(const driver_modem::DataPacketPtr& message);
 };
 
 #endif // MODEM_INTERFACE_H

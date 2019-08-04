@@ -5,22 +5,23 @@
 #include <driver_modem/AddTCPConnection.h>
 #include <driver_modem/AddUDPConnection.h>
 #include <driver_modem/RemoveConnection.h>
+#include <driver_modem/SendTCP.h>
 
 // CONSTRUCTORS
 modem_interface::modem_interface(std::string modem_namespace)
 {
     // Get node handle.
-    ros::NodeHandle node;
+    modem_interface::m_node = new ros::NodeHandle(modem_namespace);
 
     // Initialize active connections subscriber.
-    modem_interface::m_subscriber_active_connections = node.subscribe(modem_namespace + "/active_connections", 1, &modem_interface::callback_active_connections, this);
+    modem_interface::m_subscriber_active_connections = modem_interface::m_node->subscribe(modem_namespace + "/active_connections", 1, &modem_interface::callback_active_connections, this);
 
     // Initialize connection management service clients.
-    modem_interface::m_service_set_remote_host = node.serviceClient<driver_modem::SetRemoteHost>(modem_namespace + "/set_remote_host");
-    modem_interface::m_service_get_remote_host = node.serviceClient<driver_modem::GetRemoteHost>(modem_namespace + "/get_remote_host");
-    modem_interface::m_service_add_tcp_connection = node.serviceClient<driver_modem::AddTCPConnection>(modem_namespace + "/add_tcp_connection");
-    modem_interface::m_service_add_udp_connection = node.serviceClient<driver_modem::AddUDPConnection>(modem_namespace + "/add_udp_connection");
-    modem_interface::m_service_remove_connection = node.serviceClient<driver_modem::RemoveConnection>(modem_namespace + "/remove_connection");
+    modem_interface::m_service_set_remote_host = modem_interface::m_node->serviceClient<driver_modem::SetRemoteHost>("set_remote_host");
+    modem_interface::m_service_get_remote_host = modem_interface::m_node->serviceClient<driver_modem::GetRemoteHost>("get_remote_host");
+    modem_interface::m_service_add_tcp_connection = modem_interface::m_node->serviceClient<driver_modem::AddTCPConnection>("add_tcp_connection");
+    modem_interface::m_service_add_udp_connection = modem_interface::m_node->serviceClient<driver_modem::AddUDPConnection>("add_udp_connection");
+    modem_interface::m_service_remove_connection = modem_interface::m_node->serviceClient<driver_modem::RemoveConnection>("remove_connection");
 }
 modem_interface::~modem_interface()
 {
@@ -35,22 +36,25 @@ modem_interface::~modem_interface()
     modem_interface::m_service_remove_connection.shutdown();
 
     // Shut down transmission publishers, subscribers, and service clients.
-    for(std::map<uint8_t, ros::ServiceClient>::iterator it = modem_interface::m_services_send_tcp.begin(); it != modem_interface::m_services_send_tcp.end(); it++)
+    for(auto it = modem_interface::m_services_send_tcp.begin(); it != modem_interface::m_services_send_tcp.end(); it++)
     {
         it->second.shutdown();
     }
-    for(std::map<uint8_t, ros::Publisher>::iterator it = modem_interface::m_publishers_udp.begin(); it != modem_interface::m_publishers_udp.end(); it++)
+    for(auto it = modem_interface::m_publishers_udp.begin(); it != modem_interface::m_publishers_udp.end(); it++)
     {
         it->second.shutdown();
     }
-    for(std::map<uint8_t, ros::Subscriber>::iterator it = modem_interface::m_subscribers_tcp_rx.begin(); it != modem_interface::m_subscribers_tcp_rx.end(); it++)
+    for(auto it = modem_interface::m_subscribers_tcp_rx.begin(); it != modem_interface::m_subscribers_tcp_rx.end(); it++)
     {
         it->second.shutdown();
     }
-    for(std::map<uint8_t, ros::Subscriber>::iterator it = modem_interface::m_subscribers_udp_rx.begin(); it != modem_interface::m_subscribers_udp_rx.end(); it++)
+    for(auto it = modem_interface::m_subscribers_udp_rx.begin(); it != modem_interface::m_subscribers_udp_rx.end(); it++)
     {
         it->second.shutdown();
     }
+
+    // Delete the nodehandle pointer.
+    delete modem_interface::m_node;
 }
 
 // METHODS: Connection Management
@@ -145,4 +149,96 @@ bool modem_interface::send_tcp(uint8_t port, const uint8_t *data, uint32_t lengt
 bool modem_interface::send_udp(uint8_t port, const uint8_t *data, uint32_t length)
 {
 
+}
+
+// METHODS
+void modem_interface::remove_duplicates(std::list<uint16_t> &a, std::list<uint16_t> &b)
+{
+    // Loop over A.
+    for(auto a_it = a.begin(); a_it != a.end();)
+    {
+        bool erased = false;
+        // Loop over B.
+        for(auto b_it = b.begin(); b_it != b.end(); b_it++)
+        {
+            // Check if port matches.
+            if(*a_it == *b_it)
+            {
+                // Match found.  Delete both, updating a_it to next position.
+                a_it = a.erase(a_it);
+                b.erase(b_it);
+                // Mark erased as true so a_it is not iterated a second time.
+                erased = true;
+                // Break for loop.
+                break;
+            }
+        }
+        // Iterate a_it if no match was found.
+        if(!erased)
+        {
+            a_it++;
+        }
+    }
+}
+
+// CALLBACKS: Subscribers
+void modem_interface::callback_active_connections(const driver_modem::ActiveConnectionsPtr &message)
+{
+    // Find differences between old and new connections.
+    // NOTE: Use lists instead of vectors to remove elements while looping.
+    // Store old connections.
+    std::list<uint16_t> active_tcp_old(modem_interface::m_active_tcp_connections.begin(), modem_interface::m_active_tcp_connections.end());
+    std::list<uint16_t> active_udp_old(modem_interface::m_active_udp_connections.begin(), modem_interface::m_active_udp_connections.end());
+    // Store new connections.
+    std::list<uint16_t> active_tcp_new(message->tcp_active.begin(), message->tcp_active.end());
+    std::list<uint16_t> active_udp_new(message->udp_active.begin(), message->udp_active.end());
+
+    // TCP:
+    modem_interface::remove_duplicates(active_tcp_old, active_tcp_new);
+    // Connections left in _old have been removed, while connections left in _new have been added.
+    for(auto it = active_tcp_old.begin(); it != active_tcp_old.end(); it++)
+    {
+        // Remove TCP TX service client.
+        modem_interface::m_services_send_tcp.at(*it).shutdown();
+        modem_interface::m_services_send_tcp.erase(*it);
+        // Remove TCP RX subscriber.
+        modem_interface::m_subscribers_tcp_rx.at(*it).shutdown();
+        modem_interface::m_subscribers_tcp_rx.erase(*it);
+    }
+    for(auto it = active_tcp_new.begin(); it != active_tcp_new.end(); it++)
+    {
+        // Add TCP TX service client.
+        std::stringstream topic_front;
+        topic_front << "tcp/" << *it;
+        modem_interface::m_services_send_tcp.insert(std::make_pair(*it, modem_interface::m_node->serviceClient<driver_modem::SendTCP>(topic_front.str() + "/tx")));
+        // Add TCP RX subscriber.
+        modem_interface::m_subscribers_tcp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe(topic_front.str() + "/rx", 1, &modem_interface::callback_tcp_rx, this)));
+    }
+
+    // UDP:
+    modem_interface::remove_duplicates(active_udp_old, active_udp_new);
+    // Connections left in _old have been removed, while connections left in _new have been added.
+    for(auto it = active_udp_old.begin(); it != active_udp_old.end(); it++)
+    {
+        // Remove UDP TX publisher.
+        modem_interface::m_publishers_udp.at(*it).shutdown();
+        modem_interface::m_publishers_udp.erase(*it);
+        // Remove UDP RX subscriber.
+        modem_interface::m_subscribers_udp_rx.at(*it).shutdown();
+        modem_interface::m_subscribers_udp_rx.erase(*it);
+    }
+    for(auto it = active_udp_new.begin(); it != active_udp_new.end(); it++)
+    {
+        // Add UDP TX publisher.
+        std::stringstream topic_front;
+        topic_front << "udp/" << *it;
+        modem_interface::m_publishers_udp.insert(std::make_pair(*it, modem_interface::m_node->advertise<driver_modem::DataPacket>(topic_front.str() + "/tx", 1)));
+        // Add UDP RX subscriber.
+        modem_interface::m_subscribers_udp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe(topic_front.str() + "/rx", 1, &modem_interface::callback_udp_rx, this)));
+    }
+
+    // Assign new connections to internal storage.
+    modem_interface::m_pending_tcp_connections = message->tcp_pending;
+    modem_interface::m_active_tcp_connections = message->tcp_active;
+    modem_interface::m_active_udp_connections = message->udp_active;
 }
