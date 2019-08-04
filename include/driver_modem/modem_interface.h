@@ -41,7 +41,28 @@ public:
     modem_interface(std::string modem_namespace);
     ~modem_interface();
 
-    // METHODS
+    // METHODS: Callback Management
+    ///
+    /// \brief attach_callback_tcp_rx Attaches a callback for handling received TCP messages.
+    /// \param callback The callback function.
+    ///
+    void attach_callback_tcp_rx(std::function<void(const driver_modem::DataPacketPtr&)> callback);
+    ///
+    /// \brief detach_callback_tcp_rx Detaches the current callback for handling received TCP messages.
+    ///
+    void detach_callback_tcp_rx();
+    ///
+    /// \brief attach_callback_udp_rx Attaches a callback for handling received UDP messages.
+    /// \param callback The callback function.
+    ///
+    void attach_callback_udp_rx(std::function<void(const driver_modem::DataPacketPtr&)> callback);
+    ///
+    /// \brief detach_callback_udp_rx Detaches the current callback for handling received UDP messages.
+    ///
+    void detach_callback_udp_rx();
+
+
+    // METHODS: Configuration
     ///
     /// \brief set_remote_host Sets the remote host of the modem.
     /// \param remote_host The new remote host to set.
@@ -75,6 +96,7 @@ public:
     ///
     bool remove_connection(protocol type, uint16_t port);
 
+    // METHODS: Transmission
     ///
     /// \brief send_tcp Sends data via a TCP connection.
     /// \param port The port to send the data over.
@@ -108,6 +130,16 @@ private:
     /// \brief m_active_udp_connections List of active UDP connections.
     ///
     std::vector<uint16_t> m_active_udp_connections;
+
+    // VARIABLES: External Callbacks
+    ///
+    /// \brief m_callback_tcp_rx Stores the external callback for handling received TCP messages.
+    ///
+    std::function<void(const driver_modem::DataPacketPtr&)> m_callback_tcp_rx;
+    ///
+    /// \brief m_callback_udp_rx Stores the external callback for handling received UDP messages.
+    ///
+    std::function<void(const driver_modem::DataPacketPtr&)> m_callback_udp_rx;
 
     // VARIABLES: ROS Node
     ///

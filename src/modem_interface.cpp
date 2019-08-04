@@ -57,6 +57,24 @@ modem_interface::~modem_interface()
     delete modem_interface::m_node;
 }
 
+// METHODS: Callback Management
+void modem_interface::attach_callback_tcp_rx(std::function<void (const driver_modem::DataPacketPtr &)> callback)
+{
+    modem_interface::m_callback_tcp_rx = callback;
+}
+void modem_interface::detach_callback_tcp_rx()
+{
+    modem_interface::m_callback_tcp_rx = nullptr;
+}
+void modem_interface::attach_callback_udp_rx(std::function<void (const driver_modem::DataPacketPtr &)> callback)
+{
+    modem_interface::m_callback_udp_rx = callback;
+}
+void modem_interface::detach_callback_udp_rx()
+{
+    modem_interface::m_callback_udp_rx = nullptr;
+}
+
 // METHODS: Connection Management
 bool modem_interface::set_remote_host(std::string remote_host)
 {
@@ -286,4 +304,14 @@ void modem_interface::callback_active_connections(const driver_modem::ActiveConn
     modem_interface::m_pending_tcp_connections = message->tcp_pending;
     modem_interface::m_active_tcp_connections = message->tcp_active;
     modem_interface::m_active_udp_connections = message->udp_active;
+}
+void modem_interface::callback_tcp_rx(const driver_modem::DataPacketPtr &message)
+{
+    // Forward to external callback.
+    modem_interface::m_callback_tcp_rx(message);
+}
+void modem_interface::callback_udp_rx(const driver_modem::DataPacketPtr &message)
+{
+    // Forward to external callback.
+    modem_interface::m_callback_udp_rx(message);
 }
