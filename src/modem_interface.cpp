@@ -144,11 +144,56 @@ bool modem_interface::remove_connection(protocol type, uint16_t port)
 // METHODS: Data Transmission
 bool modem_interface::send_tcp(uint8_t port, const uint8_t *data, uint32_t length)
 {
+    // Check if connection exists.
+    if(modem_interface::m_services_send_tcp.count(port) != 0)
+    {
+        // Create message.
+        driver_modem::SendTCP service;
+        service.request.packet.header.stamp = ros::Time::now();
+        service.request.packet.data.reserve(length);
+        for(uint32_t i = 0; i < length; i++)
+        {
+            service.request.packet.data.push_back(data[i]);
+        }
 
+        // Send message.
+        if(modem_interface::m_services_send_tcp.at(port).call(service))
+        {
+            return service.response.success;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    else
+    {
+        return false;
+    }
 }
 bool modem_interface::send_udp(uint8_t port, const uint8_t *data, uint32_t length)
 {
+    // Check if connection exists.
+    if(modem_interface::m_publishers_udp.count(port) != 0)
+    {
+        // Create message.
+        driver_modem::DataPacket message;
+        message.header.stamp = ros::Time::now();
+        message.data.reserve(length);
+        for(uint32_t i = 0; i < length; i++)
+        {
+            message.data.push_back(data[i]);
+        }
 
+        // Send message.
+        modem_interface::m_publishers_udp.at(port).publish(message);
+
+        return true;
+    }
+    else
+    {
+        return false;
+    }
 }
 
 // METHODS
