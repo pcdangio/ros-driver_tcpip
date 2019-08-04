@@ -5,6 +5,8 @@
 
 #include <ros/ros.h>
 
+#include <driver_modem/ActiveConnections.h>
+
 ///
 /// \brief Provides management and control of a driver_modem ROS node.
 ///
@@ -92,6 +94,12 @@ public:
     bool send_udp(uint8_t port, const uint8_t* data, uint32_t length);
 
 private:
+    // VARIABLES: Active Connections Subscriber
+    ///
+    /// \brief m_subscriber_active_connections Subscriber for ActiveConnections messages.
+    ///
+    ros::Subscriber m_subscriber_active_connections;
+
     // VARIABLES: Connection Management Service Clients
     ///
     /// \brief m_service_set_remote_host The SetRemoteHost service client.
@@ -116,13 +124,28 @@ private:
 
     // VARIABLES: Transmission Service Clients and Publishers
     ///
-    /// \brief m_service_send_tcp Service clients for sending TCP messages.
+    /// \brief m_services_send_tcp Service clients for sending TCP messages.
     ///
-    std::map<uint8_t, ros::ServiceClient> m_service_send_tcp;
+    std::map<uint8_t, ros::ServiceClient> m_services_send_tcp;
     ///
-    /// \brief m_publisher_udp Publishers for sending UDP messages.
+    /// \brief m_publishers_udp Publishers for sending UDP messages.
     ///
-    std::map<uint8_t, ros::Publisher> m_publisher_udp;
+    std::map<uint8_t, ros::Publisher> m_publishers_udp;
+    ///
+    /// \brief m_subscribers_tcp_rx Subscribers for TCP RX messages.
+    ///
+    std::map<uint8_t, ros::Subscriber> m_subscribers_tcp_rx;
+    ///
+    /// \brief m_subscribers_udp_rx Subscribers for UDP RX messages.
+    ///
+    std::map<uint8_t, ros::Subscriber> m_subscribers_udp_rx;
+
+    // CALLBACKS: Subscribers
+    ///
+    /// \brief callback_active_connections Handles ActiveConnections messages.
+    /// \param message
+    ///
+    void callback_active_connections(const driver_modem::ActiveConnectionsPtr& message);
 };
 
 #endif // MODEM_INTERFACE_H

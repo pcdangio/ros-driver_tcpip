@@ -12,7 +12,10 @@ modem_interface::modem_interface(std::string modem_namespace)
     // Get node handle.
     ros::NodeHandle node;
 
-    // Initialize service clients.
+    // Initialize active connections subscriber.
+    modem_interface::m_subscriber_active_connections = node.subscribe(modem_namespace + "/active_connections", 1, &modem_interface::callback_active_connections, this);
+
+    // Initialize connection management service clients.
     modem_interface::m_service_set_remote_host = node.serviceClient<driver_modem::SetRemoteHost>(modem_namespace + "/set_remote_host");
     modem_interface::m_service_get_remote_host = node.serviceClient<driver_modem::GetRemoteHost>(modem_namespace + "/get_remote_host");
     modem_interface::m_service_add_tcp_connection = node.serviceClient<driver_modem::AddTCPConnection>(modem_namespace + "/add_tcp_connection");
@@ -21,12 +24,33 @@ modem_interface::modem_interface(std::string modem_namespace)
 }
 modem_interface::~modem_interface()
 {
+    // Shut down active connections subscriber.
+    modem_interface::m_subscriber_active_connections.shutdown();
+
     // Shut down service clients.
     modem_interface::m_service_set_remote_host.shutdown();
     modem_interface::m_service_get_remote_host.shutdown();
     modem_interface::m_service_add_tcp_connection.shutdown();
     modem_interface::m_service_add_udp_connection.shutdown();
     modem_interface::m_service_remove_connection.shutdown();
+
+    // Shut down transmission publishers, subscribers, and service clients.
+    for(std::map<uint8_t, ros::ServiceClient>::iterator it = modem_interface::m_services_send_tcp.begin(); it != modem_interface::m_services_send_tcp.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    for(std::map<uint8_t, ros::Publisher>::iterator it = modem_interface::m_publishers_udp.begin(); it != modem_interface::m_publishers_udp.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    for(std::map<uint8_t, ros::Subscriber>::iterator it = modem_interface::m_subscribers_tcp_rx.begin(); it != modem_interface::m_subscribers_tcp_rx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    for(std::map<uint8_t, ros::Subscriber>::iterator it = modem_interface::m_subscribers_udp_rx.begin(); it != modem_interface::m_subscribers_udp_rx.end(); it++)
+    {
+        it->second.shutdown();
+    }
 }
 
 // METHODS: Connection Management
