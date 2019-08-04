@@ -7,6 +7,8 @@
 #include <driver_modem/RemoveConnection.h>
 #include <driver_modem/SendTCP.h>
 
+using namespace driver_modem;
+
 // CONSTRUCTORS
 modem_interface::modem_interface(std::string modem_namespace)
 {
@@ -160,7 +162,7 @@ bool modem_interface::remove_connection(protocol type, uint16_t port)
 }
 
 // METHODS: Data Transmission
-bool modem_interface::send_tcp(uint8_t port, const uint8_t *data, uint32_t length)
+bool modem_interface::send_tcp(uint16_t port, const uint8_t *data, uint32_t length)
 {
     // Check if connection exists.
     if(modem_interface::m_services_send_tcp.count(port) != 0)
@@ -189,7 +191,7 @@ bool modem_interface::send_tcp(uint8_t port, const uint8_t *data, uint32_t lengt
         return false;
     }
 }
-bool modem_interface::send_udp(uint8_t port, const uint8_t *data, uint32_t length)
+bool modem_interface::send_udp(uint16_t port, const uint8_t *data, uint32_t length)
 {
     // Check if connection exists.
     if(modem_interface::m_publishers_udp.count(port) != 0)

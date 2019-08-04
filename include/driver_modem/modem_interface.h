@@ -9,6 +9,11 @@
 #include <driver_modem/DataPacket.h>
 
 ///
+/// \brief Namespace for driver_modem package.
+///
+namespace driver_modem {
+
+///
 /// \brief Provides management and control of a driver_modem ROS node.
 ///
 class modem_interface
@@ -106,7 +111,7 @@ public:
     /// FALSE can be returned if the TCP connection does not exist yet,
     /// or if the TCP transmission failed.
     ///
-    bool send_tcp(uint8_t port, const uint8_t* data, uint32_t length);
+    bool send_tcp(uint16_t port, const uint8_t* data, uint32_t length);
     ///
     /// \brief send_udp Sends data via a UDP connection.
     /// \param port The port to send data over.
@@ -114,7 +119,7 @@ public:
     /// \param length The length of the data to send.
     /// \return TRUE if the messsage was sent.  FALSE if the UDP connection does not exist yet.
     ///
-    bool send_udp(uint8_t port, const uint8_t* data, uint32_t length);
+    bool send_udp(uint16_t port, const uint8_t* data, uint32_t length);
 
 private:
     // VARIABLES: Active Connections
@@ -218,5 +223,7 @@ private:
     ///
     void callback_udp_rx(const driver_modem::DataPacketPtr& message);
 };
+
+}
 
 #endif // MODEM_INTERFACE_H
