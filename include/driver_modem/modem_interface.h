@@ -162,6 +162,11 @@ private:
     std::map<uint16_t, ros::Subscriber> m_subscribers_udp_rx;
 
     // METHODS
+    ///
+    /// \brief remove_duplicates Removes duplicate ports from two lists.
+    /// \param a The first list of ports.
+    /// \param b The second list of ports.
+    ///
     void remove_duplicates(std::list<uint16_t>& a, std::list<uint16_t>& b);
 
     // CALLBACKS: Subscribers
@@ -170,7 +175,15 @@ private:
     /// \param message
     ///
     void callback_active_connections(const driver_modem::ActiveConnectionsPtr& message);
+    ///
+    /// \brief callback_tcp_rx Handles received TCP messages.
+    /// \param message The recieved message.
+    ///
     void callback_tcp_rx(const driver_modem::DataPacketPtr& message);
+    ///
+    /// \brief callback_udp_rx Handles received UDP messages.
+    /// \param message The received message.
+    ///
     void callback_udp_rx(const driver_modem::DataPacketPtr& message);
 };
 
