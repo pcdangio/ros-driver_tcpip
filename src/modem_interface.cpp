@@ -149,7 +149,7 @@ bool modem_interface::send_tcp(uint8_t port, const uint8_t *data, uint32_t lengt
     {
         // Create message.
         driver_modem::SendTCP service;
-        service.request.packet.header.stamp = ros::Time::now();
+        // NOTE: Timestamp and source IP are set on receiving end.
         service.request.packet.data.reserve(length);
         for(uint32_t i = 0; i < length; i++)
         {
@@ -178,7 +178,7 @@ bool modem_interface::send_udp(uint8_t port, const uint8_t *data, uint32_t lengt
     {
         // Create message.
         driver_modem::DataPacket message;
-        message.header.stamp = ros::Time::now();
+        // NOTE: Timestamp and source IP are set on receiving end.
         message.data.reserve(length);
         for(uint32_t i = 0; i < length; i++)
         {
