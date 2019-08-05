@@ -306,6 +306,10 @@ void modem_interface::callback_active_connections(const driver_modem::ActiveConn
     modem_interface::m_pending_tcp_connections = message->tcp_pending;
     modem_interface::m_active_tcp_connections = message->tcp_active;
     modem_interface::m_active_udp_connections = message->udp_active;
+
+    // Wait for publishers, subscribers, and services to link through ROS.
+    ros::Duration sleeper(0.5);
+    sleeper.sleep();
 }
 void modem_interface::callback_tcp_rx(const driver_modem::DataPacketPtr &message)
 {
