@@ -21,9 +21,10 @@ public:
     /// \brief udp_connection Creates a new instance for the UDP connection.
     /// \param io_service The global IO Service to run the connection on.
     /// \param local_endpoint The local endpoint to bind to.
+    /// \param remote_endpoint The remote endpoint to transmit to.
     /// \param buffer_size The size of the RX buffer in bytes.
     ///
-    udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, uint32_t buffer_size=1024);
+    udp_connection(boost::asio::io_service& io_service, udp::endpoint local_endpoint, udp::endpoint remote_endpoint, uint32_t buffer_size=1024);
     ~udp_connection();
 
     // METHODS

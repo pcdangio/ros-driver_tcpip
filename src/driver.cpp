@@ -108,7 +108,7 @@ bool driver::add_udp_connection(uint16_t port)
     if(driver::m_udp_active.count(port) == 0)
     {
         // Create the UDP connection.
-        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port));
+        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port), udp::endpoint(driver::m_remote_ip, port));
         // Attach the rx callback.
         new_udp->attach_rx_callback(driver::m_callback_rx);
         // Add connection to map.
