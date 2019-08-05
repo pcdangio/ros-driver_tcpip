@@ -65,7 +65,7 @@ ros_node::ros_node(int argc, char **argv)
         uint16_t port = static_cast<uint16_t>(param_tcp_server_ports.at(i));
 
         // Add connection to node.
-        ros_node::add_tcp_connection(tcp_connection::role::SERVER, port, false);
+        ros_node::add_tcp_connection(tcp_role::SERVER, port, false);
     }
 
     // TCP Clients:
@@ -75,7 +75,7 @@ ros_node::ros_node(int argc, char **argv)
         uint16_t port = static_cast<uint16_t>(param_tcp_client_ports.at(i));
 
         // Add connection to node.
-        ros_node::add_tcp_connection(tcp_connection::role::CLIENT, port, false);
+        ros_node::add_tcp_connection(tcp_role::CLIENT, port, false);
     }
 
     // UDP:
@@ -114,7 +114,7 @@ void ros_node::spin()
 }
 
 // PRIVATE METHODS: CONNECTION MANAGEMENT
-bool ros_node::add_tcp_connection(tcp_connection::role role, uint16_t port, bool publish_connections)
+bool ros_node::add_tcp_connection(tcp_role role, uint16_t port, bool publish_connections)
 {
     if(ros_node::m_driver->add_tcp_connection(role, port) && publish_connections)
     {
@@ -366,7 +366,7 @@ bool ros_node::service_get_remote_host(driver_modem::GetRemoteHostRequest &reque
 }
 bool ros_node::service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response)
 {
-    response.success = ros_node::add_tcp_connection(static_cast<tcp_connection::role>(request.role), request.port);
+    response.success = ros_node::add_tcp_connection(static_cast<tcp_role>(request.role), request.port);
 
     return true;
 }

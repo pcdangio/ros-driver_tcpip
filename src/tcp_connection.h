@@ -4,6 +4,7 @@
 #define TCP_CONNECTION_H
 
 #include "driver_modem/protocol.h"
+#include "driver_modem/tcp_role.h"
 
 #include <boost/asio.hpp>
 #include <functional>
@@ -18,15 +19,7 @@ class tcp_connection
 {
 public:
     // ENUMERATIONS
-    ///
-    /// \brief Enumerates the roles that a TCP connection may take.
-    ///
-    enum class role
-    {
-        UNASSIGNED = 0,     ///< The connection has not yet been assigned a role
-        SERVER = 1,         ///< The connection is acting as a TCP server
-        CLIENT = 2          ///< The connection is acting as a TCP client
-    };
+
     ///
     /// \brief Enumerates the statuses that the connection may have.
     ///
@@ -98,7 +91,7 @@ public:
     /// \brief p_role Gets the current role of the connection.
     /// \return The role of the connection.
     ///
-    role p_role() const;
+    tcp_role p_role() const;
     ///
     /// \brief p_status Gets the status of the connection.
     /// \return The current status of the connection.
@@ -139,7 +132,7 @@ private:
     ///
     /// \brief m_role Stores the current role of the connection.
     ///
-    role m_role;
+    tcp_role m_role;
     ///
     /// \brief m_status Stores the current status of the connection.
     ///

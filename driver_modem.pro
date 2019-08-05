@@ -34,6 +34,7 @@ DISTFILES += \
 HEADERS += \
     include/driver_modem/protocol.h \
     include/driver_modem/modem_interface.h \
+    include/driver_modem/tcp_role.h \
     src/driver.h \
     src/ros_node.h \
     src/udp_connection.h \
