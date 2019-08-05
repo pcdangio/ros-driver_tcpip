@@ -27,19 +27,30 @@ driver::driver(std::string local_ip, std::string remote_host,
 driver::~driver()
 {
     // Close and delete any remaining connections.
-
     driver::close_all_connections();
+
+    // Delete io service worker.
+    delete driver::m_service_work;
 }
 
 // PUBLIC METHODS: START/STOP
 void driver::start()
 {
+    // Create worker object to keep io service running.
+    driver::m_service_work = new boost::asio::io_service::work(driver::m_service);
+    // Run io service in separate thread.
     driver::m_thread = boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(driver::m_service)));
 }
 void driver::stop()
 {
+    // Stop the service.
     driver::m_service.stop();
+
+    // Join the thread.
     driver::m_thread.join();
+
+    // Delete the service worker.
+    delete driver::m_service_work;
 }
 
 // PUBLIC METHODS: CONNECTION MANAGEMENT
