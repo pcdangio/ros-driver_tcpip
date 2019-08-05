@@ -246,6 +246,20 @@ void modem_interface::remove_duplicates(std::list<uint16_t> &a, std::list<uint16
     }
 }
 
+// PROPERTIES
+std::vector<uint16_t> modem_interface::p_active_tcp_connections() const
+{
+    return modem_interface::m_active_tcp_connections;
+}
+std::vector<uint16_t> modem_interface::p_pending_tcp_connections() const
+{
+    return modem_interface::m_pending_tcp_connections;
+}
+std::vector<uint16_t> modem_interface::p_active_udp_connections() const
+{
+    return modem_interface::m_active_udp_connections;
+}
+
 // CALLBACKS: Subscribers
 void modem_interface::callback_active_connections(const driver_modem::ActiveConnectionsPtr &message)
 {

@@ -121,6 +121,24 @@ public:
     ///
     bool send_udp(uint16_t port, const uint8_t* data, uint32_t length);
 
+    // PROPERTIES
+    ///
+    /// \brief p_active_tcp_connections Gets the active TCP connections.
+    /// \return The list of active TCP ports.
+    ///
+    std::vector<uint16_t> p_active_tcp_connections() const;
+    ///
+    /// \brief p_pending_tcp_connections Gets the pending TCP connections.
+    /// \return The list of pending TCP ports.
+    ///
+    std::vector<uint16_t> p_pending_tcp_connections() const;
+    ///
+    /// \brief p_active_udp_connections Gets the active UDP connections.
+    /// \return The list of active UDP ports.
+    ///
+    std::vector<uint16_t> p_active_udp_connections() const;
+
+
 private:
     // VARIABLES: Active Connections
     ///
