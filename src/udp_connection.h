@@ -3,12 +3,13 @@
 #ifndef UDP_CONNECTION_H
 #define UDP_CONNECTION_H
 
-#include "protocol.h"
+#include "driver_modem/protocol.h"
 
 #include <boost/asio.hpp>
 #include <functional>
 
 using namespace boost::asio::ip;
+using namespace driver_modem;
 
 ///
 /// \brief Provides a single asynchronous UDP connection for a specific IP address and port.

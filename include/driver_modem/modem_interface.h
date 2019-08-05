@@ -3,6 +3,8 @@
 #ifndef MODEM_INTERFACE_H
 #define MODEM_INTERFACE_H
 
+#include "driver_modem/protocol.h"
+
 #include <ros/ros.h>
 
 #include <driver_modem/ActiveConnections.h>
@@ -20,14 +22,6 @@ class modem_interface
 {
 public:
     // ENUMERATIONS
-    ///
-    /// \brief An enumeration of communication protocols.
-    ///
-    enum class protocol
-    {
-        TCP = 0,    ///< TCP Protocol
-        UDP = 1     ///< UDP Protocol
-    };
     ///
     /// \brief An enumeration of TCP roles.
     ///

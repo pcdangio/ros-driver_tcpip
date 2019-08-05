@@ -32,9 +32,9 @@ DISTFILES += \
     srv/SetRemoteHost.srv
 
 HEADERS += \
+    include/driver_modem/protocol.h \
     include/driver_modem/modem_interface.h \
     src/driver.h \
-    src/protocol.h \
     src/ros_node.h \
     src/udp_connection.h \
     src/tcp_connection.h
