@@ -4,6 +4,7 @@
 #define MODEM_INTERFACE_H
 
 #include "driver_modem/protocol.h"
+#include "driver_modem/tcp_role.h"
 
 #include <ros/ros.h>
 
@@ -21,16 +22,6 @@ namespace driver_modem {
 class modem_interface
 {
 public:
-    // ENUMERATIONS
-    ///
-    /// \brief An enumeration of TCP roles.
-    ///
-    enum class tcp_role
-    {
-        SERVER = 0,     ///< TCP Server Connection
-        CLIENT = 1      ///< TCP Client Connection
-    };
-
     // CONSTRUCTORS
     ///
     /// \brief modem_interface Creates a new modem manager.

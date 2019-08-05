@@ -110,7 +110,7 @@ bool modem_interface::get_remote_host(std::string& remote_host)
         return false;
     }
 }
-bool modem_interface::add_tcp_connection(modem_interface::tcp_role role, uint16_t port)
+bool modem_interface::add_tcp_connection(tcp_role role, uint16_t port)
 {
     // Build request.
     driver_modem::AddTCPConnection service;
