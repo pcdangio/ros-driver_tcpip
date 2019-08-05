@@ -25,10 +25,10 @@ public:
     // CONSTRUCTORS
     ///
     /// \brief modem_interface Creates a new modem manager.
-    /// \param modem_namespace The global namespace of the driver_modem node to manage.
+    /// \param modem_name The global ROS name of the driver_modem node to manage.
     /// \note The namespace must be in the form of "\xxx\yyy\node_name"
     ///
-    modem_interface(std::string modem_namespace);
+    modem_interface(std::string modem_name);
     ~modem_interface();
 
     // METHODS: Callback Management

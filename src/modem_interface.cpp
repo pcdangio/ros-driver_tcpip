@@ -10,13 +10,13 @@
 using namespace driver_modem;
 
 // CONSTRUCTORS
-modem_interface::modem_interface(std::string modem_namespace)
+modem_interface::modem_interface(std::string modem_name)
 {
     // Get node handle.
-    modem_interface::m_node = new ros::NodeHandle(modem_namespace);
+    modem_interface::m_node = new ros::NodeHandle(modem_name);
 
     // Initialize active connections subscriber.
-    modem_interface::m_subscriber_active_connections = modem_interface::m_node->subscribe(modem_namespace + "/active_connections", 1, &modem_interface::callback_active_connections, this);
+    modem_interface::m_subscriber_active_connections = modem_interface::m_node->subscribe("active_connections", 1, &modem_interface::callback_active_connections, this);
 
     // Initialize connection management service clients.
     modem_interface::m_service_set_remote_host = modem_interface::m_node->serviceClient<driver_modem::SetRemoteHost>("set_remote_host");
