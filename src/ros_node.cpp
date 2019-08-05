@@ -150,14 +150,17 @@ bool ros_node::add_udp_connection(uint16_t port, bool publish_connections)
 bool ros_node::remove_connection(protocol type, uint16_t port, bool publish_connections)
 {
     // Instruct driver to remove connection.
-    if(ros_node::m_driver->remove_connection(type, port) && publish_connections)
+    if(ros_node::m_driver->remove_connection(type, port))
     {
         // Remove topics.
         // NOTE: For TCP, driver will not generate disconnected callbacks when driver::remove_connection() is called.
         ros_node::remove_connection_topics(type, port);
 
-        // Publish active connections.
-        ros_node::publish_active_connections();
+        if(publish_connections)
+        {
+            // Publish active connections.
+            ros_node::publish_active_connections();
+        }
 
         return true;
     }
@@ -256,9 +259,6 @@ void ros_node::remove_connection_topics(protocol type, uint16_t port)
         break;
     }
     }
-
-    // Publish updated connections.
-    ros_node::publish_active_connections();
 }
 
 // PRIVATE METHODS: MISC
@@ -355,6 +355,9 @@ void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, 
 bool ros_node::service_set_remote_host(driver_modem::SetRemoteHostRequest &request, driver_modem::SetRemoteHostResponse &response)
 {
     response.success = ros_node::m_driver->set_remote_host(request.remote_host);
+
+    // Publish active connections, since changing remote host clears all connections.
+    ros_node::publish_active_connections();
 
     return true;
 }
