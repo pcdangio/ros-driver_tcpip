@@ -27,19 +27,30 @@ driver::driver(std::string local_ip, std::string remote_host,
 driver::~driver()
 {
     // Close and delete any remaining connections.
-
     driver::close_all_connections();
+
+    // Delete io service worker.
+    delete driver::m_service_work;
 }
 
 // PUBLIC METHODS: START/STOP
 void driver::start()
 {
+    // Create worker object to keep io service running.
+    driver::m_service_work = new boost::asio::io_service::work(driver::m_service);
+    // Run io service in separate thread.
     driver::m_thread = boost::thread(boost::bind(&boost::asio::io_service::run, boost::ref(driver::m_service)));
 }
 void driver::stop()
 {
+    // Stop the service.
     driver::m_service.stop();
+
+    // Join the thread.
     driver::m_thread.join();
+
+    // Delete the service worker.
+    delete driver::m_service_work;
 }
 
 // PUBLIC METHODS: CONNECTION MANAGEMENT
@@ -64,10 +75,10 @@ bool driver::set_remote_host(std::string remote_host)
         return false;
     }
 }
-bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
+bool driver::add_tcp_connection(tcp_role role, uint16_t port)
 {
     // Check if the connection already exists.
-    if(driver::m_tcp_pending.count(port) == 0 && driver::m_tcp_active.count(port) == 0 && role != tcp_connection::role::UNASSIGNED)
+    if(driver::m_tcp_pending.count(port) == 0 && driver::m_tcp_active.count(port) == 0 && role != tcp_role::UNASSIGNED)
     {
         // Create the TCP connection.
         tcp_connection* new_tcp = new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, port));
@@ -83,16 +94,16 @@ bool driver::add_tcp_connection(tcp_connection::role role, uint16_t port)
 
         switch(role)
         {
-        case tcp_connection::role::UNASSIGNED:
+        case tcp_role::UNASSIGNED:
         {
             // This case will never occur due to if condition.
             return false;
         }
-        case tcp_connection::role::SERVER:
+        case tcp_role::SERVER:
         {
             return new_tcp->start_server();
         }
-        case tcp_connection::role::CLIENT:
+        case tcp_role::CLIENT:
         {
             return new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
         }
@@ -108,7 +119,7 @@ bool driver::add_udp_connection(uint16_t port)
     if(driver::m_udp_active.count(port) == 0)
     {
         // Create the UDP connection.
-        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port));
+        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port), udp::endpoint(driver::m_remote_ip, port));
         // Attach the rx callback.
         new_udp->attach_rx_callback(driver::m_callback_rx);
         // Add connection to map.

@@ -4,6 +4,7 @@ CONFIG -= app_bundle
 CONFIG -= qt
 
 INCLUDEPATH += \
+    include \
     /usr/include \
     /opt/ros/melodic/include \
     ../../devel/include
@@ -11,6 +12,7 @@ INCLUDEPATH += \
 SOURCES += \
     src/driver.cpp \
     src/main.cpp \
+    src/modem_interface.cpp \
     src/ros_node.cpp \
     src/udp_connection.cpp \
     src/tcp_connection.cpp
@@ -30,8 +32,10 @@ DISTFILES += \
     srv/SetRemoteHost.srv
 
 HEADERS += \
+    include/driver_modem/protocol.h \
+    include/driver_modem/modem_interface.h \
+    include/driver_modem/tcp_role.h \
     src/driver.h \
-    src/protocol.h \
     src/ros_node.h \
     src/udp_connection.h \
     src/tcp_connection.h

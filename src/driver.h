@@ -52,7 +52,7 @@ public:
     /// \param port The port that the connection shall communicate through.
     /// \return TRUE if the connection was added, otherwise FALSE.
     ///
-    bool add_tcp_connection(tcp_connection::role role, uint16_t port);
+    bool add_tcp_connection(tcp_role role, uint16_t port);
     ///
     /// \brief add_udp_connection Adds a UDP connection to the driver.
     /// \param port The port that the connection shall communicate through.
@@ -119,6 +119,10 @@ private:
     /// \brief m_thread A separate thread for running the IO service event loop.
     ///
     boost::thread m_thread;
+    ///
+    /// \brief m_service_work IO service worker instance for keepign io_service::run running.
+    ///
+    boost::asio::io_service::work* m_service_work;
 
     // VARIABLES: CONNECTION MAPS
     ///

@@ -16,7 +16,7 @@ tcp_connection::tcp_connection(boost::asio::io_service& io_service, tcp::endpoin
     tcp_connection::m_buffer = new uint8_t[buffer_size];
 
     // Initialize role and status.
-    tcp_connection::m_role = tcp_connection::role::UNASSIGNED;
+    tcp_connection::m_role = tcp_role::UNASSIGNED;
     tcp_connection::m_status = tcp_connection::status::DISCONNECTED;
 }
 tcp_connection::~tcp_connection()
@@ -42,7 +42,7 @@ bool tcp_connection::start_server()
         tcp_connection::async_accept();
 
         // Set role.
-        tcp_connection::m_role = tcp_connection::role::SERVER;
+        tcp_connection::m_role = tcp_role::SERVER;
 
         // Update status.
         tcp_connection::update_status(tcp_connection::status::PENDING);
@@ -70,7 +70,7 @@ bool tcp_connection::start_client(tcp::endpoint remote_endpoint)
             tcp_connection::m_socket.async_connect(remote_endpoint, boost::bind(&tcp_connection::connect_callback, this, boost::placeholders::_1));
 
             // Set role.
-            tcp_connection::m_role = tcp_connection::role::CLIENT;
+            tcp_connection::m_role = tcp_role::CLIENT;
 
             // Update status.
             tcp_connection::update_status(tcp_connection::status::PENDING);
@@ -161,7 +161,7 @@ void tcp_connection::update_status(status new_status, bool signal)
         case tcp_connection::status::DISCONNECTED:
         {
             // Reset role to unassigned.
-            tcp_connection::m_role = tcp_connection::role::UNASSIGNED;
+            tcp_connection::m_role = tcp_role::UNASSIGNED;
 
             // Raise disconnect callback.
             if(signal && tcp_connection::m_disconnected_callback)
@@ -195,7 +195,7 @@ void tcp_connection::update_status(status new_status, bool signal)
 }
 
 // PROPERTIES
-tcp_connection::role tcp_connection::p_role() const
+tcp_role tcp_connection::p_role() const
 {
     return tcp_connection::m_role;
 }

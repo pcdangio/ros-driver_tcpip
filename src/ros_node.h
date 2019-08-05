@@ -101,7 +101,7 @@ private:
     /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
     /// \return TRUE if the new connection was added, otherwise FALSE.
     ///
-    bool add_tcp_connection(tcp_connection::role role, uint16_t port, bool publish_connections = true);
+    bool add_tcp_connection(tcp_role role, uint16_t port, bool publish_connections = true);
     ///
     /// \brief add_udp_connection Instructs the driver to add a new UDP connection.
     /// \param port The port of the new UDP connection.
