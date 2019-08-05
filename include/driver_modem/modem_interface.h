@@ -85,12 +85,16 @@ public:
     /// \param role The role of the TCP connection (client or server).
     /// \param port The port of the TCP connection.
     /// \return TRUE if successful, otherwise FALSE.
+    /// \note ROS takes time to connect publishers, subscribers, and services.
+    /// The connection will not be immediately available for use.
     ///
     bool add_tcp_connection(tcp_role role, uint16_t port);
     ///
     /// \brief add_udp_connection Adds a UDP connection to the modem.
     /// \param port The port of the UDP connection.
     /// \return TRUE if successful, otherwise FALSE.
+    /// \note ROS takes time to connect publishers, subscribers, and services.
+    /// The connection will not be immediately available for use.
     ///
     bool add_udp_connection(uint16_t port);
     ///
@@ -121,6 +125,25 @@ public:
     ///
     bool send_udp(uint16_t port, const uint8_t* data, uint32_t length);
 
+    // METHODS: Connection Checking
+    ///
+    /// \brief is_connected_tcp Checks if a particular TCP port is connected.
+    /// \param type The protocol type of the connection.
+    /// \param port The port to check.
+    /// \return TRUE if the port is connected, FALSE if the port is pending or disconnected.
+    ///
+    bool is_connected(protocol type, uint16_t port) const;
+    ///
+    /// \brief wait_for_connection Waits until a connection is established.
+    /// \param type THe protocol type of the connection.
+    /// \param port The port of the connection.
+    /// \param timeout Timeout (seconds) to wait for the connection.
+    /// \return TRUE if the connection was found in time, otherwise FALSE.
+    /// \details Blocks until connection is found, timeout, or the node shuts down.
+    /// Spins the node while waiting.
+    ///
+    bool wait_for_connection(protocol type, uint16_t port, double_t timeout = 0.5) const;
+
     // PROPERTIES
     ///
     /// \brief p_active_tcp_connections Gets the active TCP connections.
@@ -137,7 +160,6 @@ public:
     /// \return The list of active UDP ports.
     ///
     std::vector<uint16_t> p_active_udp_connections() const;
-
 
 private:
     // VARIABLES: Active Connections

@@ -216,6 +216,63 @@ bool modem_interface::send_udp(uint16_t port, const uint8_t *data, uint32_t leng
     }
 }
 
+// METHODS: Connection Checking
+bool modem_interface::is_connected(protocol type, uint16_t port) const
+{
+    switch(type)
+    {
+    case protocol::TCP:
+    {
+        for(auto it = modem_interface::m_active_tcp_connections.begin(); it != modem_interface::m_active_tcp_connections.end(); it++)
+        {
+            if(*it == port)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    case protocol::UDP:
+    {
+        for(auto it = modem_interface::m_active_udp_connections.begin(); it != modem_interface::m_active_udp_connections.end(); it++)
+        {
+            if(*it == port)
+            {
+                return true;
+            }
+        }
+        return false;
+    }
+    }
+
+}
+bool modem_interface::wait_for_connection(protocol type, uint16_t port, double_t timeout) const
+{
+    // Set deadline for timeout.
+    ros::Time deadline = ros::Time::now() + ros::Duration(timeout);
+    // Loop while ROS is OK.
+    ros::Rate sleeper(500);
+    while(ros::ok())
+    {
+        // Check if connection has been made.
+        if(modem_interface::is_connected(type, port))
+        {
+            return true;
+        }
+        // Check for timeout.
+        else if(ros::Time::now() >= deadline)
+        {
+            return false;
+        }
+        // Spin ROS to handle node callbacks.
+        else
+        {
+            ros::spinOnce();
+        }
+    }
+    return false;
+}
+
 // METHODS
 void modem_interface::remove_duplicates(std::list<uint16_t> &a, std::list<uint16_t> &b)
 {
@@ -320,10 +377,6 @@ void modem_interface::callback_active_connections(const driver_modem::ActiveConn
     modem_interface::m_pending_tcp_connections = message->tcp_pending;
     modem_interface::m_active_tcp_connections = message->tcp_active;
     modem_interface::m_active_udp_connections = message->udp_active;
-
-    // Wait for publishers, subscribers, and services to link through ROS.
-    ros::Duration sleeper(0.5);
-    sleeper.sleep();
 }
 void modem_interface::callback_tcp_rx(const driver_modem::DataPacketPtr &message)
 {
