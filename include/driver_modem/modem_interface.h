@@ -112,6 +112,12 @@ public:
 
     // METHODS: Connection Checking
     ///
+    /// \brief wait_for_modem Waits for the modem ROS node to become available.
+    /// \param timeout The amount of time to wait.
+    /// \return TRUE if the modem is available, FALSE if the wait times out.
+    ///
+    bool wait_for_modem(ros::Duration timeout = ros::Duration(-1));
+    ///
     /// \brief is_connected Checks if a particular port is connected.
     /// \param type The protocol type of the connection.
     /// \param port The port to check.

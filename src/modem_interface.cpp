@@ -217,6 +217,11 @@ bool modem_interface::send_udp(uint16_t port, const uint8_t *data, uint32_t leng
 }
 
 // METHODS: Connection Checking
+bool modem_interface::wait_for_modem(ros::Duration timeout)
+{
+    // Use waifforservice to wait for the RemoveConnection service.
+    return modem_interface::m_service_remove_connection.waitForExistence(timeout);
+}
 bool modem_interface::is_connected(protocol type, uint16_t port) const
 {
     switch(type)
