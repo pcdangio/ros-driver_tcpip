@@ -125,6 +125,12 @@ public:
     ///
     bool is_connected(protocol type, uint16_t port) const;
     ///
+    /// \brief is_pending Check is a TCP connection is pending.
+    /// \param port The TCP port to check.
+    /// \return TRUE if the port is pending a connection, otherwise false.
+    ///
+    bool is_pending(uint16_t port) const;
+    ///
     /// \brief wait_for_connection Waits until a connection is established.
     /// \param type THe protocol type of the connection.
     /// \param port The port of the connection.
