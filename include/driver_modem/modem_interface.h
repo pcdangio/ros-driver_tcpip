@@ -36,7 +36,7 @@ public:
     /// \brief attach_callback_tcp_rx Attaches a callback for handling received TCP messages.
     /// \param callback The callback function.
     ///
-    void attach_callback_tcp_rx(std::function<void(const driver_modem::DataPacketPtr&)> callback);
+    void attach_callback_tcp_rx(std::function<void(uint16_t, const driver_modem::DataPacketConstPtr&)> callback);
     ///
     /// \brief detach_callback_tcp_rx Detaches the current callback for handling received TCP messages.
     ///
@@ -45,7 +45,7 @@ public:
     /// \brief attach_callback_udp_rx Attaches a callback for handling received UDP messages.
     /// \param callback The callback function.
     ///
-    void attach_callback_udp_rx(std::function<void(const driver_modem::DataPacketPtr&)> callback);
+    void attach_callback_udp_rx(std::function<void (uint16_t, const DataPacketConstPtr &)> callback);
     ///
     /// \brief detach_callback_udp_rx Detaches the current callback for handling received UDP messages.
     ///
@@ -112,7 +112,7 @@ public:
 
     // METHODS: Connection Checking
     ///
-    /// \brief is_connected_tcp Checks if a particular TCP port is connected.
+    /// \brief is_connected Checks if a particular port is connected.
     /// \param type The protocol type of the connection.
     /// \param port The port to check.
     /// \return TRUE if the port is connected, FALSE if the port is pending or disconnected.
@@ -165,11 +165,11 @@ private:
     ///
     /// \brief m_callback_tcp_rx Stores the external callback for handling received TCP messages.
     ///
-    std::function<void(const driver_modem::DataPacketPtr&)> m_callback_tcp_rx;
+    std::function<void(uint16_t port, const driver_modem::DataPacketConstPtr&)> m_callback_tcp_rx;
     ///
     /// \brief m_callback_udp_rx Stores the external callback for handling received UDP messages.
     ///
-    std::function<void(const driver_modem::DataPacketPtr&)> m_callback_udp_rx;
+    std::function<void(uint16_t port, const driver_modem::DataPacketConstPtr&)> m_callback_udp_rx;
 
     // VARIABLES: ROS Node
     ///
@@ -240,13 +240,15 @@ private:
     ///
     /// \brief callback_tcp_rx Handles received TCP messages.
     /// \param message The recieved message.
+    /// \param port The port the message was received on.
     ///
-    void callback_tcp_rx(const driver_modem::DataPacketPtr& message);
+    void callback_tcp_rx(const DataPacketConstPtr &message, uint16_t port);
     ///
     /// \brief callback_udp_rx Handles received UDP messages.
     /// \param message The received message.
+    /// \param port The port the message was received on.
     ///
-    void callback_udp_rx(const driver_modem::DataPacketPtr& message);
+    void callback_udp_rx(const driver_modem::DataPacketConstPtr& message, uint16_t port);
 };
 
 }

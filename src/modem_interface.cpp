@@ -60,7 +60,7 @@ modem_interface::~modem_interface()
 }
 
 // METHODS: Callback Management
-void modem_interface::attach_callback_tcp_rx(std::function<void (const driver_modem::DataPacketPtr &)> callback)
+void modem_interface::attach_callback_tcp_rx(std::function<void (uint16_t, const DataPacketConstPtr &)> callback)
 {
     modem_interface::m_callback_tcp_rx = callback;
 }
@@ -68,7 +68,7 @@ void modem_interface::detach_callback_tcp_rx()
 {
     modem_interface::m_callback_tcp_rx = nullptr;
 }
-void modem_interface::attach_callback_udp_rx(std::function<void (const driver_modem::DataPacketPtr &)> callback)
+void modem_interface::attach_callback_udp_rx(std::function<void (uint16_t, const driver_modem::DataPacketConstPtr &)> callback)
 {
     modem_interface::m_callback_udp_rx = callback;
 }
@@ -348,7 +348,7 @@ void modem_interface::callback_active_connections(const driver_modem::ActiveConn
         topic_front << "tcp/" << *it;
         modem_interface::m_services_send_tcp.insert(std::make_pair(*it, modem_interface::m_node->serviceClient<driver_modem::SendTCP>(topic_front.str() + "/tx")));
         // Add TCP RX subscriber.
-        modem_interface::m_subscribers_tcp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe(topic_front.str() + "/rx", 1, &modem_interface::callback_tcp_rx, this)));
+        modem_interface::m_subscribers_tcp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe<driver_modem::DataPacket>(topic_front.str() + "/rx", 1, std::bind(&modem_interface::callback_tcp_rx, this, std::placeholders::_1, *it))));
     }
 
     // UDP:
@@ -370,7 +370,7 @@ void modem_interface::callback_active_connections(const driver_modem::ActiveConn
         topic_front << "udp/" << *it;
         modem_interface::m_publishers_udp.insert(std::make_pair(*it, modem_interface::m_node->advertise<driver_modem::DataPacket>(topic_front.str() + "/tx", 1)));
         // Add UDP RX subscriber.
-        modem_interface::m_subscribers_udp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe(topic_front.str() + "/rx", 1, &modem_interface::callback_udp_rx, this)));
+        modem_interface::m_subscribers_udp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe<driver_modem::DataPacket>(topic_front.str() + "/rx", 1, std::bind(&modem_interface::callback_udp_rx, this, std::placeholders::_1, *it))));
     }
 
     // Assign new connections to internal storage.
@@ -378,13 +378,13 @@ void modem_interface::callback_active_connections(const driver_modem::ActiveConn
     modem_interface::m_active_tcp_connections = message->tcp_active;
     modem_interface::m_active_udp_connections = message->udp_active;
 }
-void modem_interface::callback_tcp_rx(const driver_modem::DataPacketPtr &message)
+void modem_interface::callback_tcp_rx(const driver_modem::DataPacketConstPtr &message, uint16_t port)
 {
     // Forward to external callback.
-    modem_interface::m_callback_tcp_rx(message);
+    modem_interface::m_callback_tcp_rx(port, message);
 }
-void modem_interface::callback_udp_rx(const driver_modem::DataPacketPtr &message)
+void modem_interface::callback_udp_rx(const driver_modem::DataPacketConstPtr &message, uint16_t port)
 {
     // Forward to external callback.
-    modem_interface::m_callback_udp_rx(message);
+    modem_interface::m_callback_udp_rx(port, message);
 }
