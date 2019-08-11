@@ -188,7 +188,8 @@ bool driver::remove_connection(protocol type, uint16_t port)
         }
         else
         {
-            return false;
+            // Connection already doesn't exist.
+            return true;
         }
     }
     case protocol::UDP:
@@ -208,7 +209,8 @@ bool driver::remove_connection(protocol type, uint16_t port)
         }
         else
         {
-            return false;
+            // Connection already doesn't exist.
+            return true;
         }
     }
     }
