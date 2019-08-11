@@ -254,7 +254,7 @@ private:
     /// \param message The recieved message.
     /// \param port The port the message was received on.
     ///
-    void callback_tcp_rx(const DataPacketConstPtr &message, uint16_t port);
+    void callback_tcp_rx(const driver_modem::DataPacketConstPtr &message, uint16_t port);
     ///
     /// \brief callback_udp_rx Handles received UDP messages.
     /// \param message The received message.
