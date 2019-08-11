@@ -77,40 +77,57 @@ bool driver::set_remote_host(std::string remote_host)
 }
 bool driver::add_tcp_connection(tcp_role role, uint16_t port)
 {
-    // Check if the connection already exists.
-    if(driver::m_tcp_pending.count(port) == 0 && driver::m_tcp_active.count(port) == 0 && role != tcp_role::UNASSIGNED)
+    // Make sure role is valid.
+    if(role != tcp_role::UNASSIGNED)
     {
-        // Create the TCP connection.
-        tcp_connection* new_tcp = new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, port));
+        // Check if the connection already exists.
+        if(driver::m_tcp_pending.count(port) == 0 && driver::m_tcp_active.count(port) == 0)
+        {
+            // Create the TCP connection.
+            tcp_connection* new_tcp = new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, port));
 
-        // Add the connected/disconnected/rx callbacks.
-        new_tcp->attach_connected_callback(std::bind(&driver::callback_tcp_connected, this, std::placeholders::_1));
-        new_tcp->attach_disconnected_callback(std::bind(&driver::callback_tcp_disconnected, this, std::placeholders::_1));
-        // NOTE: rx callback is forwarded from external.
-        new_tcp->attach_rx_callback(driver::m_callback_rx);
+            // Add the connected/disconnected/rx callbacks.
+            new_tcp->attach_connected_callback(std::bind(&driver::callback_tcp_connected, this, std::placeholders::_1));
+            new_tcp->attach_disconnected_callback(std::bind(&driver::callback_tcp_disconnected, this, std::placeholders::_1));
+            // NOTE: rx callback is forwarded from external.
+            new_tcp->attach_rx_callback(driver::m_callback_rx);
 
-        // Add connection to pending.
-        driver::m_tcp_pending.insert(std::make_pair(port, new_tcp));
+            // Add connection to pending.
+            driver::m_tcp_pending.insert(std::make_pair(port, new_tcp));
 
-        switch(role)
-        {
-        case tcp_role::UNASSIGNED:
-        {
-            // This case will never occur due to if condition.
-            return false;
+            switch(role)
+            {
+            case tcp_role::UNASSIGNED:
+            {
+                // This case will never occur due to if condition.
+                return false;
+            }
+            case tcp_role::SERVER:
+            {
+                return new_tcp->start_server();
+            }
+            case tcp_role::CLIENT:
+            {
+                return new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
+            }
+            }
         }
-        case tcp_role::SERVER:
+        else
         {
-            return new_tcp->start_server();
-        }
-        case tcp_role::CLIENT:
-        {
-            return new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
-        }
+            // The connection is already active or pending. Check if it's role matches the requested role.
+            if(driver::m_tcp_active.count(port))
+            {
+                return driver::m_tcp_active.at(port)->p_role() == role;
+            }
+            else
+            {
+                return driver::m_tcp_pending.at(port)->p_role() == role;
+            }
         }
     }
     else
     {
+        /// Connection role is unassigned.
         return false;
     }
 }
@@ -129,7 +146,8 @@ bool driver::add_udp_connection(uint16_t port)
     }
     else
     {
-        return false;
+        // Return true since the connection already exists.
+        return true;
     }
 }
 bool driver::remove_connection(protocol type, uint16_t port)

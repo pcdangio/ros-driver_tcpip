@@ -112,76 +112,39 @@ bool modem_interface::get_remote_host(std::string& remote_host)
 }
 bool modem_interface::add_tcp_connection(tcp_role role, uint16_t port)
 {
-    if(modem_interface::is_connected(protocol::TCP, port) || modem_interface::is_pending(port))
+    // Build request.
+    driver_modem::AddTCPConnection service;
+    service.request.role = static_cast<uint8_t>(role);
+    service.request.port = port;
+
+    // Call service.
+    if(modem_interface::m_service_add_tcp_connection.call(service))
     {
-        return true;
+        return service.response.success;
     }
     else
     {
-        // Build request.
-        driver_modem::AddTCPConnection service;
-        service.request.role = static_cast<uint8_t>(role);
-        service.request.port = port;
-
-        // Call service.
-        if(modem_interface::m_service_add_tcp_connection.call(service))
-        {
-            return service.response.success;
-        }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 }
 bool modem_interface::add_udp_connection(uint16_t port)
 {
-    if(modem_interface::is_connected(protocol::UDP, port))
+    // Build request.
+    driver_modem::AddUDPConnection service;
+    service.request.port = port;
+
+    // Call service.
+    if(modem_interface::m_service_add_udp_connection.call(service))
     {
-        return true;
+        return service.response.success;
     }
     else
     {
-        // Build request.
-        driver_modem::AddUDPConnection service;
-        service.request.port = port;
-
-        // Call service.
-        if(modem_interface::m_service_add_udp_connection.call(service))
-        {
-            return service.response.success;
-        }
-        else
-        {
-            return false;
-        }
+        return false;
     }
 }
 bool modem_interface::remove_connection(protocol type, uint16_t port)
 {
-    // Check if connection is active or pending.
-    switch(type)
-    {
-    case protocol::UDP:
-    {
-        if(!modem_interface::is_connected(type, port))
-        {
-            return true;
-        }
-        break;
-    }
-    case protocol::TCP:
-    {
-        if(!modem_interface::is_connected(type, port) && !modem_interface::is_pending(port))
-        {
-            return true;
-        }
-        break;
-    }
-    }
-
-    // If this point reached, the connection active or pending.
-
     // Build request.
     driver_modem::RemoveConnection service;
     service.request.protocol = static_cast<uint8_t>(type);
