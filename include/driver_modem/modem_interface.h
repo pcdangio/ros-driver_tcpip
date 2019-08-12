@@ -89,6 +89,11 @@ public:
     /// \return TRUE if successful, otherwise FALSE.
     ///
     bool remove_connection(protocol type, uint16_t port);
+    ///
+    /// \brief remove_all_connections Removes all active and pending connections from the modem.
+    /// \return TRUE if successful, otherwise FALSE.
+    ///
+    bool remove_all_connections();
 
     // METHODS: Transmission
     ///

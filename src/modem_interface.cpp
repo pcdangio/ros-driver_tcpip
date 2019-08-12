@@ -5,6 +5,7 @@
 #include <driver_modem/AddTCPConnection.h>
 #include <driver_modem/AddUDPConnection.h>
 #include <driver_modem/RemoveConnection.h>
+#include <driver_modem/RemoveAllConnections.h>
 #include <driver_modem/SendTCP.h>
 
 using namespace driver_modem;
@@ -149,6 +150,21 @@ bool modem_interface::remove_connection(protocol type, uint16_t port)
     driver_modem::RemoveConnection service;
     service.request.protocol = static_cast<uint8_t>(type);
     service.request.port = port;
+
+    // Call service.
+    if(modem_interface::m_service_remove_connection.call(service))
+    {
+        return service.response.success;
+    }
+    else
+    {
+        return false;
+    }
+}
+bool modem_interface::remove_all_connections()
+{
+    // Build request.
+    driver_modem::RemoveAllConnections service;
 
     // Call service.
     if(modem_interface::m_service_remove_connection.call(service))
