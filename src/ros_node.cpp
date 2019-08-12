@@ -55,6 +55,7 @@ ros_node::ros_node(int argc, char **argv)
     ros_node::m_service_add_tcp_connection = ros_node::m_node->advertiseService("add_tcp_connection", &ros_node::service_add_tcp_connection, this);
     ros_node::m_service_add_udp_connection = ros_node::m_node->advertiseService("add_udp_connection", &ros_node::service_add_udp_connection, this);
     ros_node::m_service_remove_connection = ros_node::m_node->advertiseService("remove_connection", &ros_node::service_remove_connection, this);
+    ros_node::m_service_remove_all_connections = ros_node::m_node->advertiseService("remove_all_connections", &ros_node::service_remove_all_connections, this);
 
     // Set up tx/rx publishers, subscribers, and services.
 
@@ -167,6 +168,40 @@ bool ros_node::remove_connection(protocol type, uint16_t port, bool publish_conn
     else
     {
         return false;
+    }
+}
+void ros_node::remove_all_connections(bool publish_connections)
+{
+    // Remove all TCP and UDP topics.
+    for(auto it = ros_node::m_tcp_rx.begin(); it != ros_node::m_tcp_rx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_tcp_rx.clear();
+    for(auto it = ros_node::m_tcp_tx.begin(); it != ros_node::m_tcp_tx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_tcp_tx.clear();
+    for(auto it = ros_node::m_udp_rx.begin(); it != ros_node::m_udp_rx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_udp_rx.clear();
+    for(auto it = ros_node::m_udp_tx.begin(); it != ros_node::m_udp_tx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_udp_tx.clear();
+
+    // Remove connections from driver.
+    ros_node::m_driver->remove_all_connections();
+
+    // Signal if required.
+    if(publish_connections)
+    {
+        // Publish active connections.
+        ros_node::publish_active_connections();
     }
 }
 
@@ -382,6 +417,16 @@ bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest&
 bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
 {
     response.success = ros_node::remove_connection(static_cast<protocol>(request.protocol), request.port);
+
+    return true;
+}
+bool ros_node::service_remove_all_connections(driver_modem::RemoveAllConnectionsRequest &request, driver_modem::RemoveAllConnectionsResponse &response)
+{
+    // Remove all connections.
+    ros_node::remove_all_connections();
+
+    // Set response to true.
+    response.success = true;
 
     return true;
 }

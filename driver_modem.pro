@@ -27,6 +27,7 @@ DISTFILES += \
     srv/AddTCPConnection.srv \
     srv/AddUDPConnection.srv \
     srv/GetRemoteHost.srv \
+    srv/RemoveAllConnections.srv \
     srv/RemoveConnection.srv \
     srv/SendTCP.srv \
     srv/SetRemoteHost.srv

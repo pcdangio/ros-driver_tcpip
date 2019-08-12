@@ -13,6 +13,7 @@
 #include <driver_modem/AddTCPConnection.h>
 #include <driver_modem/AddUDPConnection.h>
 #include <driver_modem/RemoveConnection.h>
+#include <driver_modem/RemoveAllConnections.h>
 #include <driver_modem/SendTCP.h>
 
 ///
@@ -92,6 +93,10 @@ private:
     /// \brief m_service_remove_connection Service for removing TCP/UDP connections.
     ///
     ros::ServiceServer m_service_remove_connection;
+    ///
+    /// \brief m_service_remove_all_connections Service for removing all connections.
+    ///
+    ros::ServiceServer m_service_remove_all_connections;
 
     // METHODS: CONNECTION MANAGEMENT
     ///
@@ -117,6 +122,10 @@ private:
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
     bool remove_connection(protocol type, uint16_t port, bool publish_connections = true);
+    ///
+    /// \brief remove_all_connections Instructs the driver to remove all connections.
+    ///
+    void remove_all_connections(bool publish_connections = true);
 
     // METHODS: TOPIC MANAGEMENT
     ///
@@ -203,6 +212,13 @@ private:
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
     bool service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response);
+    ///
+    /// \brief service_remove_all_connections Service callback for removing all active and pending connections.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \return TRUE if the service succeeded, otherwise FALSE.
+    ///
+    bool service_remove_all_connections(driver_modem::RemoveAllConnectionsRequest& request, driver_modem::RemoveAllConnectionsResponse& response);
     ///
     /// \brief service_tcp_tx Service for transmitting data over a TCP connection.
     /// \param request The service request.

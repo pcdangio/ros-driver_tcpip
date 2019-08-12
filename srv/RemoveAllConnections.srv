@@ -1,0 +1,4 @@
+# Instructs the modem to remove all pending and active connections.
+
+---
+bool success    # Indicates if all connections were removed successfully.

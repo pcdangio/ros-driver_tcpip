@@ -66,6 +66,10 @@ public:
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
     bool remove_connection(protocol type, uint16_t port);
+    ///
+    /// \brief remove_all_connections Removes all active and pending connections.
+    ///
+    void remove_all_connections();
 
     // METHODS: IO
     ///
@@ -151,12 +155,6 @@ private:
     /// \brief m_callback_rx The callback to raise when messages are received.
     ///
     std::function<void(protocol, uint16_t, uint8_t*, uint32_t, address)> m_callback_rx;
-
-    // METHODS
-    ///
-    /// \brief close_all_connections Closes all pending and active connections.
-    ///
-    void close_all_connections();
 
     // CALLBACKS
     ///

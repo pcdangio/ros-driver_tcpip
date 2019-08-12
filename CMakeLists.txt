@@ -60,6 +60,7 @@ add_service_files(
   AddTCPConnection.srv
   AddUDPConnection.srv
   RemoveConnection.srv
+  RemoveAllConnections.srv
   SendTCP.srv
 )
 
