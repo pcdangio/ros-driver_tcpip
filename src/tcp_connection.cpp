@@ -266,12 +266,13 @@ void tcp_connection::rx_callback(const boost::system::error_code &error, std::si
     }
     else
     {
-        if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted || error == boost::asio::error::operation_aborted)
+        if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted)
         {
-            // Connection has been closed.
+            // Connection has been closed from the other end.
             tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
         }
-        else
+        // Only other acceptable error is operation_aborted, which is caused by connection closed from this end.
+        else if(error != boost::asio::error::operation_aborted)
         {
             throw std::runtime_error("tcp_connection::rx_callback: " + error.message());
         }
