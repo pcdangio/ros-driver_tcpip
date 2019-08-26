@@ -115,6 +115,27 @@ void ros_node::spin()
 }
 
 // PRIVATE METHODS: CONNECTION MANAGEMENT
+bool ros_node::set_remote_host(std::string remote_host)
+{
+    if(ros_node::m_driver->set_remote_host(remote_host))
+    {
+        // Remove all connection topics.
+        ros_node::remove_connection_topics();
+
+        // Publish active connections.
+        ros_node::publish_active_connections();
+
+        ROS_INFO_STREAM("Remote host set to " << remote_host << " and all connections closed");
+
+        return true;
+    }
+    else
+    {
+        ROS_ERROR_STREAM("Could not set remote host to " << remote_host);
+
+        return false;
+    }
+}
 bool ros_node::add_tcp_connection(tcp_role role, uint16_t port, bool publish_connections)
 {
     if(ros_node::m_driver->add_tcp_connection(role, port) && publish_connections)
@@ -394,10 +415,7 @@ void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, 
 // CALLBACKS: SERVICES
 bool ros_node::service_set_remote_host(driver_modem::SetRemoteHostRequest &request, driver_modem::SetRemoteHostResponse &response)
 {
-    response.success = ros_node::m_driver->set_remote_host(request.remote_host);
-
-    // Publish active connections, since changing remote host clears all connections.
-    ros_node::publish_active_connections();
+    response.success = ros_node::set_remote_host(request.remote_host);
 
     return true;
 }

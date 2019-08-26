@@ -100,6 +100,12 @@ private:
 
     // METHODS: CONNECTION MANAGEMENT
     ///
+    /// \brief set_remote_host Sets the remote host of the modem and clears all current connections.
+    /// \param remote_host The new remote host.
+    /// \return TRUE if successful, otherwise FALSE.
+    ///
+    bool set_remote_host(std::string remote_host);
+    ///
     /// \brief add_tcp_connection Instructs the driver to add a new TCP connection.
     /// \param role The role of the new TCP connection.
     /// \param port The port of the new TCP connection.
