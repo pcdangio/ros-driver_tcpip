@@ -140,6 +140,10 @@ private:
     /// \param port The port of the connection removed.
     ///
     void remove_connection_topics(protocol type, uint16_t port);
+    ///
+    /// \brief remove_connection_topics Removes all publishers, subscribers, and services.
+    ///
+    void remove_connection_topics();
 
     // METHODS: MISC
     ///

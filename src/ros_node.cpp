@@ -172,27 +172,8 @@ bool ros_node::remove_connection(protocol type, uint16_t port, bool publish_conn
 }
 void ros_node::remove_all_connections(bool publish_connections)
 {
-    // Remove all TCP and UDP topics.
-    for(auto it = ros_node::m_tcp_rx.begin(); it != ros_node::m_tcp_rx.end(); it++)
-    {
-        it->second.shutdown();
-    }
-    ros_node::m_tcp_rx.clear();
-    for(auto it = ros_node::m_tcp_tx.begin(); it != ros_node::m_tcp_tx.end(); it++)
-    {
-        it->second.shutdown();
-    }
-    ros_node::m_tcp_tx.clear();
-    for(auto it = ros_node::m_udp_rx.begin(); it != ros_node::m_udp_rx.end(); it++)
-    {
-        it->second.shutdown();
-    }
-    ros_node::m_udp_rx.clear();
-    for(auto it = ros_node::m_udp_tx.begin(); it != ros_node::m_udp_tx.end(); it++)
-    {
-        it->second.shutdown();
-    }
-    ros_node::m_udp_tx.clear();
+    // Remove all connection topics.
+    ros_node::remove_connection_topics();
 
     // Remove connections from driver.
     ros_node::m_driver->remove_all_connections();
@@ -294,6 +275,30 @@ void ros_node::remove_connection_topics(protocol type, uint16_t port)
         break;
     }
     }
+}
+void ros_node::remove_connection_topics()
+{
+    // Remove all TCP and UDP topics.
+    for(auto it = ros_node::m_tcp_rx.begin(); it != ros_node::m_tcp_rx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_tcp_rx.clear();
+    for(auto it = ros_node::m_tcp_tx.begin(); it != ros_node::m_tcp_tx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_tcp_tx.clear();
+    for(auto it = ros_node::m_udp_rx.begin(); it != ros_node::m_udp_rx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_udp_rx.clear();
+    for(auto it = ros_node::m_udp_tx.begin(); it != ros_node::m_udp_tx.end(); it++)
+    {
+        it->second.shutdown();
+    }
+    ros_node::m_udp_tx.clear();
 }
 
 // PRIVATE METHODS: MISC
