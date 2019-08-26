@@ -138,10 +138,13 @@ bool ros_node::set_remote_host(std::string remote_host)
 }
 bool ros_node::add_tcp_connection(tcp_role role, uint16_t port, bool publish_connections)
 {
-    if(ros_node::m_driver->add_tcp_connection(role, port) && publish_connections)
+    if(ros_node::m_driver->add_tcp_connection(role, port))
     {
-        // Publish active connections, since connection will initially be in PENDING status.
-        ros_node::publish_active_connections();
+        if(publish_connections)
+        {
+            // Publish active connections, since connection will initially be in PENDING status.
+            ros_node::publish_active_connections();
+        }
 
         // NOTE: TCP will update topics once becoming active through signal on connected tcp callback.
 
@@ -157,13 +160,16 @@ bool ros_node::add_tcp_connection(tcp_role role, uint16_t port, bool publish_con
 }
 bool ros_node::add_udp_connection(uint16_t port, bool publish_connections)
 {
-    if(ros_node::m_driver->add_udp_connection(port) && publish_connections)
+    if(ros_node::m_driver->add_udp_connection(port))
     {
         // Add UDP topic.
         ros_node::add_connection_topics(protocol::UDP, port);
 
-        // Publish active connections.
-        ros_node::publish_active_connections();
+        if(publish_connections)
+        {
+            // Publish active connections.
+            ros_node::publish_active_connections();
+        }
 
         ROS_INFO_STREAM("Connection added on UDP:" << port);
 
