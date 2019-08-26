@@ -30,7 +30,10 @@ driver::~driver()
     driver::remove_all_connections();
 
     // Delete io service worker.
-    delete driver::m_service_work;
+    if(driver::m_service_work)
+    {
+        delete driver::m_service_work;
+    }
 }
 
 // PUBLIC METHODS: START/STOP
@@ -51,6 +54,7 @@ void driver::stop()
 
     // Delete the service worker.
     delete driver::m_service_work;
+    driver::m_service_work = nullptr;
 }
 
 // PUBLIC METHODS: CONNECTION MANAGEMENT
