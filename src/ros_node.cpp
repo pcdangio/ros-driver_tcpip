@@ -145,10 +145,13 @@ bool ros_node::add_tcp_connection(tcp_role role, uint16_t port, bool publish_con
 
         // NOTE: TCP will update topics once becoming active through signal on connected tcp callback.
 
+        ROS_INFO_STREAM("Connection added on TCP:" << port << " (" << driver::tcp_role_string(role) << ")");
+
         return true;
     }
     else
     {
+        ROS_ERROR_STREAM("Could not add connection on TCP:" << port << " (" << driver::tcp_role_string(role) << ")");
         return false;
     }
 }
@@ -162,10 +165,13 @@ bool ros_node::add_udp_connection(uint16_t port, bool publish_connections)
         // Publish active connections.
         ros_node::publish_active_connections();
 
+        ROS_INFO_STREAM("Connection added on UDP:" << port);
+
         return true;
     }
     else
     {
+        ROS_ERROR_STREAM("Could not add connection on UDP:" << port);
         return false;
     }
 }
@@ -184,10 +190,13 @@ bool ros_node::remove_connection(protocol type, uint16_t port, bool publish_conn
             ros_node::publish_active_connections();
         }
 
+        ROS_INFO_STREAM("Connection removed from " << driver::protocol_string(type) << ":" << port);
+
         return true;
     }
     else
     {
+        ROS_ERROR_STREAM("Could not remove connection " << driver::protocol_string(type) << ":" << port);
         return false;
     }
 }
@@ -205,6 +214,8 @@ void ros_node::remove_all_connections(bool publish_connections)
         // Publish active connections.
         ros_node::publish_active_connections();
     }
+
+    ROS_INFO_STREAM("Removed all active and pending connections.");
 }
 
 // PRIVATE METHODS: TOPIC MANAGEMENT
