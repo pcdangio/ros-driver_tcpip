@@ -83,6 +83,20 @@ public:
     ///
     bool tx(protocol type, uint16_t port, const uint8_t* data, uint32_t length);
 
+    // METHODS: Static
+    ///
+    /// \brief protocol_string Gets the string representation of a protocol.
+    /// \param value The protocol value.
+    /// \return The string representation of the protocol.
+    ///
+    static std::string protocol_string(protocol value);
+    ///
+    /// \brief tcp_role_string Gets the string representation of a tcp_role.
+    /// \param value The tcp_role value.
+    /// \return The string representation of the tcp_role.
+    ///
+    static std::string tcp_role_string(tcp_role value);
+
     // PROPERTIES
     ///
     /// \brief p_remote_host Gets the current remote host of the driver.

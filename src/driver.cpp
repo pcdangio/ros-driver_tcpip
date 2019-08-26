@@ -285,6 +285,30 @@ bool driver::tx(protocol type, uint16_t port, const uint8_t *data, uint32_t leng
     }
 }
 
+// PUBLIC METHODS: STATIC
+std::string driver::protocol_string(protocol value)
+{
+    switch(value)
+    {
+    case protocol::TCP:
+        return "TCP";
+    case protocol::UDP:
+        return "UDP";
+    }
+}
+std::string driver::tcp_role_string(tcp_role value)
+{
+    switch(value)
+    {
+    case tcp_role::UNASSIGNED:
+        return "Unassigned";
+    case tcp_role::CLIENT:
+        return "Client";
+    case tcp_role::SERVER:
+        return "Server";
+    }
+}
+
 // PROPERTIES
 std::string driver::p_remote_host()
 {
