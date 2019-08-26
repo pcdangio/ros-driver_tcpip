@@ -264,9 +264,16 @@ void tcp_connection::rx_callback(const boost::system::error_code &error, std::si
         // Start a new asynchronous receive.
         tcp_connection::async_rx();
     }
-    else if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted)
+    else
     {
-        // Connection has been closed.
-        tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+        if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted || error == boost::asio::error::operation_aborted)
+        {
+            // Connection has been closed.
+            tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+        }
+        else
+        {
+            throw std::runtime_error("tcp_connection::rx_callback: " + error.message());
+        }
     }
 }

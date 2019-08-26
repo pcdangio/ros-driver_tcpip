@@ -55,8 +55,15 @@ void udp_connection::rx_callback(const boost::system::error_code &error, std::si
                                       udp_connection::m_socket.local_endpoint().port(),
                                       output_array, static_cast<uint32_t>(bytes_read),
                                       udp_connection::m_remote_endpoint.address());
-    }
 
-    // Start a new asynchronous receive.
-    udp_connection::async_rx();
+        // Start a new asynchronous receive.
+        udp_connection::async_rx();
+    }
+    else
+    {
+        if(error != boost::asio::error::operation_aborted)
+        {
+            throw std::runtime_error("udp_connection::rx_callback: " + error.message());
+        }
+    }
 }
