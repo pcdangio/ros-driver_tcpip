@@ -92,7 +92,7 @@ ros_node::ros_node(int argc, char **argv)
     // Manually publish connections after group add.
     ros_node::publish_active_connections();
 
-    ROS_INFO_STREAM("Modem initialized with local IP: " << param_local_ip << " and remote host: " << param_remote_host);
+    ROS_INFO_STREAM("Modem initialized." << std::endl << "Local IP:\t" << param_local_ip << std::endl << "Remote Host:\t" << param_remote_host);
 }
 ros_node::~ros_node()
 {
