@@ -166,7 +166,7 @@ void tcp_connection::update_status(status new_status, bool signal)
             // Raise disconnect callback.
             if(signal && tcp_connection::m_disconnected_callback)
             {
-                tcp_connection::m_disconnected_callback(tcp_connection::m_socket.local_endpoint().port());
+                tcp_connection::m_disconnected_callback(tcp_connection::m_local_endpoint.port());
             }
 
             // Self delete.  This is needed because callbacks can't delete the caller safely.
