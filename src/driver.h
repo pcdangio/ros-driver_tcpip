@@ -146,11 +146,11 @@ private:
     ///
     /// \brief m_tcp_pending The map of pending TCP connections.
     ///
-    std::map<uint16_t, tcp_connection*> m_tcp_pending;
+    std::map<uint16_t, boost::shared_ptr<tcp_connection>> m_tcp_pending;
     ///
     /// \brief m_tcp_active The map of active TCP connections.
     ///
-    std::map<uint16_t, tcp_connection*> m_tcp_active;
+    std::map<uint16_t, boost::shared_ptr<tcp_connection>> m_tcp_active;
     ///
     /// \brief m_udp_active The map of active UDP connections.
     ///

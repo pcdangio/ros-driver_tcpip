@@ -7,6 +7,7 @@
 #include "driver_modem/tcp_role.h"
 
 #include <boost/asio.hpp>
+#include <boost/enable_shared_from_this.hpp>
 #include <functional>
 
 using namespace boost::asio::ip;
@@ -16,10 +17,10 @@ using namespace driver_modem;
 /// \brief Provides a single asynchronous TCP connection for a specific IP address and port.
 ///
 class tcp_connection
+        : public boost::enable_shared_from_this<tcp_connection>
 {
-public:
+public:    
     // ENUMERATIONS
-
     ///
     /// \brief Enumerates the statuses that the connection may have.
     ///

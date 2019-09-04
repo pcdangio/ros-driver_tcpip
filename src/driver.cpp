@@ -88,7 +88,7 @@ bool driver::add_tcp_connection(tcp_role role, uint16_t port)
         if(driver::m_tcp_pending.count(port) == 0 && driver::m_tcp_active.count(port) == 0)
         {
             // Create the TCP connection.
-            tcp_connection* new_tcp = new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, port));
+            boost::shared_ptr<tcp_connection> new_tcp = boost::shared_ptr<tcp_connection>(new tcp_connection(driver::m_service, tcp::endpoint(driver::m_local_ip, port)));
 
             // Add the connected/disconnected/rx callbacks.
             new_tcp->attach_connected_callback(std::bind(&driver::callback_tcp_connected, this, std::placeholders::_1));
@@ -166,7 +166,7 @@ bool driver::remove_connection(protocol type, uint16_t port)
         if(driver::m_tcp_pending.count(port) > 0)
         {
             // Get a pointer to the tcp connection.
-            tcp_connection* tcp = driver::m_tcp_pending.at(port);
+            boost::shared_ptr<tcp_connection> tcp = driver::m_tcp_pending.at(port);
 
             // Stop the connection.
             // NOTE: This function causes the tcp_connection pointer to self delete.
@@ -181,7 +181,7 @@ bool driver::remove_connection(protocol type, uint16_t port)
         else if(driver::m_tcp_active.count(port) > 0)
         {
             // Get a pointer to the tcp connection.
-            tcp_connection* tcp = driver::m_tcp_active.at(port);
+            boost::shared_ptr<tcp_connection> tcp = driver::m_tcp_active.at(port);
 
             // Stop the connection.
             // NOTE: This function causes the tcp_connection pointer to self delete.
@@ -225,7 +225,7 @@ void driver::remove_all_connections()
 {
     // Get list of pending TCP ports.
     std::vector<uint16_t> tcp_pending_ports;
-    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_pending.begin(); it != driver::m_tcp_pending.end(); it++)
+    for(auto it = driver::m_tcp_pending.begin(); it != driver::m_tcp_pending.end(); it++)
     {
         tcp_pending_ports.push_back(it->first);
     }
@@ -237,7 +237,7 @@ void driver::remove_all_connections()
 
     // Get list of active TCP ports.
     std::vector<uint16_t> tcp_active_ports;
-    for(std::map<uint16_t, tcp_connection*>::iterator it = driver::m_tcp_active.begin(); it != driver::m_tcp_active.end(); it++)
+    for(auto it = driver::m_tcp_active.begin(); it != driver::m_tcp_active.end(); it++)
     {
         tcp_active_ports.push_back(it->first);
     }
@@ -324,7 +324,7 @@ std::vector<uint16_t> driver::p_pending_tcp_connections() const
 {
     std::vector<uint16_t> output;
 
-    for(std::map<uint16_t, tcp_connection*>::const_iterator it = driver::m_tcp_pending.cbegin(); it != driver::m_tcp_pending.cend(); it++)
+    for(auto it = driver::m_tcp_pending.cbegin(); it != driver::m_tcp_pending.cend(); it++)
     {
         output.push_back(it->first);
     }
@@ -335,7 +335,7 @@ std::vector<uint16_t> driver::p_active_tcp_connections() const
 {
     std::vector<uint16_t> output;
 
-    for(std::map<uint16_t, tcp_connection*>::const_iterator it = driver::m_tcp_active.cbegin(); it != driver::m_tcp_active.cend(); it++)
+    for(auto it = driver::m_tcp_active.cbegin(); it != driver::m_tcp_active.cend(); it++)
     {
         output.push_back(it->first);
     }

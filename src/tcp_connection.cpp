@@ -67,7 +67,7 @@ bool tcp_connection::start_client(tcp::endpoint remote_endpoint)
             tcp_connection::m_socket.bind(tcp_connection::m_local_endpoint);
 
             // Start async connect attempt.
-            tcp_connection::m_socket.async_connect(remote_endpoint, boost::bind(&tcp_connection::connect_callback, this, boost::placeholders::_1));
+            tcp_connection::m_socket.async_connect(remote_endpoint, boost::bind(&tcp_connection::connect_callback, tcp_connection::shared_from_this(), boost::placeholders::_1));
 
             // Set role.
             tcp_connection::m_role = tcp_role::CLIENT;
@@ -142,12 +142,12 @@ bool tcp_connection::tx(const uint8_t *data, uint32_t length)
 // PRIVATE METHODS
 void tcp_connection::async_accept()
 {
-    tcp_connection::m_acceptor.async_accept(tcp_connection::m_socket, boost::bind(&tcp_connection::accept_callback, this, boost::placeholders::_1));
+    tcp_connection::m_acceptor.async_accept(tcp_connection::m_socket, boost::bind(&tcp_connection::accept_callback, tcp_connection::shared_from_this(), boost::placeholders::_1));
 }
 void tcp_connection::async_rx()
 {
     tcp_connection::m_socket.async_receive(boost::asio::buffer(tcp_connection::m_buffer, tcp_connection::m_buffer_size),
-                                           boost::bind(&tcp_connection::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+                                           boost::bind(&tcp_connection::rx_callback, tcp_connection::shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 void tcp_connection::update_status(status new_status, bool signal)
 {
@@ -169,9 +169,6 @@ void tcp_connection::update_status(status new_status, bool signal)
                 tcp_connection::m_disconnected_callback(tcp_connection::m_local_endpoint.port());
             }
 
-            // Self delete.  This is needed because callbacks can't delete the caller safely.
-            delete this;
-
             break;
         }
         case tcp_connection::status::CONNECTED:
@@ -191,7 +188,6 @@ void tcp_connection::update_status(status new_status, bool signal)
         }
         }
     }
-
 }
 
 // PROPERTIES
@@ -211,70 +207,85 @@ tcp::endpoint tcp_connection::p_remote_endpoint() const
 // CALLBACKS
 void tcp_connection::accept_callback(const boost::system::error_code &error)
 {
-    if(!error)
+    // Check if the socket is still open.
+    // Closing the socket stops async operations, but callback handlers can still be in io_service queue.
+    if(tcp_connection::m_socket.is_open())
     {
-        // Connection has been made.  Update status.
-        tcp_connection::update_status(tcp_connection::status::CONNECTED);
+        if(!error)
+        {
+            // Connection has been made.  Update status.
+            tcp_connection::update_status(tcp_connection::status::CONNECTED);
 
-        // Start first asynchronous read.
-        tcp_connection::async_rx();
-    }
-    else
-    {
-        // Restart async_accept
-        tcp_connection::async_accept();
+            // Start first asynchronous read.
+            tcp_connection::async_rx();
+        }
+        else
+        {
+            // Restart async_accept
+            tcp_connection::async_accept();
+        }
     }
 }
 void tcp_connection::connect_callback(const boost::system::error_code &error)
 {
-    if(!error)
+    // Check if the socket is still open.
+    // Closing the socket stops async operations, but callback handlers can still be in io_service queue.
+    if(tcp_connection::m_socket.is_open())
     {
-        // Client has successfully connected to a server.  Update status.
-        tcp_connection::update_status(tcp_connection::status::CONNECTED);
+        if(!error)
+        {
+            // Client has successfully connected to a server.  Update status.
+            tcp_connection::update_status(tcp_connection::status::CONNECTED);
 
-        // Start first asynchronous read.
-        tcp_connection::async_rx();
-    }
-    else
-    {
-        // Connection failed.  Update status.
-        tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+            // Start first asynchronous read.
+            tcp_connection::async_rx();
+        }
+        else
+        {
+            // Connection failed.  Update status.
+            tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+        }
     }
 }
 void tcp_connection::rx_callback(const boost::system::error_code &error, std::size_t bytes_read)
 {
-    // Make sure there are no errors, and that the rx callback is attached.
-    if(!error)
+    // Check if the socket is still open.
+    // Closing the socket stops async operations, but callback handlers can still be in io_service queue.
+    if(tcp_connection::m_socket.is_open())
     {
-        if(tcp_connection::m_rx_callback)
+        // Make sure there are no errors, and that the rx callback is attached.
+        if(!error)
         {
-            // Deep copy the data into a new output array.
-            uint8_t* output_array = new uint8_t[bytes_read];
-            std::memcpy(output_array, tcp_connection::m_buffer, bytes_read);
+            if(tcp_connection::m_rx_callback)
+            {
+                // Deep copy the data into a new output array.
+                uint8_t* output_array = new uint8_t[bytes_read];
+                std::memcpy(output_array, tcp_connection::m_buffer, bytes_read);
 
-            // Raise the callback.
-            // NOTE: Upon connection, the remote endpoint is stored in m_socket.
-            tcp_connection::m_rx_callback(protocol::TCP,
-                                          tcp_connection::m_socket.local_endpoint().port(),
-                                          output_array,
-                                          static_cast<uint32_t>(bytes_read),
-                                          tcp_connection::m_socket.remote_endpoint().address());
-        }
+                // Raise the callback.
+                // NOTE: Upon connection, the remote endpoint is stored in m_socket.
+                tcp_connection::m_rx_callback(protocol::TCP,
+                                              tcp_connection::m_socket.local_endpoint().port(),
+                                              output_array,
+                                              static_cast<uint32_t>(bytes_read),
+                                              tcp_connection::m_socket.remote_endpoint().address());
+            }
 
-        // Start a new asynchronous receive.
-        tcp_connection::async_rx();
-    }
-    else
-    {
-        if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted)
-        {
-            // Connection has been closed from the other end.
-            tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+            // Start a new asynchronous receive.
+            tcp_connection::async_rx();
         }
-        // Only other acceptable error is operation_aborted, which is caused by connection closed from this end.
-        else if(error != boost::asio::error::operation_aborted)
+        else
         {
-            throw std::runtime_error("tcp_connection::rx_callback: " + error.message());
+            if(error == boost::asio::error::eof || error == boost::asio::error::connection_reset || error == boost::asio::error::connection_aborted)
+            {
+                // Connection has been closed from the other end.
+                tcp_connection::update_status(tcp_connection::status::DISCONNECTED);
+            }
+            // Only other acceptable error is operation_aborted, which is caused by connection closed from this end.
+            else if(error != boost::asio::error::operation_aborted)
+            {
+                throw std::runtime_error("tcp_connection::rx_callback: " + error.message());
+            }
         }
     }
 }
