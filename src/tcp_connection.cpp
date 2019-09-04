@@ -92,6 +92,8 @@ bool tcp_connection::start_client(tcp::endpoint remote_endpoint)
 }
 void tcp_connection::disconnect()
 {
+    // If acceptor is open, close it.
+    tcp_connection::m_acceptor.close();
     // Close the socket
     tcp_connection::m_socket.close();
 
