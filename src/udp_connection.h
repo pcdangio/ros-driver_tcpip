@@ -6,6 +6,8 @@
 #include "driver_modem/protocol.h"
 
 #include <boost/asio.hpp>
+#include <boost/enable_shared_from_this.hpp>
+
 #include <functional>
 
 using namespace boost::asio::ip;
@@ -15,6 +17,7 @@ using namespace driver_modem;
 /// \brief Provides a single asynchronous UDP connection for a specific IP address and port.
 ///
 class udp_connection
+        : public boost::enable_shared_from_this<udp_connection>
 {
 public:
     // CONSTRUCTORS
@@ -29,6 +32,14 @@ public:
     ~udp_connection();
 
     // METHODS
+    ///
+    /// \brief connect Starts the UDP asynchronous RX operation.
+    ///
+    void connect();
+    ///
+    /// \brief disconnect Stops the UDP asynchronous RX operation.
+    ///
+    void disconnect();
     ///
     /// \brief attach_rx_callback Attaches a callback for handling received messages.
     /// \param callback The callback to handle receieved messages.

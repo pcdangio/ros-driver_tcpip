@@ -13,9 +13,6 @@ udp_connection::udp_connection(boost::asio::io_service& io_service, udp::endpoin
 
     // Store remote endpoint.
     udp_connection::m_remote_endpoint = remote_endpoint;
-
-    // Start asynchronous rx.
-    udp_connection::async_rx();
 }
 udp_connection::~udp_connection()
 {
@@ -23,6 +20,17 @@ udp_connection::~udp_connection()
 }
 
 // METHODS
+void udp_connection::connect()
+{
+    // Start asynchronous rx.
+    udp_connection::async_rx();
+}
+void udp_connection::disconnect()
+{
+    // Close the socket to stop all async operations.
+    udp_connection::m_socket.close();
+}
+
 void udp_connection::attach_rx_callback(std::function<void(protocol, uint16_t, uint8_t *, uint32_t, address)> callback)
 {
     udp_connection::m_rx_callback = callback;
@@ -36,7 +44,7 @@ void udp_connection::async_rx()
     // Start asynchronous receive, and store the source endpoint in m_remote_endpoint.
     udp_connection::m_socket.async_receive_from(boost::asio::buffer(udp_connection::m_buffer, udp_connection::m_buffer_size),
                                                 udp_connection::m_remote_endpoint,
-                                                boost::bind(&udp_connection::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+                                                boost::bind(&udp_connection::rx_callback, udp_connection::shared_from_this(), boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
 }
 
 // CALLBACKS

@@ -140,9 +140,11 @@ bool driver::add_udp_connection(uint16_t port)
     if(driver::m_udp_active.count(port) == 0)
     {
         // Create the UDP connection.
-        udp_connection* new_udp = new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port), udp::endpoint(driver::m_remote_ip, port));
+        boost::shared_ptr<udp_connection> new_udp = boost::shared_ptr<udp_connection>(new udp_connection(driver::m_service, udp::endpoint(driver::m_local_ip, port), udp::endpoint(driver::m_remote_ip, port)));
         // Attach the rx callback.
         new_udp->attach_rx_callback(driver::m_callback_rx);
+        // Start listening for packets.
+        new_udp->connect();
         // Add connection to map.
         driver::m_udp_active.insert(std::make_pair(port, new_udp));
 
@@ -201,13 +203,13 @@ bool driver::remove_connection(protocol type, uint16_t port)
         if(driver::m_udp_active.count(port) > 0)
         {
             // Get a pointer to the udp connection.
-            udp_connection* udp = driver::m_udp_active.at(port);
+            boost::shared_ptr<udp_connection> udp = driver::m_udp_active.at(port);
+
+            // Stop the connection.
+            udp->disconnect();
 
             // Remove the entry from the map.
             driver::m_udp_active.erase(port);
-
-            // Delete the connection.
-            delete udp;
 
             return true;
         }
@@ -247,7 +249,7 @@ void driver::remove_all_connections()
 
     // Get list of UDP ports that are open.
     std::vector<uint16_t> udp_active_ports;
-    for(std::map<uint16_t, udp_connection*>::iterator it = driver::m_udp_active.begin(); it != driver::m_udp_active.end(); it++)
+    for(auto it = driver::m_udp_active.begin(); it != driver::m_udp_active.end(); it++)
     {
         udp_active_ports.push_back(it->first);
     }
@@ -344,7 +346,7 @@ std::vector<uint16_t> driver::p_active_udp_connections() const
 {
     std::vector<uint16_t> output;
 
-    for(std::map<uint16_t, udp_connection*>::const_iterator it = driver::m_udp_active.cbegin(); it != driver::m_udp_active.cend(); it++)
+    for(auto it = driver::m_udp_active.cbegin(); it != driver::m_udp_active.cend(); it++)
     {
         output.push_back(it->first);
     }
