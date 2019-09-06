@@ -96,9 +96,8 @@ bool driver::add_tcp_connection(tcp_role role, uint16_t port)
             // NOTE: rx callback is forwarded from external.
             new_tcp->attach_rx_callback(driver::m_callback_rx);
 
-            // Add connection to pending.
-            driver::m_tcp_pending.insert(std::make_pair(port, new_tcp));
-
+            // Start the connection and track if the start succeeded.
+            bool connection_started = false;
             switch(role)
             {
             case tcp_role::UNASSIGNED:
@@ -108,13 +107,24 @@ bool driver::add_tcp_connection(tcp_role role, uint16_t port)
             }
             case tcp_role::SERVER:
             {
-                return new_tcp->start_server();
+                connection_started = new_tcp->start_server();
+                break;
             }
             case tcp_role::CLIENT:
             {
-                return new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
+                connection_started = new_tcp->start_client(tcp::endpoint(driver::m_remote_ip, port));
+                break;
             }
             }
+
+            // If the connection started, added it to the pending list.
+            if(connection_started)
+            {
+                // Add connection to pending.
+                driver::m_tcp_pending.insert(std::make_pair(port, new_tcp));
+            }
+
+            return connection_started;
         }
         else
         {
@@ -131,7 +141,7 @@ bool driver::add_tcp_connection(tcp_role role, uint16_t port)
     }
     else
     {
-        /// Connection role is unassigned.
+        // Connection role is unassigned.
         return false;
     }
 }
