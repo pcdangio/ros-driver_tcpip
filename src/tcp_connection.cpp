@@ -32,6 +32,11 @@ bool tcp_connection::start_server()
         // Open the acceptor
         tcp_connection::m_acceptor.open(tcp_connection::m_local_endpoint.protocol());
 
+        // Instruct acceptor to reuse the address/port if it is still left open.
+        // NOTE: This can happen with TCP even after socket/acceptor is closed or deleted.
+        boost::asio::socket_base::reuse_address option(true);
+        tcp_connection::m_acceptor.set_option(option);
+
         // Bind it to the local endpoint.
         tcp_connection::m_acceptor.bind(tcp_connection::m_local_endpoint);
 
@@ -62,6 +67,11 @@ bool tcp_connection::start_client(tcp::endpoint remote_endpoint)
         {
             // Open the socket.
             tcp_connection::m_socket.open(tcp_connection::m_local_endpoint.protocol());
+
+            // Instruct socket to reuse the address/port if it is still left open.
+            // NOTE: This can happen with TCP even after socket/acceptor is closed or deleted.
+            boost::asio::socket_base::reuse_address option(true);
+            tcp_connection::m_socket.set_option(option);
 
             // Bind socket to the local endpoint.
             tcp_connection::m_socket.bind(tcp_connection::m_local_endpoint);
