@@ -21,6 +21,8 @@ include_directories(
 
 # Add static library for modem_interface.
 add_library(modem_interface src/modem_interface.cpp)
+# Add dependency on exported targets for built driver_modem_msgs.
+add_dependencies(modem_interface ${catkin_EXPORTED_TARGETS})
 
 ## Add cmake target dependencies of the library
 ## as an example, code may need to be generated before libraries
@@ -31,8 +33,8 @@ add_library(modem_interface src/modem_interface.cpp)
 add_executable(${PROJECT_NAME}_node src/main.cpp src/ros_node.cpp src/driver.cpp src/udp_connection.cpp src/tcp_connection.cpp)
 # Rename target.
 set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
-# Add dependencies.
-add_dependencies(${PROJECT_NAME}_node ${${PROJECT_NAME}_EXPORTED_TARGETS} ${catkin_EXPORTED_TARGETS})
+# Add dependency on exported targets for built driver_modem_msgs.
+add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 # Link target.
 target_link_libraries(${PROJECT_NAME}_node
   ${catkin_LIBRARIES})
