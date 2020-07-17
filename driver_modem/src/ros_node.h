@@ -7,14 +7,14 @@
 
 #include <ros/ros.h>
 
-#include <driver_modem/DataPacket.h>
-#include <driver_modem/SetRemoteHost.h>
-#include <driver_modem/GetRemoteHost.h>
-#include <driver_modem/AddTCPConnection.h>
-#include <driver_modem/AddUDPConnection.h>
-#include <driver_modem/RemoveConnection.h>
-#include <driver_modem/RemoveAllConnections.h>
-#include <driver_modem/SendTCP.h>
+#include <driver_modem_msgs/data_packet.h>
+#include <driver_modem_msgs/set_remote_host.h>
+#include <driver_modem_msgs/get_remote_host.h>
+#include <driver_modem_msgs/add_tcp_connection.h>
+#include <driver_modem_msgs/add_udp_connection.h>
+#include <driver_modem_msgs/remove_connection.h>
+#include <driver_modem_msgs/remove_all_connections.h>
+#include <driver_modem_msgs/send_tcp.h>
 
 ///
 /// \brief Implements the driver's ROS node functionality.
@@ -109,14 +109,14 @@ private:
     /// \brief add_tcp_connection Instructs the driver to add a new TCP connection.
     /// \param role The role of the new TCP connection.
     /// \param port The port of the new TCP connection.
-    /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
+    /// \param publish_connections Indicates if the method should publish the active_connections method.
     /// \return TRUE if the new connection was added, otherwise FALSE.
     ///
     bool add_tcp_connection(tcp_role role, uint16_t port, bool publish_connections = true);
     ///
     /// \brief add_udp_connection Instructs the driver to add a new UDP connection.
     /// \param port The port of the new UDP connection.
-    /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
+    /// \param publish_connections Indicates if the method should publish the active_connections method.
     /// \return TRUE if the new connection was added, otherwise FALSE.
     ///
     bool add_udp_connection(uint16_t port, bool publish_connections = true);
@@ -124,7 +124,7 @@ private:
     /// \brief remove_connection Instructs the driver to remove a TCP or UDP connection
     /// \param type The protocol type of the connection to remove.
     /// \param port The port of the connection to remove.
-    /// \param publish_connections Indicates if the method should publish the ActiveConnections method.
+    /// \param publish_connections Indicates if the method should publish the active_connections method.
     /// \return TRUE if the connection was removed, otherwise FALSE.
     ///
     bool remove_connection(protocol type, uint16_t port, bool publish_connections = true);
@@ -180,11 +180,11 @@ private:
 
     // CALLBACKS: SUBSCRIBERS
     ///
-    /// \brief callback_udp_tx Forwards received DataPacket messages from udp tx topics.
+    /// \brief callback_udp_tx Forwards received data_packet messages from udp tx topics.
     /// \param message The message to forward.
     /// \param port The local port to forward the message to.
     ///
-    void callback_udp_tx(const driver_modem::DataPacketConstPtr& message, uint16_t port);
+    void callback_udp_tx(const driver_modem_msgs::data_packetConstPtr& message, uint16_t port);
 
     // CALLBACKS: SERVICES
     ///
@@ -193,42 +193,42 @@ private:
     /// \param response The service response.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_set_remote_host(driver_modem::SetRemoteHostRequest& request, driver_modem::SetRemoteHostResponse& response);
+    bool service_set_remote_host(driver_modem_msgs::set_remote_hostRequest& request, driver_modem_msgs::set_remote_hostResponse& response);
     ///
     /// \brief service_get_remote_host Service callback for getting the driver's remote host.
     /// \param request The service request.
     /// \param response The service response.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_get_remote_host(driver_modem::GetRemoteHostRequest& request, driver_modem::GetRemoteHostResponse& response);
+    bool service_get_remote_host(driver_modem_msgs::get_remote_hostRequest& request, driver_modem_msgs::get_remote_hostResponse& response);
     ///
     /// \brief service_add_tcp_connection Service callback for adding TCP connectins.
     /// \param request The service request.
     /// \param response The service response.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response);
+    bool service_add_tcp_connection(driver_modem_msgs::add_tcp_connectionRequest& request, driver_modem_msgs::add_tcp_connectionResponse& response);
     ///
     /// \brief service_add_udp_connection Service callback for adding UDP connections.
     /// \param request The service request.
     /// \param response The service response.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response);
+    bool service_add_udp_connection(driver_modem_msgs::add_udp_connectionRequest& request, driver_modem_msgs::add_udp_connectionResponse& response);
     ///
     /// \brief service_remove_connection Service callback for removing TCP/UDP connections.
     /// \param request The service request.
     /// \param response The service response.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response);
+    bool service_remove_connection(driver_modem_msgs::remove_connectionRequest& request, driver_modem_msgs::remove_connectionResponse& response);
     ///
     /// \brief service_remove_all_connections Service callback for removing all active and pending connections.
     /// \param request The service request.
     /// \param response The service response.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_remove_all_connections(driver_modem::RemoveAllConnectionsRequest& request, driver_modem::RemoveAllConnectionsResponse& response);
+    bool service_remove_all_connections(driver_modem_msgs::remove_all_connectionsRequest& request, driver_modem_msgs::remove_all_connectionsResponse& response);
     ///
     /// \brief service_tcp_tx Service for transmitting data over a TCP connection.
     /// \param request The service request.
@@ -236,7 +236,7 @@ private:
     /// \param port The TCP port to communicate the data over.
     /// \return TRUE if the service succeeded, otherwise FALSE.
     ///
-    bool service_tcp_tx(driver_modem::SendTCPRequest& request, driver_modem::SendTCPResponse& response, uint16_t port);
+    bool service_tcp_tx(driver_modem_msgs::send_tcpRequest& request, driver_modem_msgs::send_tcpResponse& response, uint16_t port);
 };
 
 #endif // ROS_NODE_H

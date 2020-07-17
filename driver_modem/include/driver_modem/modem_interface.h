@@ -8,8 +8,8 @@
 
 #include <ros/ros.h>
 
-#include <driver_modem/ActiveConnections.h>
-#include <driver_modem/DataPacket.h>
+#include <driver_modem_msgs/active_connections.h>
+#include <driver_modem_msgs/data_packet.h>
 
 ///
 /// \brief Namespace for driver_modem package.
@@ -36,7 +36,7 @@ public:
     /// \brief attach_callback_tcp_rx Attaches a callback for handling received TCP messages.
     /// \param callback The callback function.
     ///
-    void attach_callback_tcp_rx(std::function<void(uint16_t, const driver_modem::DataPacketConstPtr&)> callback);
+    void attach_callback_tcp_rx(std::function<void(uint16_t, const driver_modem_msgs::data_packetConstPtr&)> callback);
     ///
     /// \brief detach_callback_tcp_rx Detaches the current callback for handling received TCP messages.
     ///
@@ -45,7 +45,7 @@ public:
     /// \brief attach_callback_udp_rx Attaches a callback for handling received UDP messages.
     /// \param callback The callback function.
     ///
-    void attach_callback_udp_rx(std::function<void (uint16_t, const DataPacketConstPtr &)> callback);
+    void attach_callback_udp_rx(std::function<void (uint16_t, const driver_modem_msgs::data_packetConstPtr &)> callback);
     ///
     /// \brief detach_callback_udp_rx Detaches the current callback for handling received UDP messages.
     ///
@@ -182,11 +182,11 @@ private:
     ///
     /// \brief m_callback_tcp_rx Stores the external callback for handling received TCP messages.
     ///
-    std::function<void(uint16_t port, const driver_modem::DataPacketConstPtr&)> m_callback_tcp_rx;
+    std::function<void(uint16_t port, const driver_modem_msgs::data_packetConstPtr&)> m_callback_tcp_rx;
     ///
     /// \brief m_callback_udp_rx Stores the external callback for handling received UDP messages.
     ///
-    std::function<void(uint16_t port, const driver_modem::DataPacketConstPtr&)> m_callback_udp_rx;
+    std::function<void(uint16_t port, const driver_modem_msgs::data_packetConstPtr&)> m_callback_udp_rx;
 
     // VARIABLES: ROS Node
     ///
@@ -196,7 +196,7 @@ private:
 
     // VARIABLES: Active Connections Subscriber
     ///
-    /// \brief m_subscriber_active_connections Subscriber for ActiveConnections messages.
+    /// \brief m_subscriber_active_connections Subscriber for active_connections messages.
     ///
     ros::Subscriber m_subscriber_active_connections;
 
@@ -250,22 +250,22 @@ private:
 
     // CALLBACKS: Subscribers
     ///
-    /// \brief callback_active_connections Handles ActiveConnections messages.
+    /// \brief callback_active_connections Handles active_connections messages.
     /// \param message
     ///
-    void callback_active_connections(const driver_modem::ActiveConnectionsPtr& message);
+    void callback_active_connections(const driver_modem_msgs::active_connectionsPtr& message);
     ///
     /// \brief callback_tcp_rx Handles received TCP messages.
     /// \param message The recieved message.
     /// \param port The port the message was received on.
     ///
-    void callback_tcp_rx(const driver_modem::DataPacketConstPtr &message, uint16_t port);
+    void callback_tcp_rx(const driver_modem_msgs::data_packetConstPtr &message, uint16_t port);
     ///
     /// \brief callback_udp_rx Handles received UDP messages.
     /// \param message The received message.
     /// \param port The port the message was received on.
     ///
-    void callback_udp_rx(const driver_modem::DataPacketConstPtr& message, uint16_t port);
+    void callback_udp_rx(const driver_modem_msgs::data_packetConstPtr& message, uint16_t port);
 };
 
 }
