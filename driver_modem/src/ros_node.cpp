@@ -1,6 +1,6 @@
 #include "ros_node.h"
 
-#include <driver_modem/ActiveConnections.h>
+#include <driver_modem_msgs/active_connections.h>
 
 // CONSTRUCTORS
 ros_node::ros_node(int argc, char **argv)
@@ -45,7 +45,7 @@ ros_node::ros_node(int argc, char **argv)
     // Set up active connections publisher.
     // This will publish each time the connections are modified.
     // Use latching so new nodes always have the latest information.
-    ros_node::m_publisher_active_connections = ros_node::m_node->advertise<driver_modem::ActiveConnections>("active_connections", 1, true);
+    ros_node::m_publisher_active_connections = ros_node::m_node->advertise<driver_modem_msgs::active_connections>("active_connections", 1, true);
 
     // Set up service for setting/getting remote host.
     ros_node::m_service_set_remote_host = ros_node::m_node->advertiseService("set_remote_host", &ros_node::service_set_remote_host, this);
@@ -236,14 +236,14 @@ void ros_node::add_connection_topics(protocol type, uint16_t port)
         std::stringstream rx_topic;
         rx_topic << "tcp/" << port << "/rx";
         // Add new rx publisher to the map.
-        ros_node::m_tcp_rx.insert(std::make_pair(port, ros_node::m_node->advertise<driver_modem::DataPacket>(rx_topic.str(), 1)));
+        ros_node::m_tcp_rx.insert(std::make_pair(port, ros_node::m_node->advertise<driver_modem_msgs::data_packet>(rx_topic.str(), 1)));
 
         // TX Service:
         // Generate topic name.
         std::stringstream tx_topic;
         tx_topic << "tcp/" << port << "/tx";
         // Add new tx service server to the map.
-        ros_node::m_tcp_tx.insert(std::make_pair(port, ros_node::m_node->advertiseService<driver_modem::SendTCPRequest, driver_modem::SendTCPResponse>(tx_topic.str(), std::bind(&ros_node::service_tcp_tx, this, std::placeholders::_1, std::placeholders::_2, port))));
+        ros_node::m_tcp_tx.insert(std::make_pair(port, ros_node::m_node->advertiseService<driver_modem_msgs::send_tcpRequest, driver_modem_msgs::send_tcpResponse>(tx_topic.str(), std::bind(&ros_node::service_tcp_tx, this, std::placeholders::_1, std::placeholders::_2, port))));
 
         break;
     }
@@ -254,14 +254,14 @@ void ros_node::add_connection_topics(protocol type, uint16_t port)
         std::stringstream rx_topic;
         rx_topic << "udp/" << port << "/rx";
         // Add new rx publisher to the map.
-        ros_node::m_udp_rx.insert(std::make_pair(port, ros_node::m_node->advertise<driver_modem::DataPacket>(rx_topic.str(), 1)));
+        ros_node::m_udp_rx.insert(std::make_pair(port, ros_node::m_node->advertise<driver_modem_msgs::data_packet>(rx_topic.str(), 1)));
 
         // TX Subscriber:
         // Generate topic name.
         std::stringstream tx_topic;
         tx_topic << "udp/" << port << "/tx";
         // Add new tx subscriber to the map.
-        ros_node::m_udp_tx.insert(std::make_pair(port, ros_node::m_node->subscribe<driver_modem::DataPacket>(tx_topic.str(), 1, std::bind(&ros_node::callback_udp_tx, this, std::placeholders::_1, port))));
+        ros_node::m_udp_tx.insert(std::make_pair(port, ros_node::m_node->subscribe<driver_modem_msgs::data_packet>(tx_topic.str(), 1, std::bind(&ros_node::callback_udp_tx, this, std::placeholders::_1, port))));
 
         break;
     }
@@ -342,11 +342,10 @@ void ros_node::remove_connection_topics()
 // PRIVATE METHODS: MISC
 void ros_node::publish_active_connections()
 {
-    // Convert current connections into ActiveConnections message.
+    // Convert current connections into active_connections message.
 
     // Create output message.
-    driver_modem::ActiveConnections message;
-    message.header.stamp = ros::Time::now();
+    driver_modem_msgs::active_connections message;
 
     // Get the list of active connections from the driver.
     std::vector<uint16_t> pending_tcp = ros_node::m_driver->p_pending_tcp_connections();
@@ -396,9 +395,8 @@ void ros_node::callback_tcp_disconnected(uint16_t port)
 }
 void ros_node::callback_rx(protocol type, uint16_t port, uint8_t *data, uint32_t length, address source)
 {
-    // Deep copy data into new DataPacket message.
-    driver_modem::DataPacket message;
-    message.header.stamp = ros::Time::now();
+    // Deep copy data into new data_packet message.
+    driver_modem_msgs::data_packet message;
     message.source_ip = source.to_string();
     for(uint32_t i = 0; i < length; i++)
     {
@@ -424,43 +422,43 @@ void ros_node::callback_rx(protocol type, uint16_t port, uint8_t *data, uint32_t
 }
 
 // CALLBACKS: SUBSCRIBERS
-void ros_node::callback_udp_tx(const driver_modem::DataPacketConstPtr &message, uint16_t port)
+void ros_node::callback_udp_tx(const driver_modem_msgs::data_packetConstPtr &message, uint16_t port)
 {
     ros_node::m_driver->tx(protocol::UDP, port, message->data.data(), static_cast<uint32_t>(message->data.size()));
 }
 
 // CALLBACKS: SERVICES
-bool ros_node::service_set_remote_host(driver_modem::SetRemoteHostRequest &request, driver_modem::SetRemoteHostResponse &response)
+bool ros_node::service_set_remote_host(driver_modem_msgs::set_remote_hostRequest &request, driver_modem_msgs::set_remote_hostResponse &response)
 {
     response.success = ros_node::set_remote_host(request.remote_host);
 
     return true;
 }
-bool ros_node::service_get_remote_host(driver_modem::GetRemoteHostRequest &request, driver_modem::GetRemoteHostResponse &response)
+bool ros_node::service_get_remote_host(driver_modem_msgs::get_remote_hostRequest &request, driver_modem_msgs::get_remote_hostResponse &response)
 {
     response.remote_host = ros_node::m_driver->p_remote_host();
 
     return true;
 }
-bool ros_node::service_add_tcp_connection(driver_modem::AddTCPConnectionRequest& request, driver_modem::AddTCPConnectionResponse& response)
+bool ros_node::service_add_tcp_connection(driver_modem_msgs::add_tcp_connectionRequest& request, driver_modem_msgs::add_tcp_connectionResponse& response)
 {
     response.success = ros_node::add_tcp_connection(static_cast<tcp_role>(request.role), request.port);
 
     return true;
 }
-bool ros_node::service_add_udp_connection(driver_modem::AddUDPConnectionRequest& request, driver_modem::AddUDPConnectionResponse& response)
+bool ros_node::service_add_udp_connection(driver_modem_msgs::add_udp_connectionRequest& request, driver_modem_msgs::add_udp_connectionResponse& response)
 {
     response.success = ros_node::add_udp_connection(request.port);
 
     return true;
 }
-bool ros_node::service_remove_connection(driver_modem::RemoveConnectionRequest& request, driver_modem::RemoveConnectionResponse& response)
+bool ros_node::service_remove_connection(driver_modem_msgs::remove_connectionRequest& request, driver_modem_msgs::remove_connectionResponse& response)
 {
     response.success = ros_node::remove_connection(static_cast<protocol>(request.protocol), request.port);
 
     return true;
 }
-bool ros_node::service_remove_all_connections(driver_modem::RemoveAllConnectionsRequest &request, driver_modem::RemoveAllConnectionsResponse &response)
+bool ros_node::service_remove_all_connections(driver_modem_msgs::remove_all_connectionsRequest &request, driver_modem_msgs::remove_all_connectionsResponse &response)
 {
     // Remove all connections.
     ros_node::remove_all_connections();
@@ -470,7 +468,7 @@ bool ros_node::service_remove_all_connections(driver_modem::RemoveAllConnections
 
     return true;
 }
-bool ros_node::service_tcp_tx(driver_modem::SendTCPRequest &request, driver_modem::SendTCPResponse &response, uint16_t port)
+bool ros_node::service_tcp_tx(driver_modem_msgs::send_tcpRequest &request, driver_modem_msgs::send_tcpResponse &response, uint16_t port)
 {
     response.success = ros_node::m_driver->tx(protocol::TCP, port, request.packet.data.data(), static_cast<uint32_t>(request.packet.data.size()));
 
