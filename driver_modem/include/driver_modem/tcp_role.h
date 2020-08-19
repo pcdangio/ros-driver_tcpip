@@ -3,14 +3,10 @@
 #ifndef TCP_ROLE_H
 #define TCP_ROLE_H
 
-///
 /// \brief Namespace for driver_modem package.
-///
 namespace driver_modem {
 
-///
 /// \brief Enumerates the roles that a TCP connection may take.
-///
 enum class tcp_role
 {
     UNASSIGNED = 0,     ///< The connection has not yet been assigned a role
