@@ -32,7 +32,7 @@ add_dependencies(modem_interface ${catkin_EXPORTED_TARGETS})
 # Add executable for driver_modem_node.
 add_executable(${PROJECT_NAME}_node src/main.cpp src/ros_node.cpp src/driver.cpp src/udp_connection.cpp src/tcp_connection.cpp)
 # Rename target.
-set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME node PREFIX "")
+set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME driver_modem PREFIX "")
 # Add dependency on exported targets for built driver_modem_msgs.
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 # Link target.
