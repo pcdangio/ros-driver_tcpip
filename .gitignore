@@ -1,5 +1,5 @@
 # Ignore documentation
-doc/*
+doc/
 
 # Ignore IDE files
 *.user
