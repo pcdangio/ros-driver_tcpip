@@ -410,12 +410,18 @@ void ros_node::callback_rx(protocol type, uint16_t port, uint8_t *data, uint32_t
     {
     case protocol::TCP:
     {
-        ros_node::m_tcp_rx.at(port).publish(message);
+        if(ros_node::m_tcp_rx.count(port))
+        {
+            ros_node::m_tcp_rx.at(port).publish(message);
+        }
         break;
     }
     case protocol::UDP:
     {
-        ros_node::m_udp_rx.at(port).publish(message);
+        if(ros_node::m_udp_rx.count(port))
+        {
+            ros_node::m_udp_rx.at(port).publish(message);
+        }
         break;
     }
     }
