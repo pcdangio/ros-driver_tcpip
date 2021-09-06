@@ -29,7 +29,7 @@ public:
     /// \brief Opens the socket.
     /// \param local_endpoint The local endpoint to bind the socket to.
     /// \returns TRUE if the socket was opened successfully, otherwise FALSE.
-    bool open(boost::asio::ip::udp::endpoint& local_endpoint);
+    bool open(driver_modem_msgs::endpoint& local_endpoint);
     /// \brief Closes the socket.
     void close();
 

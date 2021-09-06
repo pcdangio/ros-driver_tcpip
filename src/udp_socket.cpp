@@ -20,13 +20,14 @@ udp_socket_t::~udp_socket_t()
 }
 
 // CONTROL
-bool udp_socket_t::open(boost::asio::ip::udp::endpoint& local_endpoint)
+bool udp_socket_t::open(driver_modem_msgs::endpoint& local_endpoint)
 {
     // Create error code for tracking.
     boost::system::error_code error;
 
     // Bind the socket.
-    udp_socket_t::m_socket.bind(local_endpoint, error);
+    boost::asio::ip::udp::endpoint local_endpoint_asio = udp_socket_t::endpoint_asio(local_endpoint);
+    udp_socket_t::m_socket.bind(local_endpoint_asio, error);
     if(error)
     {
         ROS_ERROR_STREAM("failed to bind udp socket " << udp_socket_t::m_id << " (" << error.message() << ")");
