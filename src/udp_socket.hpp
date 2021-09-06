@@ -54,14 +54,12 @@ private:
     void subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& message);
 
     // RX
-    /// \brief Starts an asynchronous read operation.
-    void async_rx();
     /// \brief A buffer for storing the last received packet bytes.
     std::array<uint8_t, 1024> m_buffer;
     /// \brief The remote endpoint the last packet was received from.
     boost::asio::ip::udp::endpoint m_remote_endpoint;
-
-    // CALLBACKS
+    /// \brief Starts an asynchronous read operation.
+    void async_rx();
     /// \brief The internal callback for handling messages received asynchronously.
     /// \param error The error code provided by the async read operation.
     /// \param bytes_read The number of bytes ready by the async read operation.
