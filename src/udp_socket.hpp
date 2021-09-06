@@ -34,9 +34,9 @@ public:
     void close();
 
     // PROPERTIES
-    /// \brief Gets the descriptor of the UDP socket.
-    /// \param descriptor The structure to populate with the descriptor.
-    void get_descriptor(driver_modem_msgs::udp_socket& descriptor);
+    /// \brief Gets the description of the UDP socket.
+    /// \returns The description of the UDP socket.
+    driver_modem_msgs::udp_socket description() const;
     
 private:
     // SOCKET

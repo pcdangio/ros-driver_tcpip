@@ -85,15 +85,16 @@ void udp_socket_t::close()
 }
 
 // PROPERTIES
-void udp_socket_t::get_descriptor(driver_modem_msgs::udp_socket& descriptor)
+driver_modem_msgs::udp_socket udp_socket_t::description() const
 {
-    // Set descriptor ID.
-    descriptor.id = udp_socket_t::m_id;
+    // Create output message.
+    driver_modem_msgs::udp_socket description;
 
-    // Set descriptor local endpoint.
-    const auto& local_endpoint = udp_socket_t::m_socket.local_endpoint();
-    std::memcpy(descriptor.local_endpoint.ip.data(), local_endpoint.address().to_v4().to_bytes().data(), 4);
-    descriptor.local_endpoint.port = local_endpoint.port();
+    // Populate output message.
+    description.id = udp_socket_t::m_id;
+    description.local_endpoint = udp_socket_t::endpoint_ros(udp_socket_t::m_socket.local_endpoint());
+
+    return description;
 }
 
 // SUBSCRIBERS
