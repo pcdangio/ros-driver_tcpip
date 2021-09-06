@@ -2,6 +2,8 @@
 
 #include <driver_modem_msgs/tcp_packet.h>
 
+#include <boost/asio/placeholders.hpp>
+
 using namespace driver_modem;
 
 // CONSTRUCTORS
@@ -103,6 +105,48 @@ void tcp_socket_t::stop_ros()
 {
     tcp_socket_t::m_service_tx.shutdown();
     tcp_socket_t::m_publisher_rx.shutdown();
+}
+bool tcp_socket_t::service_tx(driver_modem_msgs::send_tcpRequest& request, driver_modem_msgs::send_tcpResponse& response)
+{
+    // Try sending the message.
+    boost::system::error_code error;
+    tcp_socket_t::m_socket->send(boost::asio::buffer(request.packet.data), 0, error);
+
+    // Indicate if message was sent successfully.
+    response.success = !error;
+
+    // Indicate that service was executed successfully.
+    return true;
+}
+
+// RX
+void tcp_socket_t::async_rx()
+{
+    // Start an asynchronous receive.
+    tcp_socket_t::m_socket->async_receive(boost::asio::buffer(tcp_socket_t::m_buffer),
+                                          boost::bind(&tcp_socket_t::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
+void tcp_socket_t::rx_callback(const boost::system::error_code& error, std::size_t bytes_read)
+{
+    // Check for recieve errors.
+    if(!error)
+    {
+        // Publish the message.
+        driver_modem_msgs::tcp_packet message;
+        message.data.assign(tcp_socket_t::m_buffer.begin(), tcp_socket_t::m_buffer.begin() + bytes_read);
+        tcp_socket_t::m_publisher_rx.publish(message);
+
+        // Start a new asynchronous receive.
+        tcp_socket_t::async_rx();
+    }
+    else
+    {
+        // Check if port is being closed.
+        if(error != boost::asio::error::operation_aborted)
+        {
+            ROS_ERROR_STREAM("tcp socket " << tcp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
+        }
+    }
 }
 
 // ENDPOINT CONVERSION
