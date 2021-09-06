@@ -6,6 +6,7 @@
 #include <ros/ros.h>
 #include <driver_modem_msgs/endpoint.h>
 #include <driver_modem_msgs/send_tcp.h>
+#include <driver_modem_msgs/tcp_socket.h>
 
 #include <boost/asio/ip/tcp.hpp>
 
@@ -35,6 +36,11 @@ public:
     bool connect(driver_modem_msgs::endpoint& local_endpoint, driver_modem_msgs::endpoint& remote_endpoint);
     /// \brief Closes the socket.
     void close();
+
+    // PROPERTIES
+    /// \brief Gets the description of the TCP socket.
+    /// \returns The description of the TCP socket.
+    driver_modem_msgs::tcp_socket description() const;
 
 private:
     // SOCKET

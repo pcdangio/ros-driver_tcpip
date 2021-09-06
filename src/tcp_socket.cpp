@@ -89,6 +89,20 @@ void tcp_socket_t::close()
     }
 }
 
+// PROPERTIES
+driver_modem_msgs::tcp_socket tcp_socket_t::description() const
+{
+    // Create output message.
+    driver_modem_msgs::tcp_socket description;
+
+    // Populate message.
+    description.id = tcp_socket_t::m_id;
+    description.local_endpoint = tcp_socket_t::endpoint_ros(tcp_socket_t::m_socket->local_endpoint());
+    description.remote_endpoint = tcp_socket_t::endpoint_ros(tcp_socket_t::m_socket->remote_endpoint());
+
+    return description;
+}
+
 // ROS
 void tcp_socket_t::start_ros()
 {
