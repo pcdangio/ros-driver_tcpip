@@ -4,6 +4,7 @@
 #define DRIVER_MODEM___TCP_SERVER_H
 
 #include <driver_modem_msgs/endpoint.h>
+#include <driver_modem_msgs/tcp_server.h>
 
 #include <boost/asio/ip/tcp.hpp>
 
@@ -30,6 +31,11 @@ public:
     /// \brief Stops the TCP server.
     void stop();
 
+    // PROPERTIES
+    /// \brief Gets the description of the TCP server.
+    /// \returns The description of the TCP server.
+    driver_modem_msgs::tcp_server description() const;
+
 private:
     // VARIABLES
     /// \brief The unique ID of the server.
@@ -48,6 +54,17 @@ private:
     // CALLBACKS
     /// \brief Stores the external callback for when new connections are made.
     std::function<void(uint32_t, boost::asio::ip::tcp::socket*)> m_callback_connection;
+
+    // ENDPOINT CONVERSION
+    /// \brief Converts a ROS endpoint to an ASIO endpoint.
+    /// \param endpoint_ros The ROS endpoint to convert.
+    /// \returns The converted ASIO endpoint.
+    boost::asio::ip::tcp::endpoint endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const;
+    /// \brief Converts an ASIO endpoint to a ROS endpoint.
+    /// \param endpoint_asio The ASIO endpoint to convert.
+    /// \returns The converted ROS endpoint.
+    driver_modem_msgs::endpoint endpoint_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio) const;
+
 };
 
 }
