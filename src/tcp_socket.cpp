@@ -149,18 +149,24 @@ void tcp_socket_t::rx_callback(const boost::system::error_code& error, std::size
         driver_modem_msgs::tcp_packet message;
         message.data.assign(tcp_socket_t::m_buffer.begin(), tcp_socket_t::m_buffer.begin() + bytes_read);
         tcp_socket_t::m_publisher_rx.publish(message);
-
-        // Start a new asynchronous receive.
-        tcp_socket_t::async_rx();
     }
     else
     {
-        // Check if port is being closed.
-        if(error != boost::asio::error::operation_aborted)
+        // An error occured.
+
+        // Check if port is being closed and rx was aborted.
+        if(error == boost::asio::error::operation_aborted)
         {
-            ROS_ERROR_STREAM("tcp socket " << tcp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
+            // Quit receiving.
+            return;
         }
+
+        // Otherwise, report error.
+        ROS_ERROR_STREAM("tcp socket " << tcp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
     }
+
+    // Continue receiving data.
+    tcp_socket_t::async_rx();
 }
 
 // ENDPOINT CONVERSION

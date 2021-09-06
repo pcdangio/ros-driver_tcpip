@@ -1,7 +1,5 @@
 #include "udp_socket.hpp"
 
-#include <ros/console.h>
-
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 
@@ -122,18 +120,24 @@ void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size
         message.remote_endpoint = udp_socket_t::endpoint_ros(udp_socket_t::m_remote_endpoint);
         message.data.assign(udp_socket_t::m_buffer.begin(), udp_socket_t::m_buffer.begin() + bytes_read);
         udp_socket_t::m_publisher_rx.publish(message);
-
-        // Start a new asynchronous receive.
-        udp_socket_t::async_rx();
     }
     else
     {
-        // Check if port is being closed.
-        if(error != boost::asio::error::operation_aborted)
+        // An error occured.
+
+        // Check if port is being closed and rx was aborted.
+        if(error == boost::asio::error::operation_aborted)
         {
-            ROS_ERROR_STREAM("udp socket " << udp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
+            // Quit receiving.
+            return;
         }
+
+        // Otherwise, report error.
+        ROS_ERROR_STREAM("udp socket " << udp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
     }
+
+    // Continue receiving data.
+    udp_socket_t::async_rx();
 }
 
 // ENDPOINT CONVERSION
