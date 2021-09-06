@@ -22,6 +22,13 @@ udp_socket_t::~udp_socket_t()
 // CONTROL
 bool udp_socket_t::open(driver_modem_msgs::endpoint& local_endpoint)
 {
+    // Check if socket is already open.
+    if(udp_socket_t::m_socket.is_open())
+    {
+        ROS_ERROR_STREAM("failed to open udp socket " << udp_socket_t::m_id << " (socket is already open)");
+        return false;
+    }
+    
     // Create error code for tracking.
     boost::system::error_code error;
 
@@ -42,30 +49,38 @@ bool udp_socket_t::open(driver_modem_msgs::endpoint& local_endpoint)
         return false;
     }
 
-    // Create TX/RX subscribers/publishers.
+    // Set publishers and subscribers.
+    // Get private node handle.
     ros::NodeHandle private_node("~");
+    // Set base topic name.
     std::string topic_base = "sockets/" + std::to_string(udp_socket_t::m_id);
+    // Create TX subscriber.
     udp_socket_t::m_subscriber_tx = private_node.subscribe(topic_base + "/tx", 100, &udp_socket_t::subscriber_tx, this);
+    // Create RX publisher.
     udp_socket_t::m_publisher_rx = private_node.advertise<driver_modem_msgs::udp_packet>(topic_base + "/rx", 100);
 
     // Start async receiving.
     udp_socket_t::async_rx();
 
-    // If this point reached, socket has been opened.
+    // Indicate that socket has been opened successfully.
+    ROS_INFO_STREAM("udp socket " << udp_socket_t::m_id << " opened successfully");
     return true;
 }
 void udp_socket_t::close()
 {
-    // Close TX/RX subscribers/publishers
-    udp_socket_t::m_subscriber_tx.shutdown();
-    udp_socket_t::m_publisher_rx.shutdown();
-
-    // Close the socket.
-    boost::system::error_code error;
-    udp_socket_t::m_socket.close(error);
-    if(error)
+    if(udp_socket_t::m_socket.is_open())
     {
-        ROS_ERROR_STREAM("failed to close udp socket " << udp_socket_t::m_id << " (" << error.message() << ")");
+        // Close TX/RX subscribers/publishers
+        udp_socket_t::m_subscriber_tx.shutdown();
+        udp_socket_t::m_publisher_rx.shutdown();
+
+        // Close the socket.
+        boost::system::error_code error;
+        udp_socket_t::m_socket.close(error);
+        if(error)
+        {
+            ROS_ERROR_STREAM("failed to close udp socket " << udp_socket_t::m_id << " (" << error.message() << ")");
+        }
     }
 }
 
