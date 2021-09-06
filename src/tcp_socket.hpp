@@ -1,3 +1,5 @@
+/// \file tcp_socket.hpp
+/// \brief Defines the driver_modem::tcp_socket_t class.
 #ifndef DRIVER_MODEM___TCP_SOCKET_H
 #define DRIVER_MODEM___TCP_SOCKET_H
 
@@ -10,6 +12,7 @@
 
 namespace driver_modem {
 
+/// \brief A TCP socket.
 class tcp_socket_t
 {
 public:
@@ -39,7 +42,14 @@ private:
     /// \brief The unique ID of the socket.
     const uint32_t m_id;
 
+    // ENDPOINT CONVERSION
+    /// \brief Converts a ROS endpoint to an ASIO endpoint.
+    /// \param endpoint_ros The ROS endpoint to convert.
+    /// \returns The converted ASIO endpoint.
     boost::asio::ip::tcp::endpoint endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const;
+    /// \brief Converts an ASIO endpoint to a ROS endpoint.
+    /// \param endpoint_asio The ASIO endpoint to convert.
+    /// \returns The converted ROS endpoint.
     driver_modem_msgs::endpoint endpoint_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio) const;
 };
 

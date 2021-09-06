@@ -24,6 +24,7 @@ tcp_socket_t::~tcp_socket_t()
     delete tcp_socket_t::m_socket;
 }
 
+// CONTROL
 bool tcp_socket_t::connect(driver_modem_msgs::endpoint& local_endpoint, driver_modem_msgs::endpoint& remote_endpoint)
 {
     // Check if the socket is already open.
