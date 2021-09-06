@@ -83,15 +83,8 @@ void udp_socket_t::get_descriptor(driver_modem_msgs::udp_socket& descriptor)
 // SUBSCRIBERS
 void udp_socket_t::subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& message)
 {
-    // Parse remote endpoint.
-    boost::asio::ip::udp::endpoint remote_endpoint;
-    boost::asio::ip::address_v4::bytes_type ip_bytes;
-    std::memcpy(ip_bytes.data(), message->remote_endpoint.ip.data(), 4);
-    remote_endpoint.address(boost::asio::ip::address_v4(ip_bytes));
-    remote_endpoint.port(message->remote_endpoint.port);
-
     // Send the data.
-    udp_socket_t::m_socket.send_to(boost::asio::buffer(message->data), remote_endpoint);
+    udp_socket_t::m_socket.send_to(boost::asio::buffer(message->data), udp_socket_t::endpoint_asio(message->remote_endpoint));
 }
 
 // RX
@@ -109,8 +102,7 @@ void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size
     {
         // Publish the message.
         driver_modem_msgs::udp_packet message;
-        std::memcpy(message.remote_endpoint.ip.data(), udp_socket_t::m_remote_endpoint.address().to_v4().to_bytes().data(), 4);
-        message.remote_endpoint.port = udp_socket_t::m_remote_endpoint.port();
+        message.remote_endpoint = udp_socket_t::endpoint_ros(udp_socket_t::m_remote_endpoint);
         message.data.assign(udp_socket_t::m_buffer.begin(), udp_socket_t::m_buffer.begin() + bytes_read);
         udp_socket_t::m_publisher_rx.publish(message);
 
@@ -125,4 +117,34 @@ void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size
             ROS_ERROR_STREAM("udp socket " << udp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
         }
     }
+}
+
+// ENDPOINT CONVERSION
+boost::asio::ip::udp::endpoint udp_socket_t::endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const
+{
+    // Create ASIO endpoint output.
+    boost::asio::ip::udp::endpoint endpoint_asio;
+
+    // Set the endpoint address.
+    boost::asio::ip::address_v4::bytes_type ip_bytes;
+    std::memcpy(ip_bytes.data(), endpoint_ros.ip.data(), 4);
+    endpoint_asio.address(boost::asio::ip::address_v4(ip_bytes));
+
+    // Set the endpoint port.
+    endpoint_asio.port(endpoint_ros.port);
+
+    return endpoint_asio;
+}
+driver_modem_msgs::endpoint udp_socket_t::endpoint_ros(const boost::asio::ip::udp::endpoint& endpoint_asio) const
+{
+    // Create ROS endpoint output.
+    driver_modem_msgs::endpoint endpoint_ros;
+
+    // Set endpoint address.
+    std::memcpy(endpoint_ros.ip.data(), endpoint_asio.address().to_v4().to_bytes().data(), 4);
+
+    // Set endpoint port.
+    endpoint_ros.port = endpoint_asio.port();
+
+    return endpoint_ros;
 }

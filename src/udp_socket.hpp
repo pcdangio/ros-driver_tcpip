@@ -66,6 +66,17 @@ private:
     /// \param error The error code provided by the async read operation.
     /// \param bytes_read The number of bytes ready by the async read operation.
     void rx_callback(const boost::system::error_code& error, std::size_t bytes_read);
+
+    // ENDPOINT CONVERSION
+    /// \brief Converts a ROS endpoint to an ASIO endpoint.
+    /// \param endpoint_ros The ROS endpoint to convert.
+    /// \returns The converted ASIO endpoint.
+    boost::asio::ip::udp::endpoint endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const;
+    /// \brief Converts an ASIO endpoint to a ROS endpoint.
+    /// \param endpoint_asio The ASIO endpoint to convert.
+    /// \returns The converted ROS endpoint.
+    driver_modem_msgs::endpoint endpoint_ros(const boost::asio::ip::udp::endpoint& endpoint_asio) const;
+
 };
 
 }
