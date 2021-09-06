@@ -1,5 +1,7 @@
 #include "tcp_socket.hpp"
 
+#include <driver_modem_msgs/tcp_packet.h>
+
 using namespace driver_modem;
 
 // CONSTRUCTORS
@@ -8,6 +10,9 @@ tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
 {
     // Store socket.
     tcp_socket_t::m_socket = socket;
+
+    // Start ROS publishers and services.
+    tcp_socket_t::start_ros();
 }
 tcp_socket_t::tcp_socket_t(boost::asio::io_service& io_service, uint32_t id)
     : m_id(id)
@@ -54,11 +59,50 @@ bool tcp_socket_t::connect(driver_modem_msgs::endpoint& local_endpoint, driver_m
         ROS_ERROR_STREAM("failed to connect tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
         return false;
     }
+
+    // Start ROS publishers and services.
+    tcp_socket_t::start_ros();
+
+    // Start asynchronously receiving.
+    tcp_socket_t::async_rx();
+
+    // Indicate success.
+    ROS_INFO_STREAM("tcp socket " << tcp_socket_t::m_id << " connected successfully");
+    return false;
 }
 void tcp_socket_t::close()
 {
-    // Close the ASIO socket.
-    tcp_socket_t::m_socket->close();
+    if(tcp_socket_t::m_socket->is_open())
+    {
+        // Stop publishers and services.
+        tcp_socket_t::stop_ros();
+
+        // Close the ASIO socket.
+        boost::system::error_code error;
+        tcp_socket_t::m_socket->close(error);
+        if(error)
+        {
+            ROS_ERROR_STREAM("failed to close udp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
+        }
+    }
+}
+
+// ROS
+void tcp_socket_t::start_ros()
+{
+    // Get private node handle.
+    ros::NodeHandle private_node("~");
+    // Create base topic.
+    std::string topic_base = "sockets/" + std::to_string(tcp_socket_t::m_id);
+    // Create TX service.
+    tcp_socket_t::m_service_tx = private_node.advertiseService(topic_base + "/tx", &tcp_socket_t::service_tx, this);
+    // Create RX publisher.
+    tcp_socket_t::m_publisher_rx = private_node.advertise<driver_modem_msgs::tcp_packet>(topic_base + "/rx", 100);
+}
+void tcp_socket_t::stop_ros()
+{
+    tcp_socket_t::m_service_tx.shutdown();
+    tcp_socket_t::m_publisher_rx.shutdown();
 }
 
 // ENDPOINT CONVERSION
