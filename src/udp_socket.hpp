@@ -5,6 +5,7 @@
 
 #include <ros/ros.h>
 #include <driver_modem_msgs/udp_packet.h>
+#include <driver_modem_msgs/udp_socket.h>
 
 #include <boost/asio/ip/udp.hpp>
 
@@ -29,6 +30,11 @@ public:
     bool open(boost::asio::ip::udp::endpoint& local_endpoint);
     /// \brief Closes the socket.
     void close();
+
+    // PROPERTIES
+    /// \brief Gets the descriptor of the UDP socket.
+    /// \param descriptor The structure to populate with the descriptor.
+    void get_descriptor(driver_modem_msgs::udp_socket& descriptor);
     
 private:
     // SOCKET

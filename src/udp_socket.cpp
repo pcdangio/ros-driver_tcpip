@@ -17,7 +17,7 @@ udp_socket_t::~udp_socket_t()
     udp_socket_t::close();
 }
 
-// METHODS: CONTROL
+// CONTROL
 bool udp_socket_t::open(boost::asio::ip::udp::endpoint& local_endpoint)
 {
     // Create error code for tracking.
@@ -66,13 +66,16 @@ void udp_socket_t::close()
     }
 }
 
-// METHODS: RX
-void udp_socket_t::async_rx()
+// PROPERTIES
+void udp_socket_t::get_descriptor(driver_modem_msgs::udp_socket& descriptor)
 {
-    // Start an asynchronous receive.
-    udp_socket_t::m_socket.async_receive_from(boost::asio::buffer(udp_socket_t::m_buffer),
-                                              udp_socket_t::m_remote_endpoint,
-                                              boost::bind(&udp_socket_t::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+    // Set descriptor ID.
+    descriptor.id = udp_socket_t::m_id;
+
+    // Set descriptor local endpoint.
+    const auto& local_endpoint = udp_socket_t::m_socket.local_endpoint();
+    std::memcpy(descriptor.local_endpoint.ip.data(), local_endpoint.address().to_v4().to_bytes().data(), 4);
+    descriptor.local_endpoint.port = local_endpoint.port();
 }
 
 // SUBSCRIBERS
@@ -89,7 +92,14 @@ void udp_socket_t::subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& me
     udp_socket_t::m_socket.send_to(boost::asio::buffer(message->data), remote_endpoint);
 }
 
-// CALLBACKS
+// RX
+void udp_socket_t::async_rx()
+{
+    // Start an asynchronous receive.
+    udp_socket_t::m_socket.async_receive_from(boost::asio::buffer(udp_socket_t::m_buffer),
+                                              udp_socket_t::m_remote_endpoint,
+                                              boost::bind(&udp_socket_t::rx_callback, this, boost::asio::placeholders::error, boost::asio::placeholders::bytes_transferred));
+}
 void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size_t bytes_read)
 {
     // Check for recieve errors.
