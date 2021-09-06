@@ -8,7 +8,7 @@ using namespace driver_modem;
 
 // CONSTRUCTORS
 tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
-    : m_id(id)
+    : socket_t(id, protocol_t::TCP)
 {
     // Store socket.
     tcp_socket_t::m_socket = socket;
@@ -17,7 +17,7 @@ tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
     tcp_socket_t::start_ros();
 }
 tcp_socket_t::tcp_socket_t(boost::asio::io_service& io_service, uint32_t id)
-    : m_id(id)
+    : socket_t(id, protocol_t::TCP)
 {
     // Create new socket.
     tcp_socket_t::m_socket = new boost::asio::ip::tcp::socket(io_service);
@@ -101,37 +101,7 @@ driver_modem_msgs::tcp_socket tcp_socket_t::description() const
     return description;
 }
 
-// ROS
-void tcp_socket_t::start_ros()
-{
-    // Get private node handle.
-    ros::NodeHandle private_node("~");
-    // Create base topic.
-    std::string topic_base = "sockets/" + std::to_string(tcp_socket_t::m_id);
-    // Create TX service.
-    tcp_socket_t::m_service_tx = private_node.advertiseService(topic_base + "/tx", &tcp_socket_t::service_tx, this);
-    // Create RX publisher.
-    tcp_socket_t::m_publisher_rx = private_node.advertise<driver_modem_msgs::tcp_packet>(topic_base + "/rx", 100);
-}
-void tcp_socket_t::stop_ros()
-{
-    tcp_socket_t::m_service_tx.shutdown();
-    tcp_socket_t::m_publisher_rx.shutdown();
-}
-bool tcp_socket_t::service_tx(driver_modem_msgs::send_tcpRequest& request, driver_modem_msgs::send_tcpResponse& response)
-{
-    // Try sending the message.
-    boost::system::error_code error;
-    tcp_socket_t::m_socket->send(boost::asio::buffer(request.packet.data), 0, error);
-
-    // Indicate if message was sent successfully.
-    response.success = !error;
-
-    // Indicate that service was executed successfully.
-    return true;
-}
-
-// RX
+// ASIO SOCKET
 void tcp_socket_t::async_rx()
 {
     // Start an asynchronous receive.
@@ -165,6 +135,37 @@ void tcp_socket_t::rx_callback(const boost::system::error_code& error, std::size
 
     // Continue receiving data.
     tcp_socket_t::async_rx();
+}
+
+
+// ROS
+void tcp_socket_t::start_ros()
+{
+    // Get private node handle.
+    ros::NodeHandle private_node("~");
+    // Create base topic.
+    std::string topic_base = "sockets/" + std::to_string(tcp_socket_t::m_id);
+    // Create TX service.
+    tcp_socket_t::m_service_tx = private_node.advertiseService(topic_base + "/tx", &tcp_socket_t::service_tx, this);
+    // Create RX publisher.
+    tcp_socket_t::m_publisher_rx = private_node.advertise<driver_modem_msgs::tcp_packet>(topic_base + "/rx", 100);
+}
+void tcp_socket_t::stop_ros()
+{
+    tcp_socket_t::m_service_tx.shutdown();
+    tcp_socket_t::m_publisher_rx.shutdown();
+}
+bool tcp_socket_t::service_tx(driver_modem_msgs::send_tcpRequest& request, driver_modem_msgs::send_tcpResponse& response)
+{
+    // Try sending the message.
+    boost::system::error_code error;
+    tcp_socket_t::m_socket->send(boost::asio::buffer(request.packet.data), 0, error);
+
+    // Indicate if message was sent successfully.
+    response.success = !error;
+
+    // Indicate that service was executed successfully.
+    return true;
 }
 
 // ENDPOINT CONVERSION

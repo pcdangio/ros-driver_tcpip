@@ -7,8 +7,8 @@ using namespace driver_modem;
 
 // CONSTRUCTORS
 udp_socket_t::udp_socket_t(boost::asio::io_service& io_service, uint32_t id)
-    : m_socket(io_service),
-      m_id(id)
+    : socket_t(id, protocol_t::UDP),
+      m_socket(io_service)
 {
 
 }
@@ -94,14 +94,7 @@ driver_modem_msgs::udp_socket udp_socket_t::description() const
     return description;
 }
 
-// SUBSCRIBERS
-void udp_socket_t::subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& message)
-{
-    // Send the data.
-    udp_socket_t::m_socket.send_to(boost::asio::buffer(message->data), udp_socket_t::endpoint_asio(message->remote_endpoint));
-}
-
-// RX
+// ASIO SOCKET
 void udp_socket_t::async_rx()
 {
     // Start an asynchronous receive.
@@ -137,6 +130,13 @@ void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size
 
     // Continue receiving data.
     udp_socket_t::async_rx();
+}
+
+// ROS
+void udp_socket_t::subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& message)
+{
+    // Send the data.
+    udp_socket_t::m_socket.send_to(boost::asio::buffer(message->data), udp_socket_t::endpoint_asio(message->remote_endpoint));
 }
 
 // ENDPOINT CONVERSION
