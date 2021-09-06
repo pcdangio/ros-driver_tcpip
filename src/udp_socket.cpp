@@ -5,6 +5,8 @@
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 
+using namespace driver_modem;
+
 // CONSTRUCTORS
 udp_socket_t::udp_socket_t(boost::asio::io_service& io_service, uint32_t id)
     : m_socket(io_service),
