@@ -133,6 +133,16 @@ void tcp_socket_t::rx_callback(const boost::system::error_code& error, std::size
             return;
         }
 
+        // Check if remote closed the connection.
+        if(error == boost::asio::error::connection_reset)
+        {
+            // Close socket.
+            tcp_socket_t::close();
+
+            // Quit receiving.
+            return;
+        }
+
         // Otherwise, report error.
         ROS_ERROR_STREAM("tcp socket " << tcp_socket_t::m_id << " asynchrounous receive failed (" << error.message() << ")");
     }
