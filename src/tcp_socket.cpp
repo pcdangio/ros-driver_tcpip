@@ -100,6 +100,10 @@ driver_modem_msgs::tcp_socket tcp_socket_t::description() const
 
     return description;
 }
+bool tcp_socket_t::is_open() const
+{
+    return tcp_socket_t::is_open();
+}
 
 // ASIO SOCKET
 void tcp_socket_t::async_rx()

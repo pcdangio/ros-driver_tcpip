@@ -33,13 +33,13 @@ public:
     /// \param local_endpoint The local endpoint to bind the socket to.
     /// \returns TRUE if the socket was opened successfully, otherwise FALSE.
     bool open(driver_modem_msgs::endpoint& local_endpoint);
-    /// \brief Closes the socket.
     void close() override;
 
     // PROPERTIES
     /// \brief Gets the description of the UDP socket.
     /// \returns The description of the UDP socket.
     driver_modem_msgs::udp_socket description() const;
+    bool is_open() const override;
     
 private:
     // ASIO SOCKET

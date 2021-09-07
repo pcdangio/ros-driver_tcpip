@@ -27,6 +27,9 @@ public:
     /// \brief Indicates the IP protocol of the socket.
     /// \returns The IP protocol of the socket.
     protocol_t protocol() const;
+    /// \brief Indicates if the socket is open.
+    /// \returns TRUE if the socket is open, otherwise FALSE.
+    virtual bool is_open() const = 0;
 
 protected:
     // VARIABLES

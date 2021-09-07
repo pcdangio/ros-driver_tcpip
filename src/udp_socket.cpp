@@ -93,6 +93,10 @@ driver_modem_msgs::udp_socket udp_socket_t::description() const
 
     return description;
 }
+bool udp_socket_t::is_open() const
+{
+    return udp_socket_t::m_socket.is_open();
+}
 
 // ASIO SOCKET
 void udp_socket_t::async_rx()

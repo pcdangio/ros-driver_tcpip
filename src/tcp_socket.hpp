@@ -37,13 +37,13 @@ public:
     /// \param remote_endpoint The remote endpoint to connect to.
     /// \returns TRUE if the connection succeeded, otherwise FALSE.
     bool connect(driver_modem_msgs::endpoint& local_endpoint, driver_modem_msgs::endpoint& remote_endpoint);
-    /// \brief Closes the socket.
     void close() override;
 
     // PROPERTIES
     /// \brief Gets the description of the TCP socket.
     /// \returns The description of the TCP socket.
     driver_modem_msgs::tcp_socket description() const;
+    bool is_open() const override;
 
 private:
     // ASIO SOCKET
