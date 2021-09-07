@@ -1,5 +1,8 @@
 #include "driver_modem.hpp"
 
+#include "tcp_socket.hpp"
+#include "udp_socket.hpp"
+
 #include <driver_modem_msgs/status.h>
 
 using namespace driver_modem;
@@ -85,5 +88,40 @@ bool driver_modem_t::service_close_socket(driver_modem_msgs::close_socketRequest
 // PUBLISHING
 void driver_modem_t::publish_status() const
 {
+    // Create status message to publish.
+    driver_modem_msgs::status message;
 
+    // Populate TCP servers.
+    for(auto server = driver_modem_t::m_tcp_servers.cbegin(); server != driver_modem_t::m_tcp_servers.cend(); ++server)
+    {
+        message.tcp_servers.push_back(server->second->description());
+    }
+
+    // Populate TCP and UDP sockets.
+    for(auto socket = driver_modem_t::m_sockets.cbegin(); socket != driver_modem_t::m_sockets.cend(); ++socket)
+    {
+        // Get the socket protocol type.
+        switch(socket->second->protocol())
+        {
+            case protocol_t::TCP:
+            {
+                // Convert to TCP socket.
+                tcp_socket_t* tcp_socket = reinterpret_cast<tcp_socket_t*>(socket->second);
+                // Add description.
+                message.tcp_sockets.push_back(tcp_socket->description());
+                break;
+            }
+            case protocol_t::UDP:
+            {
+                // Convert to UDP socket.
+                udp_socket_t* udp_socket = reinterpret_cast<udp_socket_t*>(socket->second);
+                // Add description.
+                message.udp_sockets.push_back(udp_socket->description());
+                break;
+            }
+        }
+    }
+
+    // Publish message.
+    driver_modem_t::m_publisher_status.publish(message);
 }
