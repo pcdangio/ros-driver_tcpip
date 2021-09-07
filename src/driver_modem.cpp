@@ -107,6 +107,8 @@ bool driver_modem_t::service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverR
     {
         // Stop the server.
         iterator->second->stop();
+        // Delete server instance.
+        delete iterator->second;
         // Delete from map.
         driver_modem_t::m_tcp_servers.erase(iterator);
 
@@ -202,7 +204,32 @@ bool driver_modem_t::service_open_udp_socket(driver_modem_msgs::open_udp_socketR
 }
 bool driver_modem_t::service_close_socket(driver_modem_msgs::close_socketRequest& request, driver_modem_msgs::close_socketResponse& response)
 {
+    // Find the requested socket.
+    auto iterator = driver_modem_t::m_sockets.find(request.socket_id);
+    if(iterator != driver_modem_t::m_sockets.end())
+    {
+        // Close the socket.
+        iterator->second->close();
+        // Delete the socket instance.
+        delete iterator->second;
+        // Remove entry from map.
+        driver_modem_t::m_sockets.erase(iterator);
 
+        // Publish updated status.
+        driver_modem_t::publish_status();
+
+        // Populate response.
+        response.success = true;
+    }
+    else
+    {
+        // Requested socket does not exist.
+        ROS_ERROR_STREAM("failed to close socket " << request.socket_id << " (socket does not exist)");
+        response.success = false;
+    }
+
+    // Indicate that service execution has succeeded.
+    return true;
 }
 
 // PUBLISHING
