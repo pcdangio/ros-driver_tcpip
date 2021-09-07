@@ -33,20 +33,20 @@ bool tcp_server_t::start(driver_modem_msgs::endpoint& local_endpoint)
     // Create error structure for tracking.
     boost::system::error_code error;
 
+    // Open the acceptor.
+    tcp_server_t::m_acceptor.open(boost::asio::ip::tcp::v4(), error);
+    if(error)
+    {
+        ROS_ERROR_STREAM("tcp server " << tcp_server_t::m_id << " failed to open (" << error.message() << ")");
+        return false;
+    }
+
     // Bind the acceptor.
     tcp_server_t::m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
     tcp_server_t::m_acceptor.bind(tcp_server_t::endpoint_asio(local_endpoint), error);
     if(error)
     {
         ROS_ERROR_STREAM("tcp server " << tcp_server_t::m_id << " failed to bind to local endpoint (" << error.message() << ")");
-        return false;
-    }
-
-    // Open the acceptor.
-    tcp_server_t::m_acceptor.open(tcp_server_t::m_acceptor.local_endpoint().protocol(), error);
-    if(error)
-    {
-        ROS_ERROR_STREAM("tcp server " << tcp_server_t::m_id << " failed to open (" << error.message() << ")");
         return false;
     }
 
