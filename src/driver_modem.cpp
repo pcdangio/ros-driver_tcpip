@@ -64,13 +64,23 @@ void driver_modem_t::run()
 
         // Clean up any self-closed sockets (e.g. TCP disconnectes)
         bool sockets_updated = false;
-        for(auto socket = driver_modem_t::m_sockets.begin(); socket != driver_modem_t::m_sockets.end(); ++ socket)
+        auto socket = driver_modem_t::m_sockets.begin();
+        while(socket != driver_modem_t::m_sockets.end())
         {
+            // Check if socket is open.
             if(!socket->second->is_open())
             {
+                // Delete socket instance.
+                delete socket->second;
+                // Remove from map.
                 socket = driver_modem_t::m_sockets.erase(socket);
+                // Indicate that status should be updated.
                 sockets_updated = true;
             }
+            else
+            {
+                ++socket;
+            }                       
         }
         // If sockets updated, publish new status.
         if(sockets_updated)
@@ -179,6 +189,8 @@ bool driver_modem_t::service_open_tcp_socket(driver_modem_msgs::open_tcp_socketR
     }
     else
     {
+        // Delete socket.
+        delete tcp_socket;
         // Populate response.
         response.success = false;
     }
@@ -215,6 +227,8 @@ bool driver_modem_t::service_open_udp_socket(driver_modem_msgs::open_udp_socketR
     }
     else
     {
+        // Delete socket.
+        delete udp_socket;
         // Populate response.
         response.success = false;
     }
