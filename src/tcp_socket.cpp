@@ -193,11 +193,8 @@ bool tcp_socket_t::service_tx(driver_modem_msgs::send_tcpRequest& request, drive
     boost::system::error_code error;
     tcp_socket_t::m_socket->send(boost::asio::buffer(request.packet.data), 0, error);
 
-    // Indicate if message was sent successfully.
-    response.success = !error;
-
-    // Indicate that service was executed successfully.
-    return true;
+    // Indicate if the message was sent successfully.
+    return !error;
 }
 
 // ENDPOINT CONVERSION
