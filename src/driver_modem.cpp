@@ -50,11 +50,14 @@ void driver_modem_t::run()
     // Create rate for spinning.
     ros::Rate loop_rate(100);
 
+    // Create IO service work instance to keep io_service alive while in scope.
+    boost::asio::io_service::work io_service_work(driver_modem_t::m_io_service);
+
     // Process ROS and ASIO until node shuts down.
     while(ros::ok())
     {
         // Spin ASIO.
-        driver_modem_t::m_io_service.run_one();
+        driver_modem_t::m_io_service.poll();
 
         // Spin ROS.
         ros::spinOnce();
