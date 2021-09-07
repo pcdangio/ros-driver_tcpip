@@ -15,6 +15,9 @@ tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
 
     // Start ROS publishers and services.
     tcp_socket_t::start_ros();
+
+    // Start asynchronously receiving.
+    tcp_socket_t::async_rx();
 }
 tcp_socket_t::tcp_socket_t(boost::asio::io_service& io_service, uint32_t id)
     : socket_t(id, protocol_t::TCP)
@@ -44,19 +47,22 @@ bool tcp_socket_t::connect(driver_modem_msgs::endpoint& local_endpoint, driver_m
     // Create error structure for tracking.
     boost::system::error_code error;
 
-    // Open socket and connect to remote endpoint.
-    tcp_socket_t::m_socket->connect(tcp_socket_t::endpoint_asio(remote_endpoint), error);
-    if(error)
-    {
-        ROS_ERROR_STREAM("failed to connect tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
-        return false;
-    }
+    // Open the socket.
+    tcp_socket_t::m_socket->open(boost::asio::ip::tcp::v4());
 
     // Bind the socket to the local endpoint.
     tcp_socket_t::m_socket->bind(tcp_socket_t::endpoint_asio(local_endpoint), error);
     if(error)
     {
         ROS_ERROR_STREAM("failed to bind tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
+        return false;
+    }
+
+    // Open socket and connect to remote endpoint.
+    tcp_socket_t::m_socket->connect(tcp_socket_t::endpoint_asio(remote_endpoint), error);
+    if(error)
+    {
+        ROS_ERROR_STREAM("failed to connect tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
         return false;
     }
 
@@ -68,7 +74,7 @@ bool tcp_socket_t::connect(driver_modem_msgs::endpoint& local_endpoint, driver_m
 
     // Indicate success.
     ROS_INFO_STREAM("tcp socket " << tcp_socket_t::m_id << " connected successfully");
-    return false;
+    return true;
 }
 void tcp_socket_t::close()
 {
@@ -106,7 +112,7 @@ driver_modem_msgs::tcp_socket tcp_socket_t::description() const
 }
 bool tcp_socket_t::is_open() const
 {
-    return tcp_socket_t::is_open();
+    return tcp_socket_t::m_socket->is_open();
 }
 
 // ASIO SOCKET
@@ -144,8 +150,10 @@ void tcp_socket_t::rx_callback(const boost::system::error_code& error, std::size
         }
 
         // Check if remote closed the connection.
-        if(error == boost::asio::error::connection_reset)
+        if(error == boost::asio::error::connection_reset || error == boost::asio::error::eof)
         {
+            // Indicate remote has closed.
+            ROS_INFO_STREAM("tcp socket " << tcp_socket_t::m_id << " disconnect by peer");
             // Close socket.
             tcp_socket_t::close();
 
