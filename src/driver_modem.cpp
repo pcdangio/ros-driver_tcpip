@@ -130,7 +130,39 @@ bool driver_modem_t::service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverR
 }
 bool driver_modem_t::service_open_tcp_socket(driver_modem_msgs::open_tcp_socketRequest& request, driver_modem_msgs::open_tcp_socketResponse& response)
 {
+    // Get unique ID.
+    uint32_t id = 0;
+    while(driver_modem_t::m_sockets.count(id))
+    {
+        id++;
+    }
 
+    // Create the TCP socket.
+    tcp_socket_t* tcp_socket = new tcp_socket_t(driver_modem_t::m_io_service, id);
+
+    // Attempt to connect to the remote endpoint.
+    if(tcp_socket->connect(request.local_endpoint, request.remote_endpoint))
+    {
+        // Connection succeeded.
+
+        // Add socket to map.
+        driver_modem_t::m_sockets[id] = tcp_socket;
+        
+        // Publish updated status.
+        driver_modem_t::publish_status();
+
+        // Populate response.
+        response.socket_id = id;
+        response.success = true;
+    }
+    else
+    {
+        // Populate response.
+        response.success = false;
+    }
+
+    // Indicate that service execution succeeded.
+    return true;
 }
 bool driver_modem_t::service_open_udp_socket(driver_modem_msgs::open_udp_socketRequest& request, driver_modem_msgs::open_udp_socketResponse& response)
 {
