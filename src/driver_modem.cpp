@@ -59,6 +59,23 @@ void driver_modem_t::run()
         // Spin ROS.
         ros::spinOnce();
 
+        // Clean up any self-closed sockets (e.g. TCP disconnectes)
+        bool sockets_updated = false;
+        for(auto socket = driver_modem_t::m_sockets.begin(); socket != driver_modem_t::m_sockets.end(); ++ socket)
+        {
+            if(!socket->second->is_open())
+            {
+                socket = driver_modem_t::m_sockets.erase(socket);
+                sockets_updated = true;
+            }
+        }
+        // If sockets updated, publish new status.
+        if(sockets_updated)
+        {
+            driver_modem_t::publish_status();
+        }
+
+        // Sleep for remainder of loop.
         loop_rate.sleep();
     }
 }
