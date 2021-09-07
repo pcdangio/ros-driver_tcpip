@@ -88,6 +88,10 @@ private:
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
     bool service_close_socket(driver_modem_msgs::close_socketRequest& request, driver_modem_msgs::close_socketResponse& response);
+
+    // PUBLISHING
+    /// \brief Publishes the current status of the modem.
+    void publish_status() const;
 };
 
 }
