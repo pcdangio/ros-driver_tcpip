@@ -22,6 +22,9 @@ driver_modem_t::driver_modem_t()
     driver_modem_t::m_service_open_tcp_socket = private_node.advertiseService("open_tcp_socket", &driver_modem_t::service_open_tcp_socket, this);
     driver_modem_t::m_service_open_udp_socket = private_node.advertiseService("open_udp_socket", &driver_modem_t::service_open_udp_socket, this);
     driver_modem_t::m_service_close_socket = private_node.advertiseService("close_socket", &driver_modem_t::service_close_socket, this);
+
+    // Log initialization.
+    ROS_INFO("initialized successfully");
 }
 driver_modem_t::~driver_modem_t()
 {
@@ -41,7 +44,20 @@ driver_modem_t::~driver_modem_t()
 // CONTROL
 void driver_modem_t::run()
 {
+    // Create rate for spinning.
+    ros::Rate loop_rate(100);
 
+    // Process ROS and ASIO until node shuts down.
+    while(ros::ok())
+    {
+        // Spin ASIO.
+        driver_modem_t::m_io_service.run_one();
+
+        // Spin ROS.
+        ros::spinOnce();
+
+        loop_rate.sleep();
+    }
 }
 
 // SERVICE CALLBACKS
