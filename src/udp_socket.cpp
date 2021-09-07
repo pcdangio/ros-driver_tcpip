@@ -78,6 +78,10 @@ void udp_socket_t::close()
         {
             ROS_ERROR_STREAM("failed to close udp socket " << udp_socket_t::m_id << " (" << error.message() << ")");
         }
+        else
+        {
+            ROS_INFO_STREAM("udp socket " << udp_socket_t::m_id << " closed successfully");
+        }
     }
 }
 
