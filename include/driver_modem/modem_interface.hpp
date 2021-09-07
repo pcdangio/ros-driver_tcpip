@@ -1,5 +1,5 @@
 /// \file modem_interface.h
-/// \brief Defines the modem_interface class.
+/// \brief Defines the driver_modem::modem_interface class.
 #ifndef MODEM_INTERFACE_H
 #define MODEM_INTERFACE_H
 
