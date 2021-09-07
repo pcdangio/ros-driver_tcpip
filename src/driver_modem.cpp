@@ -25,7 +25,17 @@ driver_modem_t::driver_modem_t()
 }
 driver_modem_t::~driver_modem_t()
 {
-
+    // Clean up maps.
+    for(auto server = driver_modem_t::m_tcp_servers.begin(); server != driver_modem_t::m_tcp_servers.end(); ++server)
+    {
+        // NOTE: Deleting the instance also stops the server.
+        delete server->second;
+    }
+    for(auto socket = driver_modem_t::m_sockets.begin(); socket != driver_modem_t::m_sockets.end(); ++socket)
+    {
+        // NOTE: Deleting the instance also closes the socket.
+        delete socket->second;
+    }
 }
 
 // CONTROL
