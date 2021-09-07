@@ -44,19 +44,19 @@ bool tcp_socket_t::connect(driver_modem_msgs::endpoint& local_endpoint, driver_m
     // Create error structure for tracking.
     boost::system::error_code error;
 
-    // Bind the socket to the local endpoint.
-    tcp_socket_t::m_socket->bind(tcp_socket_t::endpoint_asio(local_endpoint), error);
-    if(error)
-    {
-        ROS_ERROR_STREAM("failed to bind tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
-        return false;
-    }
-
     // Open socket and connect to remote endpoint.
     tcp_socket_t::m_socket->connect(tcp_socket_t::endpoint_asio(remote_endpoint), error);
     if(error)
     {
         ROS_ERROR_STREAM("failed to connect tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
+        return false;
+    }
+
+    // Bind the socket to the local endpoint.
+    tcp_socket_t::m_socket->bind(tcp_socket_t::endpoint_asio(local_endpoint), error);
+    if(error)
+    {
+        ROS_ERROR_STREAM("failed to bind tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
         return false;
     }
 
