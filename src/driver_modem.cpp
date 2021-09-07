@@ -66,7 +66,35 @@ void driver_modem_t::run()
 // SERVICE CALLBACKS
 bool driver_modem_t::service_start_tcp_server(driver_modem_msgs::start_tcp_serverRequest& request, driver_modem_msgs::start_tcp_serverResponse& response)
 {
+    // Get unique ID.
+    uint32_t id = 0;
+    while(driver_modem_t::m_tcp_servers.count(id))
+    {
+        id++;
+    }
 
+    // Create the new TCP server.
+    tcp_server_t* tcp_server = new tcp_server_t(driver_modem_t::m_io_service, id, std::bind(&driver_modem_t::tcp_connection, this, std::placeholders::_1, std::placeholders::_2));
+
+    // Attempt to start the TCP server on the requested endpoint.
+    if(tcp_server->start(request.local_endpoint))
+    {
+        // Add the server to the map.
+        driver_modem_t::m_tcp_servers[id] = tcp_server;
+        // Populate the server response.
+        response.server_id = id;
+        response.success = true;
+    }
+    else
+    {
+        // Delete the server.
+        delete tcp_server;
+        // Indicate failure in response.
+        response.success = false;
+    }
+
+    // Indicate success in executing service.
+    return true;
 }
 bool driver_modem_t::service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverRequest& request, driver_modem_msgs::stop_tcp_serverResponse& response)
 {
@@ -124,4 +152,10 @@ void driver_modem_t::publish_status() const
 
     // Publish message.
     driver_modem_t::m_publisher_status.publish(message);
+}
+
+// CONNECTION
+void driver_modem_t::tcp_connection(uint32_t id, boost::asio::ip::tcp::socket* socket)
+{
+
 }
