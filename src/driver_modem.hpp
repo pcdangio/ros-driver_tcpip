@@ -7,6 +7,7 @@
 #include "socket.hpp"
 
 #include <ros/ros.h>
+#include <driver_modem_msgs/resolve_ip.h>
 #include <driver_modem_msgs/start_tcp_server.h>
 #include <driver_modem_msgs/stop_tcp_server.h>
 #include <driver_modem_msgs/open_tcp_socket.h>
@@ -51,6 +52,8 @@ private:
     ros::Publisher m_publisher_status;
 
     // SERVICE SERVERS
+    /// \brief The service for IP resolving.
+    ros::ServiceServer m_service_resolve_ip;
     /// \brief The service for starting a TCP server.
     ros::ServiceServer m_service_start_tcp_server;
     /// \brief The service for stopping a TCP server. 
@@ -63,6 +66,11 @@ private:
     ros::ServiceServer m_service_close_socket;
 
     // SERVICE CALLBACKS
+    /// \brief The service callback for resolving IP addresses.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \returns TRUE if the service executed successfully, otherwise FALSE.
+    bool service_resolve_ip(driver_modem_msgs::resolve_ipRequest& request, driver_modem_msgs::resolve_ipResponse& response);
     /// \brief The service callback for starting a TCP server.
     /// \param request The service request.
     /// \param response The service response.

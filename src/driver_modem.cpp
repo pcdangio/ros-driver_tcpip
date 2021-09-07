@@ -20,6 +20,7 @@ driver_modem_t::driver_modem_t()
     driver_modem_t::publish_status();
 
     // Start services.
+    driver_modem_t::m_service_resolve_ip = private_node.advertiseService("resolve_ip", &driver_modem_t::service_resolve_ip, this);
     driver_modem_t::m_service_start_tcp_server = private_node.advertiseService("start_tcp_server", &driver_modem_t::service_start_tcp_server, this);
     driver_modem_t::m_service_stop_tcp_server = private_node.advertiseService("stop_tcp_server", &driver_modem_t::service_stop_tcp_server, this);
     driver_modem_t::m_service_open_tcp_socket = private_node.advertiseService("open_tcp_socket", &driver_modem_t::service_open_tcp_socket, this);
@@ -94,6 +95,30 @@ void driver_modem_t::run()
 }
 
 // SERVICE CALLBACKS
+bool driver_modem_t::service_resolve_ip(driver_modem_msgs::resolve_ipRequest& request, driver_modem_msgs::resolve_ipResponse& response)
+{
+    // Create a resolver query.
+    boost::asio::ip::udp::resolver::query query(request.hostname, "");
+
+    // Create the resolver.
+    boost::asio::ip::udp::resolver resolver(driver_modem_t::m_io_service);
+
+    // Attempt to resolve the hostname.
+    boost::system::error_code error;
+    auto result = resolver.resolve(query, error);
+    if(error)
+    {
+        // Indicate that resolving has failed.
+        ROS_ERROR_STREAM("failed to resolve hostname " << request.hostname << " (" << error.message() << ")");
+        return false;
+    }
+
+    // Populate response with resolved IP.
+    memcpy(response.ip.data(), result->endpoint().address().to_v4().to_bytes().data(), 4);
+    
+    // Indicate success.
+    return true;
+}
 bool driver_modem_t::service_start_tcp_server(driver_modem_msgs::start_tcp_serverRequest& request, driver_modem_msgs::start_tcp_serverResponse& response)
 {
     // Get unique ID.
