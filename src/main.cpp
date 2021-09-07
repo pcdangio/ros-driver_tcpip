@@ -1,10 +1,13 @@
-#include "ros_node.h"
+#include "driver_modem.hpp"
 
 int main(int argc, char **argv)
 {
+    // Initilize ROS.
+    ros::init(argc, argv, "driver_modem");
+
     // Create the node.
-    ros_node node(argc, argv);
+    driver_modem::driver_modem_t node;
 
     // Run the node.
-    node.spin();
+    node.run();
 }
