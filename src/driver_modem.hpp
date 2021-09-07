@@ -95,7 +95,6 @@ private:
 
     // CONNECTION
     /// \brief Handles new connections from TCP servers.
-    /// \param id The unique ID of the tcp server that accepted the connection.
     /// \param socket The ASIO socket that was opened as a result of the connection.
     void tcp_connection(uint32_t id, boost::asio::ip::tcp::socket* socket);
 };

@@ -276,5 +276,19 @@ void driver_modem_t::publish_status() const
 // CONNECTION
 void driver_modem_t::tcp_connection(uint32_t id, boost::asio::ip::tcp::socket* socket)
 {
+    // Get unique ID.
+    uint32_t socket_id = 0;
+    while(driver_modem_t::m_sockets.count(socket_id))
+    {
+        socket_id++;
+    }
 
+    // Create a new tcp_socket_t from the ASIO socket and add it to the map.
+    driver_modem_t::m_sockets[socket_id] = new tcp_socket_t(socket, socket_id);
+
+    // Log new connection.
+    ROS_INFO_STREAM("tcp server " << id << " accepted new connection on tcp socket " << socket_id);
+
+    // Publish updated status.
+    driver_modem_t::publish_status();
 }
