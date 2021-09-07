@@ -84,6 +84,9 @@ bool driver_modem_t::service_start_tcp_server(driver_modem_msgs::start_tcp_serve
         // Populate the server response.
         response.server_id = id;
         response.success = true;
+
+        // Publish updated status.
+        driver_modem_t::publish_status();
     }
     else
     {
@@ -98,7 +101,32 @@ bool driver_modem_t::service_start_tcp_server(driver_modem_msgs::start_tcp_serve
 }
 bool driver_modem_t::service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverRequest& request, driver_modem_msgs::stop_tcp_serverResponse& response)
 {
+    // Find the tcp server by ID.
+    auto iterator = driver_modem_t::m_tcp_servers.find(request.server_id);
+    if(iterator != driver_modem_t::m_tcp_servers.end())
+    {
+        // Stop the server.
+        iterator->second->stop();
+        // Delete from map.
+        driver_modem_t::m_tcp_servers.erase(iterator);
 
+        // Publish updated status.
+        driver_modem_t::publish_status();
+
+        // Populate service response.
+        response.success = true;
+    }
+    else
+    {
+        // Indicate error.
+        ROS_ERROR_STREAM("failed to remove tcp server " << request.server_id << " (does not exist)");
+
+        // Populate service response.
+        response.success = false;
+    }
+
+    // Indicate success for executing service.
+    return true;
 }
 bool driver_modem_t::service_open_tcp_socket(driver_modem_msgs::open_tcp_socketRequest& request, driver_modem_msgs::open_tcp_socketResponse& response)
 {
