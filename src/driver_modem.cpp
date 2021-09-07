@@ -117,6 +117,7 @@ bool driver_modem_t::service_resolve_ip(driver_modem_msgs::resolve_ipRequest& re
     memcpy(response.ip.data(), result->endpoint().address().to_v4().to_bytes().data(), 4);
     
     // Indicate success.
+    ROS_INFO_STREAM("resolved hostname " << request.hostname << " to " << result->endpoint().address().to_string());
     return true;
 }
 bool driver_modem_t::service_start_tcp_server(driver_modem_msgs::start_tcp_serverRequest& request, driver_modem_msgs::start_tcp_serverResponse& response)
