@@ -1,129 +1,72 @@
-# driver_modem
+# driver_tcpip
 
-## Overview
+A ROS package that provides a driver node for TCP/IP communications outside of ROS. It enables sending TCP and/or UDP packets over an existing network interface.
 
-This package includes driver software for TCP/IP communications outside of ROS. It enables sending TCP and/or UDP packets via several ports over an existing network interface.
+**Author:** Paul D'Angio, pcdangio@gmail.com
 
-**Keywords:** modem driver tcp udp ip network communication
+**License:** [MIT](LICENSE)
 
-### License
+**Contents:**
+1. [Installation](#1-installation): Instructions for downloading and building this package.
+2. [Usage](#2-usage): How to use the node.
 
-The source code is released under a [MIT license](LICENSE).
+## 1: Installation
 
-**Author: Paul D'Angio<br />
-Maintainer: Paul D'Angio, pcdangio@gmail.com**
-
-The driver_modem package has been tested under [ROS] Melodic and Ubuntu 18.04. This is research code, expect that it changes often and any fitness for a particular purpose is disclaimed.
-
-## Installation
-
-### Building from Source
-
-#### Dependencies
+### 1.1: Dependencies
 
 - [Robot Operating System (ROS)](http://wiki.ros.org) (middleware for robotics)
-- [driver_modem_msgs](https://github.com/pcdangio/ros-driver_modem) (ROS driver modem messages)
+- [driver_tcpip_msgs](https://github.com/pcdangio/ros-driver_tcpip_msgs) (ROS messages for the tcpip driver)
 
-#### Building
+### 1.2: Building
 
 To build from source, clone the latest version from this repository into your catkin workspace and compile the package using
 
-        cd catkin_workspace/src
-        git clone https://github.com/pcdangio/ros-driver_modem.git driver_modem
-        cd ../
-        catkin_make
+```bash
+cd catkin_workspace/src
+git clone https://github.com/pcdangio/ros-driver_tcpip.git driver_tcpip
+cd ../
+catkin_make
+```
 
-## Usage
+## 2: Usage
+
+### 2.1: Running the Node
 
 Run the driver with the following command:
 
-        rosrun driver_modem driver_modem
+```bash
+rosrun driver_tcpip driver_tcpip
+```
 
-## Nodes
+### 2.2: Services
+|Service|Type|Description|
+|---|---|---|
+|`~/resolve_ip`|[driver_tcpip_msgs/resolve_ip](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/resolve_ip.srv)|Resolves the IP address of a specified hostname.|
+|`~/start_tcp_server`|[driver_tcpip_msgs/start_tcp_server](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/start_tcp_server.srv)|Starts a new TCP server on a specified local endpoint. The server will create new TCP sockets for incoming connections.|
+|`~/stop_tcp_server`|[driver_tcpip_msgs/stop_tcp_server](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/stop_tcp_server.srv)|Stops an active TCP server.|
+|`~/start_tcp_client`|[driver_tcpip_msgs/start_tcp_client](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/start_tcp_client.srv)|Starts a new TCP client on a specified local endpoint. The client will attempt to connect to the specified remote endpoint.|
+|`~/stop_tcp_client`|[driver_tcpip_msgs/stop_tcp_client](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/stop_tcp_client.srv)|Stops an active TCP client.|
+|`~/open_udp_socket`|[driver_tcpip_msgs/open_udp_socket](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/open_udp_socket.srv)|Opens a UDP socket at a specified local endpoint.|
+|`~/close_socket`|[driver_tcpip_msgs/close_socket](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/close_socket.srv)|Closes the specified TCP or UDP socket.|
 
-### node
+### 2.3: Published Topics
+|Topic|Type|Description|
+|---|---|---|
+|`~/status`|[driver_tcpip_msgs/status](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/msg/status.msg)|Indicates the current status of all active TCP servers, TCP clients, and open TCP/UDP sockets.|
 
-A driver for managing TCP/IP communications over a network interface.  This node will create topics for reading from and writing to TCP and/or UDP ports that are opened via the driver.
-Ports can be opened via parameters or through the modify_connection service.  Any data that is published to a "tx" topic will be sent over the network interface.
-Any data that is read from the network device will be published on the "rx" topics.
+### 2.4: Data Transmission
+When a TCP or UDP socket is opened, special topics and services are created that allow sending and receiving data through the socket. Each socket is assigned a unique ID, referenced as `{SOCKET_ID}` in the tables below.
 
+**TCP:**
 
-#### Published Topics
-* **`~/active_connections`** ([driver_modem/active_connections](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/msg/active_connections.msg))
+|Topic/Service|Type|Description|
+|---|---|---|
+|`~/sockets/{SOCKET_ID}/tx`|[driver_tcpip_msgs/send_tcp](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/srv/send_tcp.srv)|A service that sends a TCP packet over the socket specified by `{SOCKET_ID}`. The service succeeds only if the TCP message was sent and recieved.|
+|`~/sockets/{SOCKET_ID}/rx`|[driver_tcpip_msgs/tcp_packet](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/msg/tcp_packet.msg)|Published any time a new TCP packet is received from the socket specified by `{SOCKET_ID}`|
 
-        Publishes (with latching) a list of all active connections managed by the driver each time a new connection is added or an existing connection is removed.
+**UDP:**
 
-* **`~/PROTOCOL_TYPE/PORT/rx`** ([driver_modem/data_packet](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/msg/data_packet.msg))
-
-        Publishes data that has been received over a particular protocol and port.
-        PROTOCOL_TYPE: Either "tcp" or "udp" depending on the connection protocol
-        PORT: The port number of the connection.
-
-#### Subscribed Topics
-* **`~/udp/PORT/tx`** ([driver_modem/data_packet](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/msg/data_packet.msg))
-
-        Accepts data to send via UDP over a particular port.
-        PORT: The port number of the connection.
-
-#### Services
-* **`~/set_remote_host`** ([driver_modem/set_remote_host](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/srv/set_remote_host.srv))
-
-        Sets the remote host that outgoing UDP and TCP connections will communicate with.
-        *NOTE* This will close all existing connections.
-
-* **`~/get_remote_host`** ([driver_modem/get_remote_host](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/srv/get_remote_host.srv))
-
-        Gets the remote host that outgoing UDP and TCP connections will communicate with.
-
-* **`~/add_tcp_connection`** ([driver_modem/add_tcp_connection](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/srv/add_tcp_connection.srv))
-
-        Adds a new TCP connection to the driver.
-
-* **`~/add_udp_connection`** ([driver_modem/add_udp_connection](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/srv/add_udp_connection.srv))
-
-        Adds a new UDP connection to the driver.
-
-* **`~/remove_connection`** ([driver_modem/remove_connection](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/srv/remove_connection.srv))
-
-        Removes a TCP or UDP connection from the driver.
-
-* **`~/tcp/PORT/tx`** ([driver_modem/send_tcp](https://github.com/pcdangio/ros-driver_modem/blob/master/driver_modem_msgs/srv/send_tcp.srv))
-
-        Accepts data to send via TCP over a particular port.  This is implemented as a service to indicate success.
-        PORT: The port number of the connection.
-
-#### Runtime Parameters
-
-* **`~/local_ip`** (string, default: 192.168.1.2)
-
-        The IP address of the local network interface to use for communication.
-
-* **`~/remote_host`** (string, default: 192.168.1.3)
-
-        The hostname or IP address of the remote device to communicate with.
-
-#### Connection Parameters
-
-These parameters are optional and can be used to create TCP and/or UDP connections on node startup.
-
-* **`~/tcp_server_ports`** (vector<uint16>, default: empty)
-
-        The list of TCP ports to open as a TCP server.
-        NOTE: These ports will enter the "pending" state until a TCP client connects.
-
-* **`~/tcp_client_ports`** (vector<uint16>, default: empty)
-
-        The list of TCP ports to open as a TCP client.
-        NOTE: These ports will enter the "pending" state until they are able to connect to a TCP server.
-
-* **`~/udp_ports`** (vector<uint16>, default: empty)
-
-        The list of UDP ports to open for communication.
-
-
-## Bugs & Feature Requests
-
-Please report bugs and request features using the [Issue Tracker](https://github.com/pcdangio/ros-driver_modem/issues).
-
-
-[ROS]: http://www.ros.org
+|Topic|Type|Description|
+|---|---|---|
+|`~/sockets/{SOCKET_ID}/tx`|[driver_tcpip_msgs/udp_packet](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/msg/udp_packet.msg)|A subscriber that sends a packet of data over the UDP socket specified by `{SOCKET_ID}`.|
+|`~/sockets/{SOCKET_ID}/rx`|[driver_tcpip_msgs/udp_packet](https://github.com/pcdangio/ros-driver_tcpip_msgs/blob/main/msg/udp_packet.msg)|Published any time a new UDP packet is received from the socket specified by `{SOCKET_ID}`|
