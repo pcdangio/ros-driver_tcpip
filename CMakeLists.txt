@@ -1,16 +1,16 @@
 cmake_minimum_required(VERSION 2.8.3)
-project(driver_modem)
+project(driver_tcpip)
 
 # Find catkin macros and libraries
 find_package(catkin REQUIRED COMPONENTS
   roscpp
-  driver_modem_msgs)
+  driver_tcpip_msgs)
 
 # Set up catkin package.
 catkin_package(
   INCLUDE_DIRS include
   LIBRARIES modem_interface
-  CATKIN_DEPENDS roscpp driver_modem_msgs
+  CATKIN_DEPENDS roscpp driver_tcpip_msgs
 )
 
 # Set up include directories.
@@ -21,14 +21,14 @@ include_directories(
 
 # # Add static library for modem_interface.
 # add_library(modem_interface src/modem_interface.cpp)
-# # Add dependency on exported targets for built driver_modem_msgs.
+# # Add dependency on exported targets for built driver_tcpip_msgs.
 # add_dependencies(modem_interface ${catkin_EXPORTED_TARGETS})
 
-# Add executable for driver_modem_node.
-add_executable(${PROJECT_NAME}_node src/socket.cpp src/udp_socket.cpp src/tcp_socket.cpp src/tcp_server.cpp src/tcp_client.cpp src/endpoint.cpp src/driver_modem.cpp src/main.cpp)
+# Add executable for driver_tcpip_node.
+add_executable(${PROJECT_NAME}_node src/socket.cpp src/udp_socket.cpp src/tcp_socket.cpp src/tcp_server.cpp src/tcp_client.cpp src/endpoint.cpp src/driver_tcpip.cpp src/main.cpp)
 # Rename target.
-set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME driver_modem PREFIX "")
-# Add dependency on exported targets for built driver_modem_msgs.
+set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME driver_tcpip PREFIX "")
+# Add dependency on exported targets for built driver_tcpip_msgs.
 add_dependencies(${PROJECT_NAME}_node ${catkin_EXPORTED_TARGETS})
 # Link target.
 target_link_libraries(${PROJECT_NAME}_node

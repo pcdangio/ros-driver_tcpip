@@ -7,7 +7,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 
-using namespace driver_modem;
+using namespace driver_tcpip;
 
 // CONSTRUCTORS
 tcp_client_t::tcp_client_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(boost::asio::ip::tcp::socket*)> connection_callback)
@@ -29,7 +29,7 @@ tcp_client_t::~tcp_client_t()
 }
 
 // CONTROL
-bool tcp_client_t::start(const driver_modem_msgs::endpoint& local_endpoint, const driver_modem_msgs::endpoint& remote_endpoint)
+bool tcp_client_t::start(const driver_tcpip_msgs::endpoint& local_endpoint, const driver_tcpip_msgs::endpoint& remote_endpoint)
 {
     // Check if the client has alread failed.
     if(!tcp_client_t::m_socket)
@@ -99,10 +99,10 @@ void tcp_client_t::stop()
 }
 
 // PROPERTIES
-driver_modem_msgs::tcp_client tcp_client_t::description() const
+driver_tcpip_msgs::tcp_client tcp_client_t::description() const
 {
     // Create output description.
-    driver_modem_msgs::tcp_client description;
+    driver_tcpip_msgs::tcp_client description;
 
     // Populate description.
     description.id = tcp_client_t::m_id;

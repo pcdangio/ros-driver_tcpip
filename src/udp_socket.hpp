@@ -1,20 +1,20 @@
 /// \file udp_socket.hpp
-/// \brief Defines the driver_modem::udp_socket_t class.
-#ifndef DRIVER_MODEM___UDP_SOCKET_H
-#define DRIVER_MODEM___UDP_SOCKET_H
+/// \brief Defines the driver_tcpip::udp_socket_t class.
+#ifndef DRIVER_TCPIP___UDP_SOCKET_H
+#define DRIVER_TCPIP___UDP_SOCKET_H
 
 #include "socket.hpp"
 
 #include <ros/ros.h>
-#include <driver_modem_msgs/udp_packet.h>
-#include <driver_modem_msgs/udp_socket.h>
+#include <driver_tcpip_msgs/udp_packet.h>
+#include <driver_tcpip_msgs/udp_socket.h>
 
 #include <boost/asio/ip/udp.hpp>
 
 #include <functional>
 #include <array>
 
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief A UDP socket.
 class udp_socket_t
@@ -32,13 +32,13 @@ public:
     /// \brief Opens the socket.
     /// \param local_endpoint The local endpoint to bind the socket to.
     /// \returns TRUE if the socket was opened successfully, otherwise FALSE.
-    bool open(driver_modem_msgs::endpoint& local_endpoint);
+    bool open(driver_tcpip_msgs::endpoint& local_endpoint);
     void close() override;
 
     // PROPERTIES
     /// \brief Gets the description of the UDP socket.
     /// \returns The description of the UDP socket.
-    driver_modem_msgs::udp_socket description() const;
+    driver_tcpip_msgs::udp_socket description() const;
     bool is_open() const override;
     
 private:
@@ -62,7 +62,7 @@ private:
     /// \brief The subscriber for messages to transmit.
     ros::Subscriber m_subscriber_tx;
     /// \brief The callback for the transmit subscriber.
-    void subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& message);
+    void subscriber_tx(const driver_tcpip_msgs::udp_packetConstPtr& message);
 };
 
 }

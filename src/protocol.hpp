@@ -1,9 +1,9 @@
 /// \file protocol.hpp
-/// \brief Defines the driver_modem::protocol_t enumeration.
-#ifndef DRIVER_MODEM___PROTOCOL_H
-#define DRIVER_MODEM___PROTOCOL_H
+/// \brief Defines the driver_tcpip::protocol_t enumeration.
+#ifndef DRIVER_TCPIP___PROTOCOL_H
+#define DRIVER_TCPIP___PROTOCOL_H
 
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief Specifies network protocol types.
 enum class protocol_t

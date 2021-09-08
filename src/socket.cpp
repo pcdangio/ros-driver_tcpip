@@ -1,6 +1,6 @@
 #include "socket.hpp"
 
-using namespace driver_modem;
+using namespace driver_tcpip;
 
 // CONSTRUCTORS
 socket_t::socket_t(uint32_t id, protocol_t protocol)

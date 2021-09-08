@@ -2,11 +2,11 @@
 
 #include "endpoint.hpp"
 
-#include <driver_modem_msgs/tcp_packet.h>
+#include <driver_tcpip_msgs/tcp_packet.h>
 
 #include <boost/asio/placeholders.hpp>
 
-using namespace driver_modem;
+using namespace driver_tcpip;
 
 // CONSTRUCTORS
 tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
@@ -56,10 +56,10 @@ void tcp_socket_t::close()
 }
 
 // PROPERTIES
-driver_modem_msgs::tcp_socket tcp_socket_t::description() const
+driver_tcpip_msgs::tcp_socket tcp_socket_t::description() const
 {
     // Create output message.
-    driver_modem_msgs::tcp_socket description;
+    driver_tcpip_msgs::tcp_socket description;
 
     // Populate message.
     description.id = tcp_socket_t::m_id;
@@ -86,7 +86,7 @@ void tcp_socket_t::rx_callback(const boost::system::error_code& error, std::size
     if(!error)
     {
         // Publish the message.
-        driver_modem_msgs::tcp_packet message;
+        driver_tcpip_msgs::tcp_packet message;
         message.data.assign(tcp_socket_t::m_buffer.begin(), tcp_socket_t::m_buffer.begin() + bytes_read);
         tcp_socket_t::m_publisher_rx.publish(message);
     }
@@ -132,14 +132,14 @@ void tcp_socket_t::start_ros()
     // Create TX service.
     tcp_socket_t::m_service_tx = private_node.advertiseService(topic_base + "/tx", &tcp_socket_t::service_tx, this);
     // Create RX publisher.
-    tcp_socket_t::m_publisher_rx = private_node.advertise<driver_modem_msgs::tcp_packet>(topic_base + "/rx", 100);
+    tcp_socket_t::m_publisher_rx = private_node.advertise<driver_tcpip_msgs::tcp_packet>(topic_base + "/rx", 100);
 }
 void tcp_socket_t::stop_ros()
 {
     tcp_socket_t::m_service_tx.shutdown();
     tcp_socket_t::m_publisher_rx.shutdown();
 }
-bool tcp_socket_t::service_tx(driver_modem_msgs::send_tcpRequest& request, driver_modem_msgs::send_tcpResponse& response)
+bool tcp_socket_t::service_tx(driver_tcpip_msgs::send_tcpRequest& request, driver_tcpip_msgs::send_tcpResponse& response)
 {
     // Try sending the message.
     boost::system::error_code error;

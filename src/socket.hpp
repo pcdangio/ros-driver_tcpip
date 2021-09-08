@@ -1,13 +1,13 @@
 /// \file socket.hpp
-/// \brief Defines the driver_modem::socket_t class.
-#ifndef DRIVER_MODEM___SOCKET_H
-#define DRIVER_MODEM___SOCKET_H
+/// \brief Defines the driver_tcpip::socket_t class.
+#ifndef DRIVER_TCPIP___SOCKET_H
+#define DRIVER_TCPIP___SOCKET_H
 
 #include "protocol.hpp"
 
 #include <stdint.h>
 
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief An abstract base class for IP sockets.
 class socket_t

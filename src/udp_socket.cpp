@@ -5,7 +5,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 
-using namespace driver_modem;
+using namespace driver_tcpip;
 
 // CONSTRUCTORS
 udp_socket_t::udp_socket_t(boost::asio::io_service& io_service, uint32_t id)
@@ -20,7 +20,7 @@ udp_socket_t::~udp_socket_t()
 }
 
 // CONTROL
-bool udp_socket_t::open(driver_modem_msgs::endpoint& local_endpoint)
+bool udp_socket_t::open(driver_tcpip_msgs::endpoint& local_endpoint)
 {
     // Check if socket is already open.
     if(udp_socket_t::m_socket.is_open())
@@ -56,7 +56,7 @@ bool udp_socket_t::open(driver_modem_msgs::endpoint& local_endpoint)
     // Create TX subscriber.
     udp_socket_t::m_subscriber_tx = private_node.subscribe(topic_base + "/tx", 100, &udp_socket_t::subscriber_tx, this);
     // Create RX publisher.
-    udp_socket_t::m_publisher_rx = private_node.advertise<driver_modem_msgs::udp_packet>(topic_base + "/rx", 100);
+    udp_socket_t::m_publisher_rx = private_node.advertise<driver_tcpip_msgs::udp_packet>(topic_base + "/rx", 100);
 
     // Start async receiving.
     udp_socket_t::async_rx();
@@ -88,10 +88,10 @@ void udp_socket_t::close()
 }
 
 // PROPERTIES
-driver_modem_msgs::udp_socket udp_socket_t::description() const
+driver_tcpip_msgs::udp_socket udp_socket_t::description() const
 {
     // Create output message.
-    driver_modem_msgs::udp_socket description;
+    driver_tcpip_msgs::udp_socket description;
 
     // Populate output message.
     description.id = udp_socket_t::m_id;
@@ -118,7 +118,7 @@ void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size
     if(!error)
     {
         // Publish the message.
-        driver_modem_msgs::udp_packet message;
+        driver_tcpip_msgs::udp_packet message;
         message.remote_endpoint = endpoint::to_ros(udp_socket_t::m_remote_endpoint);
         message.data.assign(udp_socket_t::m_buffer.begin(), udp_socket_t::m_buffer.begin() + bytes_read);
         udp_socket_t::m_publisher_rx.publish(message);
@@ -143,7 +143,7 @@ void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size
 }
 
 // ROS
-void udp_socket_t::subscriber_tx(const driver_modem_msgs::udp_packetConstPtr& message)
+void udp_socket_t::subscriber_tx(const driver_tcpip_msgs::udp_packetConstPtr& message)
 {
     // Send the data.
     udp_socket_t::m_socket.send_to(boost::asio::buffer(message->data), endpoint::to_asio_udp(message->remote_endpoint));

@@ -1,14 +1,14 @@
-#include "driver_modem/modem_interface.h"
+#include "driver_tcpip/modem_interface.h"
 
-#include <driver_modem_msgs/set_remote_host.h>
-#include <driver_modem_msgs/get_remote_host.h>
-#include <driver_modem_msgs/add_tcp_connection.h>
-#include <driver_modem_msgs/add_udp_connection.h>
-#include <driver_modem_msgs/remove_connection.h>
-#include <driver_modem_msgs/remove_all_connections.h>
-#include <driver_modem_msgs/send_tcp.h>
+#include <driver_tcpip_msgs/set_remote_host.h>
+#include <driver_tcpip_msgs/get_remote_host.h>
+#include <driver_tcpip_msgs/add_tcp_connection.h>
+#include <driver_tcpip_msgs/add_udp_connection.h>
+#include <driver_tcpip_msgs/remove_connection.h>
+#include <driver_tcpip_msgs/remove_all_connections.h>
+#include <driver_tcpip_msgs/send_tcp.h>
 
-using namespace driver_modem;
+using namespace driver_tcpip;
 
 // CONSTRUCTORS
 modem_interface::modem_interface(std::string modem_name)
@@ -20,11 +20,11 @@ modem_interface::modem_interface(std::string modem_name)
     modem_interface::m_subscriber_active_connections = modem_interface::m_node->subscribe("active_connections", 1, &modem_interface::callback_active_connections, this);
 
     // Initialize connection management service clients.
-    modem_interface::m_service_set_remote_host = modem_interface::m_node->serviceClient<driver_modem_msgs::set_remote_host>("set_remote_host");
-    modem_interface::m_service_get_remote_host = modem_interface::m_node->serviceClient<driver_modem_msgs::get_remote_host>("get_remote_host");
-    modem_interface::m_service_add_tcp_connection = modem_interface::m_node->serviceClient<driver_modem_msgs::add_tcp_connection>("add_tcp_connection");
-    modem_interface::m_service_add_udp_connection = modem_interface::m_node->serviceClient<driver_modem_msgs::add_udp_connection>("add_udp_connection");
-    modem_interface::m_service_remove_connection = modem_interface::m_node->serviceClient<driver_modem_msgs::remove_connection>("remove_connection");
+    modem_interface::m_service_set_remote_host = modem_interface::m_node->serviceClient<driver_tcpip_msgs::set_remote_host>("set_remote_host");
+    modem_interface::m_service_get_remote_host = modem_interface::m_node->serviceClient<driver_tcpip_msgs::get_remote_host>("get_remote_host");
+    modem_interface::m_service_add_tcp_connection = modem_interface::m_node->serviceClient<driver_tcpip_msgs::add_tcp_connection>("add_tcp_connection");
+    modem_interface::m_service_add_udp_connection = modem_interface::m_node->serviceClient<driver_tcpip_msgs::add_udp_connection>("add_udp_connection");
+    modem_interface::m_service_remove_connection = modem_interface::m_node->serviceClient<driver_tcpip_msgs::remove_connection>("remove_connection");
 }
 modem_interface::~modem_interface()
 {
@@ -61,7 +61,7 @@ modem_interface::~modem_interface()
 }
 
 // METHODS: Callback Management
-void modem_interface::attach_callback_tcp_rx(std::function<void (uint16_t, const driver_modem_msgs::data_packetConstPtr &)> callback)
+void modem_interface::attach_callback_tcp_rx(std::function<void (uint16_t, const driver_tcpip_msgs::data_packetConstPtr &)> callback)
 {
     modem_interface::m_callback_tcp_rx = callback;
 }
@@ -69,7 +69,7 @@ void modem_interface::detach_callback_tcp_rx()
 {
     modem_interface::m_callback_tcp_rx = nullptr;
 }
-void modem_interface::attach_callback_udp_rx(std::function<void (uint16_t, const driver_modem_msgs::data_packetConstPtr &)> callback)
+void modem_interface::attach_callback_udp_rx(std::function<void (uint16_t, const driver_tcpip_msgs::data_packetConstPtr &)> callback)
 {
     modem_interface::m_callback_udp_rx = callback;
 }
@@ -82,7 +82,7 @@ void modem_interface::detach_callback_udp_rx()
 bool modem_interface::set_remote_host(std::string remote_host)
 {
     // Build request.
-    driver_modem_msgs::set_remote_host service;
+    driver_tcpip_msgs::set_remote_host service;
     service.request.remote_host = remote_host;
 
     // Call service.
@@ -98,7 +98,7 @@ bool modem_interface::set_remote_host(std::string remote_host)
 bool modem_interface::get_remote_host(std::string& remote_host)
 {
     // Build request.
-    driver_modem_msgs::get_remote_host service;
+    driver_tcpip_msgs::get_remote_host service;
 
     // Call service.
     if(modem_interface::m_service_get_remote_host.call(service))
@@ -114,7 +114,7 @@ bool modem_interface::get_remote_host(std::string& remote_host)
 bool modem_interface::add_tcp_connection(tcp_role role, uint16_t port)
 {
     // Build request.
-    driver_modem_msgs::add_tcp_connection service;
+    driver_tcpip_msgs::add_tcp_connection service;
     service.request.role = static_cast<uint8_t>(role);
     service.request.port = port;
 
@@ -131,7 +131,7 @@ bool modem_interface::add_tcp_connection(tcp_role role, uint16_t port)
 bool modem_interface::add_udp_connection(uint16_t port)
 {
     // Build request.
-    driver_modem_msgs::add_udp_connection service;
+    driver_tcpip_msgs::add_udp_connection service;
     service.request.port = port;
 
     // Call service.
@@ -147,7 +147,7 @@ bool modem_interface::add_udp_connection(uint16_t port)
 bool modem_interface::remove_connection(protocol type, uint16_t port)
 {
     // Build request.
-    driver_modem_msgs::remove_connection service;
+    driver_tcpip_msgs::remove_connection service;
     service.request.protocol = static_cast<uint8_t>(type);
     service.request.port = port;
 
@@ -164,7 +164,7 @@ bool modem_interface::remove_connection(protocol type, uint16_t port)
 bool modem_interface::remove_all_connections()
 {
     // Build request.
-    driver_modem_msgs::remove_all_connections service;
+    driver_tcpip_msgs::remove_all_connections service;
 
     // Call service.
     if(modem_interface::m_service_remove_connection.call(service))
@@ -184,7 +184,7 @@ bool modem_interface::send_tcp(uint16_t port, const uint8_t *data, uint32_t leng
     if(modem_interface::m_services_send_tcp.count(port) != 0)
     {
         // Create message.
-        driver_modem_msgs::send_tcp service;
+        driver_tcpip_msgs::send_tcp service;
         // NOTE: Timestamp and source IP are set on receiving end.
         service.request.packet.data.reserve(length);
         for(uint32_t i = 0; i < length; i++)
@@ -213,7 +213,7 @@ bool modem_interface::send_udp(uint16_t port, const uint8_t *data, uint32_t leng
     if(modem_interface::m_publishers_udp.count(port) != 0)
     {
         // Create message.
-        driver_modem_msgs::data_packet message;
+        driver_tcpip_msgs::data_packet message;
         // NOTE: Timestamp and source IP are set on receiving end.
         message.data.reserve(length);
         for(uint32_t i = 0; i < length; i++)
@@ -350,7 +350,7 @@ std::vector<uint16_t> modem_interface::p_active_udp_connections() const
 }
 
 // CALLBACKS: Subscribers
-void modem_interface::callback_active_connections(const driver_modem_msgs::active_connectionsPtr &message)
+void modem_interface::callback_active_connections(const driver_tcpip_msgs::active_connectionsPtr &message)
 {
     // Find differences between old and new connections.
     // NOTE: Use lists instead of vectors to remove elements while looping.
@@ -378,9 +378,9 @@ void modem_interface::callback_active_connections(const driver_modem_msgs::activ
         // Add TCP TX service client.
         std::stringstream topic_front;
         topic_front << "tcp/" << *it;
-        modem_interface::m_services_send_tcp.insert(std::make_pair(*it, modem_interface::m_node->serviceClient<driver_modem_msgs::send_tcp>(topic_front.str() + "/tx")));
+        modem_interface::m_services_send_tcp.insert(std::make_pair(*it, modem_interface::m_node->serviceClient<driver_tcpip_msgs::send_tcp>(topic_front.str() + "/tx")));
         // Add TCP RX subscriber.
-        modem_interface::m_subscribers_tcp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe<driver_modem_msgs::data_packet>(topic_front.str() + "/rx", 1, std::bind(&modem_interface::callback_tcp_rx, this, std::placeholders::_1, *it))));
+        modem_interface::m_subscribers_tcp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe<driver_tcpip_msgs::data_packet>(topic_front.str() + "/rx", 1, std::bind(&modem_interface::callback_tcp_rx, this, std::placeholders::_1, *it))));
     }
 
     // UDP:
@@ -400,9 +400,9 @@ void modem_interface::callback_active_connections(const driver_modem_msgs::activ
         // Add UDP TX publisher.
         std::stringstream topic_front;
         topic_front << "udp/" << *it;
-        modem_interface::m_publishers_udp.insert(std::make_pair(*it, modem_interface::m_node->advertise<driver_modem_msgs::data_packet>(topic_front.str() + "/tx", 1)));
+        modem_interface::m_publishers_udp.insert(std::make_pair(*it, modem_interface::m_node->advertise<driver_tcpip_msgs::data_packet>(topic_front.str() + "/tx", 1)));
         // Add UDP RX subscriber.
-        modem_interface::m_subscribers_udp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe<driver_modem_msgs::data_packet>(topic_front.str() + "/rx", 1, std::bind(&modem_interface::callback_udp_rx, this, std::placeholders::_1, *it))));
+        modem_interface::m_subscribers_udp_rx.insert(std::make_pair(*it, modem_interface::m_node->subscribe<driver_tcpip_msgs::data_packet>(topic_front.str() + "/rx", 1, std::bind(&modem_interface::callback_udp_rx, this, std::placeholders::_1, *it))));
     }
 
     // Assign new connections to internal storage.
@@ -410,12 +410,12 @@ void modem_interface::callback_active_connections(const driver_modem_msgs::activ
     modem_interface::m_active_tcp_connections = message->tcp_active;
     modem_interface::m_active_udp_connections = message->udp_active;
 }
-void modem_interface::callback_tcp_rx(const driver_modem_msgs::data_packetConstPtr &message, uint16_t port)
+void modem_interface::callback_tcp_rx(const driver_tcpip_msgs::data_packetConstPtr &message, uint16_t port)
 {
     // Forward to external callback.
     modem_interface::m_callback_tcp_rx(port, message);
 }
-void modem_interface::callback_udp_rx(const driver_modem_msgs::data_packetConstPtr &message, uint16_t port)
+void modem_interface::callback_udp_rx(const driver_tcpip_msgs::data_packetConstPtr &message, uint16_t port)
 {
     // Forward to external callback.
     modem_interface::m_callback_udp_rx(port, message);

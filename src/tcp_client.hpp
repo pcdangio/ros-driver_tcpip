@@ -1,16 +1,16 @@
 /// \file tcp_client.hpp
-/// \brief Defines the driver_modem::tcp_client_t class.
-#ifndef DRIVER_MODEM___TCP_CLIENT_H
-#define DRIVER_MODEM___TCP_CLIENT_H
+/// \brief Defines the driver_tcpip::tcp_client_t class.
+#ifndef DRIVER_TCPIP___TCP_CLIENT_H
+#define DRIVER_TCPIP___TCP_CLIENT_H
 
-#include <driver_modem_msgs/endpoint.h>
-#include <driver_modem_msgs/tcp_client.h>
+#include <driver_tcpip_msgs/endpoint.h>
+#include <driver_tcpip_msgs/tcp_client.h>
 
 #include <boost/asio/ip/tcp.hpp>
 
 #include <functional>
 
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief A TCP client that attempts to connect to a remote server.
 class tcp_client_t
@@ -29,14 +29,14 @@ public:
     /// \param local_endpoint The local endpoint to start the client on.
     /// \param remote_endpoint The remote endpoint for the client to attempt to connect to.
     /// \returns TRUE if the client started successfully, otherwise FALSE.
-    bool start(const driver_modem_msgs::endpoint& local_endpoint, const driver_modem_msgs::endpoint& remote_endpoint);
+    bool start(const driver_tcpip_msgs::endpoint& local_endpoint, const driver_tcpip_msgs::endpoint& remote_endpoint);
     /// \brief Stops the TCP client.
     void stop();
 
     // PROPERTIES
     /// \brief Gets the description of the TCP client.
     /// \returns The description of the TCP client.
-    driver_modem_msgs::tcp_client description() const;
+    driver_tcpip_msgs::tcp_client description() const;
     /// \brief Indicates if the client is active.
     /// \returns TRUE if the client is still active, otherwise FALSE.
     bool is_active() const;
@@ -48,9 +48,9 @@ private:
 
     // ENDPOINTS
     /// \brief Stores the local endpoint of the client.
-    driver_modem_msgs::endpoint m_local_endpoint;
+    driver_tcpip_msgs::endpoint m_local_endpoint;
     /// \brief Stores the requested endpoint for connection.
-    driver_modem_msgs::endpoint m_remote_endpoint;
+    driver_tcpip_msgs::endpoint m_remote_endpoint;
 
     // ASIO SOCKET
     /// \brief The new socket for the next connection.

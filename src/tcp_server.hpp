@@ -1,16 +1,16 @@
 /// \file tcp_server.hpp
-/// \brief Defines the driver_modem::tcp_server_t class.
-#ifndef DRIVER_MODEM___TCP_SERVER_H
-#define DRIVER_MODEM___TCP_SERVER_H
+/// \brief Defines the driver_tcpip::tcp_server_t class.
+#ifndef DRIVER_TCPIP___TCP_SERVER_H
+#define DRIVER_TCPIP___TCP_SERVER_H
 
-#include <driver_modem_msgs/endpoint.h>
-#include <driver_modem_msgs/tcp_server.h>
+#include <driver_tcpip_msgs/endpoint.h>
+#include <driver_tcpip_msgs/tcp_server.h>
 
 #include <boost/asio/ip/tcp.hpp>
 
 #include <functional>
 
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief A TCP server for accepting incoming connections.
 class tcp_server_t
@@ -28,14 +28,14 @@ public:
     /// \brief Starts the TCP server.
     /// \param local_endpoint The local endpoint to start the server on.
     /// \returns TRUE if the server started successfully, otherwise FALSE.
-    bool start(driver_modem_msgs::endpoint& local_endpoint);
+    bool start(driver_tcpip_msgs::endpoint& local_endpoint);
     /// \brief Stops the TCP server.
     void stop();
 
     // PROPERTIES
     /// \brief Gets the description of the TCP server.
     /// \returns The description of the TCP server.
-    driver_modem_msgs::tcp_server description() const;
+    driver_tcpip_msgs::tcp_server description() const;
 
 private:
     // VARIABLES

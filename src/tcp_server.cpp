@@ -7,7 +7,7 @@
 #include <boost/bind.hpp>
 #include <boost/asio/placeholders.hpp>
 
-using namespace driver_modem;
+using namespace driver_tcpip;
 
 // CONSTRUCTORS
 tcp_server_t::tcp_server_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(boost::asio::ip::tcp::socket*)> connection_callback)
@@ -23,7 +23,7 @@ tcp_server_t::~tcp_server_t()
 }
 
 // CONTROL
-bool tcp_server_t::start(driver_modem_msgs::endpoint& local_endpoint)
+bool tcp_server_t::start(driver_tcpip_msgs::endpoint& local_endpoint)
 {
     // Check if server is already running.
     if(tcp_server_t::m_acceptor.is_open())
@@ -85,10 +85,10 @@ void tcp_server_t::stop()
 }
 
 // PROPERTIES
-driver_modem_msgs::tcp_server tcp_server_t::description() const
+driver_tcpip_msgs::tcp_server tcp_server_t::description() const
 {
     // Create output description.
-    driver_modem_msgs::tcp_server description;
+    driver_tcpip_msgs::tcp_server description;
 
     // Populate description.
     description.id = tcp_server_t::m_id;

@@ -1,34 +1,34 @@
-/// \file driver_modem.hpp
-/// \brief Defines the driver_modem::driver_modem_t class.
-#ifndef DRIVER_MODEM___DRIVER_MODEM_H
-#define DRIVER_MODEM___DRIVER_MODEM_H
+/// \file driver_tcpip.hpp
+/// \brief Defines the driver_tcpip::driver_tcpip_t class.
+#ifndef DRIVER_TCPIP___DRIVER_TCPIP_H
+#define DRIVER_TCPIP___DRIVER_TCPIP_H
 
 #include "tcp_server.hpp"
 #include "tcp_client.hpp"
 #include "socket.hpp"
 
 #include <ros/ros.h>
-#include <driver_modem_msgs/resolve_ip.h>
-#include <driver_modem_msgs/start_tcp_server.h>
-#include <driver_modem_msgs/stop_tcp_server.h>
-#include <driver_modem_msgs/start_tcp_client.h>
-#include <driver_modem_msgs/stop_tcp_client.h>
-#include <driver_modem_msgs/open_udp_socket.h>
-#include <driver_modem_msgs/close_socket.h>
+#include <driver_tcpip_msgs/resolve_ip.h>
+#include <driver_tcpip_msgs/start_tcp_server.h>
+#include <driver_tcpip_msgs/stop_tcp_server.h>
+#include <driver_tcpip_msgs/start_tcp_client.h>
+#include <driver_tcpip_msgs/stop_tcp_client.h>
+#include <driver_tcpip_msgs/open_udp_socket.h>
+#include <driver_tcpip_msgs/close_socket.h>
 
 #include <map>
 
 /// \brief Includes all software for TCP/IP communication over a network.
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief A ROS node for controlling TCP/IP sockets.
-class driver_modem_t
+class driver_tcpip_t
 {
 public:
     // CONSTRUCTORS
-    /// \brief Instantiates a new driver_modem_t.
-    driver_modem_t();
-    ~driver_modem_t();
+    /// \brief Instantiates a new driver_tcpip_t.
+    driver_tcpip_t();
+    ~driver_tcpip_t();
 
     // CONTROL
     /// \brief Runs the node until shutdown.
@@ -76,37 +76,37 @@ private:
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_resolve_ip(driver_modem_msgs::resolve_ipRequest& request, driver_modem_msgs::resolve_ipResponse& response);
+    bool service_resolve_ip(driver_tcpip_msgs::resolve_ipRequest& request, driver_tcpip_msgs::resolve_ipResponse& response);
     /// \brief The service callback for starting a TCP server.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_start_tcp_server(driver_modem_msgs::start_tcp_serverRequest& request, driver_modem_msgs::start_tcp_serverResponse& response);
+    bool service_start_tcp_server(driver_tcpip_msgs::start_tcp_serverRequest& request, driver_tcpip_msgs::start_tcp_serverResponse& response);
     /// \brief The service callback for stopping a TCP server.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverRequest& request, driver_modem_msgs::stop_tcp_serverResponse& response);
+    bool service_stop_tcp_server(driver_tcpip_msgs::stop_tcp_serverRequest& request, driver_tcpip_msgs::stop_tcp_serverResponse& response);
     /// \brief The service callback for starting a TCP client.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_start_tcp_client(driver_modem_msgs::start_tcp_clientRequest& request, driver_modem_msgs::start_tcp_clientResponse& response);
+    bool service_start_tcp_client(driver_tcpip_msgs::start_tcp_clientRequest& request, driver_tcpip_msgs::start_tcp_clientResponse& response);
     /// \brief The service callback for stopping a TCP client.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_stop_tcp_client(driver_modem_msgs::stop_tcp_clientRequest& request, driver_modem_msgs::stop_tcp_clientResponse& response);
+    bool service_stop_tcp_client(driver_tcpip_msgs::stop_tcp_clientRequest& request, driver_tcpip_msgs::stop_tcp_clientResponse& response);
     /// \brief The service callback for opening a UDP socket.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_open_udp_socket(driver_modem_msgs::open_udp_socketRequest& request, driver_modem_msgs::open_udp_socketResponse& response);
+    bool service_open_udp_socket(driver_tcpip_msgs::open_udp_socketRequest& request, driver_tcpip_msgs::open_udp_socketResponse& response);
     /// \brief The service callback for closing a TCP or UDP socket.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_close_socket(driver_modem_msgs::close_socketRequest& request, driver_modem_msgs::close_socketResponse& response);
+    bool service_close_socket(driver_tcpip_msgs::close_socketRequest& request, driver_tcpip_msgs::close_socketResponse& response);
 
     // PUBLISHING
     /// \brief Publishes the current status of the modem.

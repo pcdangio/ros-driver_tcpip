@@ -1,52 +1,40 @@
 /// \file modem_interface.h
-/// \brief Defines the driver_modem::modem_interface class.
-#ifndef MODEM_INTERFACE_H
-#define MODEM_INTERFACE_H
-
-#include "driver_modem/protocol.h"
-#include "driver_modem/tcp_role.h"
+/// \brief Defines the driver_tcpip::modem_interface class.
+#ifndef driver_tcpip___MODEM_INTERFACE_H
+#define driver_tcpip___MODEM_INTERFACE_H
 
 #include <ros/ros.h>
 
-#include <driver_modem_msgs/active_connections.h>
-#include <driver_modem_msgs/data_packet.h>
+#include <driver_tcpip_msgs/status.h>
+#include <driver_tcpip_msgs/tcp_packet.h>
+#include <driver_tcpip_msgs/udp_packet.h>
 
-/// \brief Namespace for driver_modem package.
-namespace driver_modem {
+/// \brief Includes all software for the driver_tcpip package.
+namespace driver_tcpip {
 
-/// \brief Provides management and control of a driver_modem ROS node.
+/// \brief An interface for controlling a driver_tcpip node.
 class modem_interface
 {
 public:
     // CONSTRUCTORS
     /// \brief Creates a new modem manager.
-    /// \param modem_name The global ROS name of the driver_modem node to manage.
-    /// \note The namespace must be in the form of "\xxx\yyy\node_name"
+    /// \param modem_name The global ROS name of the driver_tcpip node to manage.
     modem_interface(std::string modem_name);
     ~modem_interface();
 
-    // METHODS: Callback Management
+    // CALLBACK MANAGEMENT
     /// \brief Attaches a callback for handling received TCP messages.
     /// \param callback The callback function.
-    void attach_callback_tcp_rx(std::function<void(uint16_t, const driver_modem_msgs::data_packetConstPtr&)> callback);
-    /// \brief Detaches the current callback for handling received TCP messages.
-    void detach_callback_tcp_rx();
+    void set_callback_tcp_rx(std::function<void(uint32_t, const driver_tcpip_msgs::tcp_packetConstPtr&)> callback);
     /// \brief Attaches a callback for handling received UDP messages.
     /// \param callback The callback function.
-    void attach_callback_udp_rx(std::function<void (uint16_t, const driver_modem_msgs::data_packetConstPtr &)> callback);
-    /// \brief Detaches the current callback for handling received UDP messages.
-    void detach_callback_udp_rx();
+    void set_callback_udp_rx(std::function<void(uint32_t, const driver_tcpip_msgs::udp_packetConstPtr&)> callback);
 
+    // CONFIGURATION
+    bool add_tcp_server(const driver_tcpip_msgs::endpoint& local_endpoint);
+    bool open_tcp_socket(const driver_tcpip_msgs::endpoint& local_endpoint, const driver_tcpip_msgs::endpoint& remote_endpoint);
+    bool open_udp_socket(const driver_tcpip_msgs::endpoint& local_endpoint);
 
-    // METHODS: Configuration
-    /// \brief Sets the remote host of the modem.
-    /// \param remote_host The new remote host to set.
-    /// \return TRUE if successful, otherwise FALSE.
-    bool set_remote_host(std::string remote_host);
-    /// \brief Gets the remote host of the modem.
-    /// \param remote_host A string to store the returned remote host in.
-    /// \return TRUE if successful, otherwise FALSE.
-    bool get_remote_host(std::string& remote_host);
     /// \brief Adds a TCP connection to the modem.
     /// \param role The role of the TCP connection (client or server).
     /// \param port The port of the TCP connection.
@@ -130,9 +118,9 @@ private:
 
     // VARIABLES: External Callbacks
     /// \brief Stores the external callback for handling received TCP messages.
-    std::function<void(uint16_t port, const driver_modem_msgs::data_packetConstPtr&)> m_callback_tcp_rx;
+    std::function<void(uint16_t port, const driver_tcpip_msgs::data_packetConstPtr&)> m_callback_tcp_rx;
     /// \brief Stores the external callback for handling received UDP messages.
-    std::function<void(uint16_t port, const driver_modem_msgs::data_packetConstPtr&)> m_callback_udp_rx;
+    std::function<void(uint16_t port, const driver_tcpip_msgs::data_packetConstPtr&)> m_callback_udp_rx;
 
     // VARIABLES: ROS Node
     /// \brief Maintains a copy of the ROS nodehandle for pub/sub/srv creation.
@@ -173,15 +161,15 @@ private:
     // CALLBACKS: Subscribers
     /// \brief Handles active_connections messages.
     /// \param message
-    void callback_active_connections(const driver_modem_msgs::active_connectionsPtr& message);
+    void callback_active_connections(const driver_tcpip_msgs::active_connectionsPtr& message);
     /// \brief Handles received TCP messages.
     /// \param message The recieved message.
     /// \param port The port the message was received on.
-    void callback_tcp_rx(const driver_modem_msgs::data_packetConstPtr &message, uint16_t port);
+    void callback_tcp_rx(const driver_tcpip_msgs::data_packetConstPtr &message, uint16_t port);
     /// \brief Handles received UDP messages.
     /// \param message The received message.
     /// \param port The port the message was received on.
-    void callback_udp_rx(const driver_modem_msgs::data_packetConstPtr& message, uint16_t port);
+    void callback_udp_rx(const driver_tcpip_msgs::data_packetConstPtr& message, uint16_t port);
 };
 
 }

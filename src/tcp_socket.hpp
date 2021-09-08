@@ -1,20 +1,20 @@
 /// \file tcp_socket.hpp
-/// \brief Defines the driver_modem::tcp_socket_t class.
-#ifndef DRIVER_MODEM___TCP_SOCKET_H
-#define DRIVER_MODEM___TCP_SOCKET_H
+/// \brief Defines the driver_tcpip::tcp_socket_t class.
+#ifndef DRIVER_TCPIP___TCP_SOCKET_H
+#define DRIVER_TCPIP___TCP_SOCKET_H
 
 #include "socket.hpp"
 
 #include <ros/ros.h>
-#include <driver_modem_msgs/endpoint.h>
-#include <driver_modem_msgs/send_tcp.h>
-#include <driver_modem_msgs/tcp_socket.h>
+#include <driver_tcpip_msgs/endpoint.h>
+#include <driver_tcpip_msgs/send_tcp.h>
+#include <driver_tcpip_msgs/tcp_socket.h>
 
 #include <boost/asio/ip/tcp.hpp>
 
 #include <memory>
 
-namespace driver_modem {
+namespace driver_tcpip {
 
 /// \brief A TCP socket.
 class tcp_socket_t
@@ -33,7 +33,7 @@ public:
     // PROPERTIES
     /// \brief Gets the description of the TCP socket.
     /// \returns The description of the TCP socket.
-    driver_modem_msgs::tcp_socket description() const;
+    driver_tcpip_msgs::tcp_socket description() const;
     bool is_open() const override;
 
 private:
@@ -58,7 +58,7 @@ private:
     /// \param request The transmit service request.
     /// \param response The transmit service response.
     /// \returns TRUE if the service completed, otherwise FALSE.
-    bool service_tx(driver_modem_msgs::send_tcpRequest& request, driver_modem_msgs::send_tcpResponse& response);
+    bool service_tx(driver_tcpip_msgs::send_tcpRequest& request, driver_tcpip_msgs::send_tcpResponse& response);
     /// \brief Starts all necessary ROS publishers and services.
     void start_ros();
     /// \brief Stops all ROS publishers and services.
