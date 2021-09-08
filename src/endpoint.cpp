@@ -1,9 +1,7 @@
 #include "endpoint.hpp"
 
-using namespace driver_modem::endpoint;
-
 // TCP
-boost::asio::ip::tcp::endpoint to_asio_tcp(const driver_modem_msgs::endpoint& endpoint_ros)
+boost::asio::ip::tcp::endpoint driver_modem::endpoint::to_asio_tcp(const driver_modem_msgs::endpoint& endpoint_ros)
 {
     // Create ASIO endpoint output.
     boost::asio::ip::tcp::endpoint endpoint_asio;
@@ -18,7 +16,7 @@ boost::asio::ip::tcp::endpoint to_asio_tcp(const driver_modem_msgs::endpoint& en
 
     return endpoint_asio;
 }
-driver_modem_msgs::endpoint to_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio)
+driver_modem_msgs::endpoint driver_modem::endpoint::to_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio)
 {
     // Create ROS endpoint output.
     driver_modem_msgs::endpoint endpoint_ros;
@@ -33,7 +31,7 @@ driver_modem_msgs::endpoint to_ros(const boost::asio::ip::tcp::endpoint& endpoin
 }
 
 // UDP
-boost::asio::ip::udp::endpoint to_asio_udp(const driver_modem_msgs::endpoint& endpoint_ros)
+boost::asio::ip::udp::endpoint driver_modem::endpoint::to_asio_udp(const driver_modem_msgs::endpoint& endpoint_ros)
 {
     // Create ASIO endpoint output.
     boost::asio::ip::udp::endpoint endpoint_asio;
@@ -48,7 +46,7 @@ boost::asio::ip::udp::endpoint to_asio_udp(const driver_modem_msgs::endpoint& en
 
     return endpoint_asio;
 }
-driver_modem_msgs::endpoint to_ros(const boost::asio::ip::udp::endpoint& endpoint_asio)
+driver_modem_msgs::endpoint driver_modem::endpoint::to_ros(const boost::asio::ip::udp::endpoint& endpoint_asio)
 {
     // Create ROS endpoint output.
     driver_modem_msgs::endpoint endpoint_ros;
