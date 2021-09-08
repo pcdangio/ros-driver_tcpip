@@ -21,12 +21,6 @@ tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
     // Start asynchronously receiving.
     tcp_socket_t::async_rx();
 }
-tcp_socket_t::tcp_socket_t(boost::asio::io_service& io_service, uint32_t id)
-    : socket_t(id, protocol_t::TCP)
-{
-    // Create new socket.
-    tcp_socket_t::m_socket = new boost::asio::ip::tcp::socket(io_service);
-}
 tcp_socket_t::~tcp_socket_t()
 {
     // Close the socket.
@@ -37,47 +31,6 @@ tcp_socket_t::~tcp_socket_t()
 }
 
 // CONTROL
-bool tcp_socket_t::connect(driver_modem_msgs::endpoint& local_endpoint, driver_modem_msgs::endpoint& remote_endpoint)
-{
-    // Check if the socket is already open.
-    if(tcp_socket_t::m_socket->is_open())
-    {
-        ROS_ERROR_STREAM("tcp socket " << tcp_socket_t::m_id << " failed to connect (socket is already connected)");
-        return false;
-    }
-
-    // Create error structure for tracking.
-    boost::system::error_code error;
-
-    // Open the socket.
-    tcp_socket_t::m_socket->open(boost::asio::ip::tcp::v4());
-
-    // Bind the socket to the local endpoint.
-    tcp_socket_t::m_socket->bind(tcp_socket_t::endpoint_asio(local_endpoint), error);
-    if(error)
-    {
-        ROS_ERROR_STREAM("failed to bind tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
-        return false;
-    }
-
-    // Open socket and connect to remote endpoint.
-    tcp_socket_t::m_socket->connect(tcp_socket_t::endpoint_asio(remote_endpoint), error);
-    if(error)
-    {
-        ROS_ERROR_STREAM("failed to connect tcp socket " << tcp_socket_t::m_id << " (" << error.message() << ")");
-        return false;
-    }
-
-    // Start ROS publishers and services.
-    tcp_socket_t::start_ros();
-
-    // Start asynchronously receiving.
-    tcp_socket_t::async_rx();
-
-    // Indicate success.
-    ROS_INFO_STREAM("tcp socket " << tcp_socket_t::m_id << " connected successfully");
-    return true;
-}
 void tcp_socket_t::close()
 {
     if(tcp_socket_t::m_socket->is_open())

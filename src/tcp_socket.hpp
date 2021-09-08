@@ -26,17 +26,8 @@ public:
     /// \param socket The existing ASIO socket to instantiate with.
     /// \param id The unique ID of the TCP socket.
     tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id);
-    /// \brief Creates a new tcp_socket instance with a new ASIO socket.
-    /// \param io_service The application's io_service instance.
-    /// \param id The unique ID of the TCP socket.
-    tcp_socket_t(boost::asio::io_service& io_service, uint32_t id);
     ~tcp_socket_t();
 
-    /// \brief Connects to an existing TCP server.
-    /// \param local_endpoint The local endpoint of the socket.
-    /// \param remote_endpoint The remote endpoint to connect to.
-    /// \returns TRUE if the connection succeeded, otherwise FALSE.
-    bool connect(driver_modem_msgs::endpoint& local_endpoint, driver_modem_msgs::endpoint& remote_endpoint);
     void close() override;
 
     // PROPERTIES
