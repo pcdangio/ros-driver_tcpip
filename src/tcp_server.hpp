@@ -20,6 +20,7 @@ public:
     /// \brief Instantiates a new tcp_server_t.
     /// \param io_service The application's io_service instance.
     /// \param id The unique ID of the TCP server.
+    /// \param connection_callback The callback for handling new connections.
     tcp_server_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(uint32_t, boost::asio::ip::tcp::socket*)> connection_callback);
     ~tcp_server_t();
 
@@ -54,17 +55,6 @@ private:
     // CALLBACKS
     /// \brief Stores the external callback for when new connections are made.
     std::function<void(uint32_t, boost::asio::ip::tcp::socket*)> m_callback_connection;
-
-    // ENDPOINT CONVERSION
-    /// \brief Converts a ROS endpoint to an ASIO endpoint.
-    /// \param endpoint_ros The ROS endpoint to convert.
-    /// \returns The converted ASIO endpoint.
-    boost::asio::ip::tcp::endpoint endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const;
-    /// \brief Converts an ASIO endpoint to a ROS endpoint.
-    /// \param endpoint_asio The ASIO endpoint to convert.
-    /// \returns The converted ROS endpoint.
-    driver_modem_msgs::endpoint endpoint_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio) const;
-
 };
 
 }

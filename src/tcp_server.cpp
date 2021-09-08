@@ -1,5 +1,7 @@
 #include "tcp_server.hpp"
 
+#include "endpoint.hpp"
+
 #include <ros/console.h>
 
 #include <boost/bind.hpp>
@@ -43,7 +45,7 @@ bool tcp_server_t::start(driver_modem_msgs::endpoint& local_endpoint)
 
     // Bind the acceptor.
     tcp_server_t::m_acceptor.set_option(boost::asio::socket_base::reuse_address(true));
-    tcp_server_t::m_acceptor.bind(tcp_server_t::endpoint_asio(local_endpoint), error);
+    tcp_server_t::m_acceptor.bind(endpoint::to_asio_tcp(local_endpoint), error);
     if(error)
     {
         ROS_ERROR_STREAM("tcp server " << tcp_server_t::m_id << " failed to bind to local endpoint (" << error.message() << ")");
@@ -90,7 +92,7 @@ driver_modem_msgs::tcp_server tcp_server_t::description() const
 
     // Populate description.
     description.id = tcp_server_t::m_id;
-    description.local_endpoint = tcp_server_t::endpoint_ros(tcp_server_t::m_acceptor.local_endpoint());
+    description.local_endpoint = endpoint::to_ros(tcp_server_t::m_acceptor.local_endpoint());
 
     return description;
 }
@@ -136,34 +138,4 @@ void tcp_server_t::accept_callback(const boost::system::error_code &error)
 
     // Restart accept loop.
     tcp_server_t::async_accept();  
-}
-
-// ENDPOINT CONVERSION
-boost::asio::ip::tcp::endpoint tcp_server_t::endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const
-{
-    // Create ASIO endpoint output.
-    boost::asio::ip::tcp::endpoint endpoint_asio;
-
-    // Set the endpoint address.
-    boost::asio::ip::address_v4::bytes_type ip_bytes;
-    std::memcpy(ip_bytes.data(), endpoint_ros.ip.data(), 4);
-    endpoint_asio.address(boost::asio::ip::address_v4(ip_bytes));
-
-    // Set the endpoint port.
-    endpoint_asio.port(endpoint_ros.port);
-
-    return endpoint_asio;
-}
-driver_modem_msgs::endpoint tcp_server_t::endpoint_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio) const
-{
-    // Create ROS endpoint output.
-    driver_modem_msgs::endpoint endpoint_ros;
-
-    // Set endpoint address.
-    std::memcpy(endpoint_ros.ip.data(), endpoint_asio.address().to_v4().to_bytes().data(), 4);
-
-    // Set endpoint port.
-    endpoint_ros.port = endpoint_asio.port();
-
-    return endpoint_ros;
 }

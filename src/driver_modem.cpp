@@ -2,6 +2,7 @@
 
 #include "tcp_socket.hpp"
 #include "udp_socket.hpp"
+#include "endpoint.hpp"
 
 #include <driver_modem_msgs/status.h>
 
@@ -114,7 +115,7 @@ bool driver_modem_t::service_resolve_ip(driver_modem_msgs::resolve_ipRequest& re
     }
 
     // Populate response with resolved IP.
-    memcpy(response.ip.data(), result->endpoint().address().to_v4().to_bytes().data(), 4);
+    response.ip = endpoint::to_ros(result->endpoint()).ip;
     
     // Indicate success.
     ROS_INFO_STREAM("resolved hostname " << request.hostname << " to " << result->endpoint().address().to_string());
