@@ -20,6 +20,9 @@ tcp_socket_t::tcp_socket_t(boost::asio::ip::tcp::socket* socket, uint32_t id)
 
     // Start asynchronously receiving.
     tcp_socket_t::async_rx();
+
+    // Log socket opening.
+    ROS_INFO_STREAM("tcp socket " << id << " opened successfully");
 }
 tcp_socket_t::~tcp_socket_t()
 {

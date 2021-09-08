@@ -24,7 +24,8 @@ driver_modem_t::driver_modem_t()
     driver_modem_t::m_service_resolve_ip = private_node.advertiseService("resolve_ip", &driver_modem_t::service_resolve_ip, this);
     driver_modem_t::m_service_start_tcp_server = private_node.advertiseService("start_tcp_server", &driver_modem_t::service_start_tcp_server, this);
     driver_modem_t::m_service_stop_tcp_server = private_node.advertiseService("stop_tcp_server", &driver_modem_t::service_stop_tcp_server, this);
-    driver_modem_t::m_service_open_tcp_socket = private_node.advertiseService("open_tcp_socket", &driver_modem_t::service_open_tcp_socket, this);
+    driver_modem_t::m_service_start_tcp_client = private_node.advertiseService("start_tcp_client", &driver_modem_t::service_start_tcp_client, this);
+    driver_modem_t::m_service_stop_tcp_client = private_node.advertiseService("stop_tcp_client", &driver_modem_t::service_stop_tcp_client, this);
     driver_modem_t::m_service_open_udp_socket = private_node.advertiseService("open_udp_socket", &driver_modem_t::service_open_udp_socket, this);
     driver_modem_t::m_service_close_socket = private_node.advertiseService("close_socket", &driver_modem_t::service_close_socket, this);
 
@@ -131,7 +132,7 @@ bool driver_modem_t::service_start_tcp_server(driver_modem_msgs::start_tcp_serve
     }
 
     // Create the new TCP server.
-    tcp_server_t* tcp_server = new tcp_server_t(driver_modem_t::m_io_service, id, std::bind(&driver_modem_t::tcp_connection, this, std::placeholders::_1, std::placeholders::_2));
+    tcp_server_t* tcp_server = new tcp_server_t(driver_modem_t::m_io_service, id, std::bind(&driver_modem_t::tcp_connection, this, std::placeholders::_1));
 
     // Attempt to start the TCP server on the requested endpoint.
     if(tcp_server->start(request.local_endpoint))
@@ -183,40 +184,65 @@ bool driver_modem_t::service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverR
         return false;
     }
 }
-bool driver_modem_t::service_open_tcp_socket(driver_modem_msgs::open_tcp_socketRequest& request, driver_modem_msgs::open_tcp_socketResponse& response)
+bool driver_modem_t::service_start_tcp_client(driver_modem_msgs::start_tcp_clientRequest& request, driver_modem_msgs::start_tcp_clientResponse& response)
 {
     // Get unique ID.
     uint32_t id = 0;
-    while(driver_modem_t::m_sockets.count(id))
+    while(driver_modem_t::m_tcp_clients.count(id))
     {
         id++;
     }
 
-    // Create the TCP socket.
-    tcp_socket_t* tcp_socket = new tcp_socket_t(driver_modem_t::m_io_service, id);
+    // Create the new TCP client.
+    tcp_client_t* tcp_client = new tcp_client_t(driver_modem_t::m_io_service, id, std::bind(&driver_modem_t::tcp_connection, this, std::placeholders::_1));
 
-    // Attempt to connect to the remote endpoint.
-    if(tcp_socket->connect(request.local_endpoint, request.remote_endpoint))
+    // Attempt to start the TCP client on the requested endpoint.
+    if(tcp_client->start(request.local_endpoint, request.remote_endpoint))
     {
-        // Connection succeeded.
+        // Add the client to the map.
+        driver_modem_t::m_tcp_clients[id] = tcp_client;
+        // Populate the response.
+        response.client_id = id;
 
-        // Add socket to map.
-        driver_modem_t::m_sockets[id] = tcp_socket;
-        
         // Publish updated status.
         driver_modem_t::publish_status();
 
-        // Populate response.
-        response.socket_id = id;
-        
         // Indicate success.
         return true;
     }
     else
     {
-        // Delete socket.
-        delete tcp_socket;
-        // indicate failure.
+        // Delete the client.
+        delete tcp_client;
+        // Indicate failure.
+        return false;
+    }
+}
+bool driver_modem_t::service_stop_tcp_client(driver_modem_msgs::stop_tcp_clientRequest& request, driver_modem_msgs::stop_tcp_clientResponse& response)
+{
+    // Find the tcp client by ID.
+    auto iterator = driver_modem_t::m_tcp_clients.find(request.client_id);
+    if(iterator != driver_modem_t::m_tcp_clients.end())
+    {
+        // Stop the client.
+        iterator->second->stop();
+        // Delete client instance.
+        delete iterator->second;
+        // Delete from map.
+        driver_modem_t::m_tcp_clients.erase(iterator);
+
+        // Publish updated status.
+        driver_modem_t::publish_status();
+
+        // Indicate success.
+        return true;
+    }
+    else
+    {
+        // Indicate error.
+        ROS_ERROR_STREAM("failed to remove tcp client " << request.client_id << " (does not exist)");
+
+        // Indicate failure.
         return false;
     }
 }
@@ -297,6 +323,12 @@ void driver_modem_t::publish_status() const
         message.tcp_servers.push_back(server->second->description());
     }
 
+    // Populate TCP clients.
+    for(auto client = driver_modem_t::m_tcp_clients.cbegin(); client != driver_modem_t::m_tcp_clients.cend(); ++client)
+    {
+        message.tcp_clients.push_back(client->second->description());
+    }
+
     // Populate TCP and UDP sockets.
     for(auto socket = driver_modem_t::m_sockets.cbegin(); socket != driver_modem_t::m_sockets.cend(); ++socket)
     {
@@ -327,7 +359,7 @@ void driver_modem_t::publish_status() const
 }
 
 // CONNECTION
-void driver_modem_t::tcp_connection(uint32_t id, boost::asio::ip::tcp::socket* socket)
+void driver_modem_t::tcp_connection(boost::asio::ip::tcp::socket* socket)
 {
     // Get unique ID.
     uint32_t socket_id = 0;
@@ -338,9 +370,6 @@ void driver_modem_t::tcp_connection(uint32_t id, boost::asio::ip::tcp::socket* s
 
     // Create a new tcp_socket_t from the ASIO socket and add it to the map.
     driver_modem_t::m_sockets[socket_id] = new tcp_socket_t(socket, socket_id);
-
-    // Log new connection.
-    ROS_INFO_STREAM("tcp server " << id << " accepted new connection on tcp socket " << socket_id);
 
     // Publish updated status.
     driver_modem_t::publish_status();

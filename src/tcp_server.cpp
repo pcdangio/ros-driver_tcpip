@@ -10,7 +10,7 @@
 using namespace driver_modem;
 
 // CONSTRUCTORS
-tcp_server_t::tcp_server_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(uint32_t, boost::asio::ip::tcp::socket*)> connection_callback)
+tcp_server_t::tcp_server_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(boost::asio::ip::tcp::socket*)> connection_callback)
     : m_acceptor(io_service),
       m_id(id)
 {
@@ -111,8 +111,11 @@ void tcp_server_t::accept_callback(const boost::system::error_code &error)
     // Check if there was an error.
     if(!error)
     {
+        // Indicate connection.
+        ROS_INFO_STREAM("tcp server " << tcp_server_t::m_id << " successfully accepted a new connection");
+        
         // Raise the connection callback.
-        tcp_server_t::m_callback_connection(tcp_server_t::m_id, tcp_server_t::m_socket);
+        tcp_server_t::m_callback_connection(tcp_server_t::m_socket);
 
         // This passes the ownership of the socket through the callback.
         tcp_server_t::m_socket = nullptr;

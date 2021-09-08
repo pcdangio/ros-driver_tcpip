@@ -4,13 +4,15 @@
 #define DRIVER_MODEM___DRIVER_MODEM_H
 
 #include "tcp_server.hpp"
+#include "tcp_client.hpp"
 #include "socket.hpp"
 
 #include <ros/ros.h>
 #include <driver_modem_msgs/resolve_ip.h>
 #include <driver_modem_msgs/start_tcp_server.h>
 #include <driver_modem_msgs/stop_tcp_server.h>
-#include <driver_modem_msgs/open_tcp_socket.h>
+#include <driver_modem_msgs/start_tcp_client.h>
+#include <driver_modem_msgs/stop_tcp_client.h>
 #include <driver_modem_msgs/open_udp_socket.h>
 #include <driver_modem_msgs/close_socket.h>
 
@@ -44,6 +46,8 @@ private:
     // MAPS
     /// \brief The collection of active TCP servers.
     std::map<uint32_t, tcp_server_t*> m_tcp_servers;
+    /// \brief The collection of active TCP clients.
+    std::map<uint32_t, tcp_client_t*> m_tcp_clients;
     /// \brief The collection of open TCP or UDP sockets.
     std::map<uint32_t, socket_t*> m_sockets;
 
@@ -58,8 +62,10 @@ private:
     ros::ServiceServer m_service_start_tcp_server;
     /// \brief The service for stopping a TCP server. 
     ros::ServiceServer m_service_stop_tcp_server;
-    /// \brief The service for opening a TCP socket as a client.
-    ros::ServiceServer m_service_open_tcp_socket;
+    /// \brief The service for starting a TCP client.
+    ros::ServiceServer m_service_start_tcp_client;
+    /// \brief The service for stopping a TCP client. 
+    ros::ServiceServer m_service_stop_tcp_client;
     /// \brief The service for opening a UDP socket.
     ros::ServiceServer m_service_open_udp_socket;
     /// \brief The service for closing a TCP or UDP socket.
@@ -81,11 +87,16 @@ private:
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
     bool service_stop_tcp_server(driver_modem_msgs::stop_tcp_serverRequest& request, driver_modem_msgs::stop_tcp_serverResponse& response);
-    /// \brief The service callback for opening a TCP socket as a client.
+    /// \brief The service callback for starting a TCP client.
     /// \param request The service request.
     /// \param response The service response.
     /// \returns TRUE if the service executed successfully, otherwise FALSE.
-    bool service_open_tcp_socket(driver_modem_msgs::open_tcp_socketRequest& request, driver_modem_msgs::open_tcp_socketResponse& response);
+    bool service_start_tcp_client(driver_modem_msgs::start_tcp_clientRequest& request, driver_modem_msgs::start_tcp_clientResponse& response);
+    /// \brief The service callback for stopping a TCP client.
+    /// \param request The service request.
+    /// \param response The service response.
+    /// \returns TRUE if the service executed successfully, otherwise FALSE.
+    bool service_stop_tcp_client(driver_modem_msgs::stop_tcp_clientRequest& request, driver_modem_msgs::stop_tcp_clientResponse& response);
     /// \brief The service callback for opening a UDP socket.
     /// \param request The service request.
     /// \param response The service response.
@@ -104,7 +115,7 @@ private:
     // CONNECTION
     /// \brief Handles new connections from TCP servers.
     /// \param socket The ASIO socket that was opened as a result of the connection.
-    void tcp_connection(uint32_t id, boost::asio::ip::tcp::socket* socket);
+    void tcp_connection(boost::asio::ip::tcp::socket* socket);
 };
 
 }

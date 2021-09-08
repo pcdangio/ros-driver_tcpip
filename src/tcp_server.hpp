@@ -21,7 +21,7 @@ public:
     /// \param io_service The application's io_service instance.
     /// \param id The unique ID of the TCP server.
     /// \param connection_callback The callback for handling new connections.
-    tcp_server_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(uint32_t, boost::asio::ip::tcp::socket*)> connection_callback);
+    tcp_server_t(boost::asio::io_service& io_service, uint32_t id, std::function<void(boost::asio::ip::tcp::socket*)> connection_callback);
     ~tcp_server_t();
 
     // CONTROL
@@ -54,7 +54,7 @@ private:
 
     // CALLBACKS
     /// \brief Stores the external callback for when new connections are made.
-    std::function<void(uint32_t, boost::asio::ip::tcp::socket*)> m_callback_connection;
+    std::function<void(boost::asio::ip::tcp::socket*)> m_callback_connection;
 };
 
 }
