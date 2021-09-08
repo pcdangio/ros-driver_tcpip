@@ -25,7 +25,7 @@ include_directories(
 # add_dependencies(modem_interface ${catkin_EXPORTED_TARGETS})
 
 # Add executable for driver_modem_node.
-add_executable(${PROJECT_NAME}_node src/socket.cpp src/udp_socket.cpp src/tcp_socket.cpp src/tcp_server.cpp src/endpoint.cpp src/driver_modem.cpp src/main.cpp)
+add_executable(${PROJECT_NAME}_node src/socket.cpp src/udp_socket.cpp src/tcp_socket.cpp src/tcp_server.cpp src/tcp_client.cpp src/endpoint.cpp src/driver_modem.cpp src/main.cpp)
 # Rename target.
 set_target_properties(${PROJECT_NAME}_node PROPERTIES OUTPUT_NAME driver_modem PREFIX "")
 # Add dependency on exported targets for built driver_modem_msgs.
