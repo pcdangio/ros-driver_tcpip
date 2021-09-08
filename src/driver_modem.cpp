@@ -65,8 +65,10 @@ void driver_modem_t::run()
         // Spin ROS.
         ros::spinOnce();
 
-        // Clean up any self-closed sockets (e.g. TCP disconnectes)
-        bool sockets_updated = false;
+        // Create flag for tracking if status has updated.
+        bool status_updated = false;
+
+        // Clean up any self-closed sockets (e.g. TCP disconnects)
         auto socket = driver_modem_t::m_sockets.begin();
         while(socket != driver_modem_t::m_sockets.end())
         {
@@ -78,15 +80,36 @@ void driver_modem_t::run()
                 // Remove from map.
                 socket = driver_modem_t::m_sockets.erase(socket);
                 // Indicate that status should be updated.
-                sockets_updated = true;
+                status_updated = true;
             }
             else
             {
                 ++socket;
             }                       
         }
-        // If sockets updated, publish new status.
-        if(sockets_updated)
+
+        // Clean up any timed-out TCP clients.
+        auto client = driver_modem_t::m_tcp_clients.begin();
+        while(client != driver_modem_t::m_tcp_clients.end())
+        {
+            // Check if client is active.
+            if(!client->second->is_active())
+            {
+                // Delete client instance.
+                delete client->second;
+                // Remove from map.
+                client = driver_modem_t::m_tcp_clients.erase(client);
+                // Indicate that status should be updated.
+                status_updated = true;
+            }
+            else
+            {
+                ++client;
+            }
+        }
+
+        // If status updated, publish new status.
+        if(status_updated)
         {
             driver_modem_t::publish_status();
         }

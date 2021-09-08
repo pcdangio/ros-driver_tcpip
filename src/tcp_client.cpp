@@ -31,6 +31,13 @@ tcp_client_t::~tcp_client_t()
 // CONTROL
 bool tcp_client_t::start(const driver_modem_msgs::endpoint& local_endpoint, const driver_modem_msgs::endpoint& remote_endpoint)
 {
+    // Check if the client has alread failed.
+    if(!tcp_client_t::m_socket)
+    {
+        ROS_ERROR_STREAM("tcp client " << tcp_client_t::m_id << " failed to start (failed on prior connection attempt)");
+        return false;
+    }
+
     // Check if the socket is already open.
     if(tcp_client_t::m_socket->is_open())
     {
@@ -86,6 +93,7 @@ void tcp_client_t::stop()
         
         // Clean up the socket instance.
         delete tcp_client_t::m_socket;
+        tcp_client_t::m_socket = nullptr;
     }
 
 }
@@ -104,6 +112,10 @@ driver_modem_msgs::tcp_client tcp_client_t::description() const
     // Return description.
     return description;
 }
+bool tcp_client_t::is_active() const
+{
+    return tcp_client_t::m_socket != nullptr;
+}
 
 // ASIO SOCKET
 void tcp_client_t::connect_callback(const boost::system::error_code &error)
@@ -111,7 +123,12 @@ void tcp_client_t::connect_callback(const boost::system::error_code &error)
     // Check if an error occured.
     if(error)
     {
+        // Log failure.
         ROS_ERROR_STREAM("tcp client " << tcp_client_t::m_id << " failed to connect (" << error.message() << ")");
+
+        // Stop the client.
+        tcp_client_t::stop();
+
         return;
     }
 

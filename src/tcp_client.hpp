@@ -37,6 +37,9 @@ public:
     /// \brief Gets the description of the TCP client.
     /// \returns The description of the TCP client.
     driver_modem_msgs::tcp_client description() const;
+    /// \brief Indicates if the client is active.
+    /// \returns TRUE if the client is still active, otherwise FALSE.
+    bool is_active() const;
 
 private:
     // VARIABLES
