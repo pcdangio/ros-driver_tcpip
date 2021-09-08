@@ -1,5 +1,7 @@
 #include "tcp_socket.hpp"
 
+#include "endpoint.hpp"
+
 #include <driver_modem_msgs/tcp_packet.h>
 
 #include <boost/asio/placeholders.hpp>
@@ -105,8 +107,8 @@ driver_modem_msgs::tcp_socket tcp_socket_t::description() const
 
     // Populate message.
     description.id = tcp_socket_t::m_id;
-    description.local_endpoint = tcp_socket_t::endpoint_ros(tcp_socket_t::m_socket->local_endpoint());
-    description.remote_endpoint = tcp_socket_t::endpoint_ros(tcp_socket_t::m_socket->remote_endpoint());
+    description.local_endpoint = endpoint::to_ros(tcp_socket_t::m_socket->local_endpoint());
+    description.remote_endpoint = endpoint::to_ros(tcp_socket_t::m_socket->remote_endpoint());
 
     return description;
 }
@@ -189,34 +191,4 @@ bool tcp_socket_t::service_tx(driver_modem_msgs::send_tcpRequest& request, drive
 
     // Indicate if the message was sent successfully.
     return !error;
-}
-
-// ENDPOINT CONVERSION
-boost::asio::ip::tcp::endpoint tcp_socket_t::endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const
-{
-    // Create ASIO endpoint output.
-    boost::asio::ip::tcp::endpoint endpoint_asio;
-
-    // Set the endpoint address.
-    boost::asio::ip::address_v4::bytes_type ip_bytes;
-    std::memcpy(ip_bytes.data(), endpoint_ros.ip.data(), 4);
-    endpoint_asio.address(boost::asio::ip::address_v4(ip_bytes));
-
-    // Set the endpoint port.
-    endpoint_asio.port(endpoint_ros.port);
-
-    return endpoint_asio;
-}
-driver_modem_msgs::endpoint tcp_socket_t::endpoint_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio) const
-{
-    // Create ROS endpoint output.
-    driver_modem_msgs::endpoint endpoint_ros;
-
-    // Set endpoint address.
-    std::memcpy(endpoint_ros.ip.data(), endpoint_asio.address().to_v4().to_bytes().data(), 4);
-
-    // Set endpoint port.
-    endpoint_ros.port = endpoint_asio.port();
-
-    return endpoint_ros;
 }

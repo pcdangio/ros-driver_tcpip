@@ -72,16 +72,6 @@ private:
     void start_ros();
     /// \brief Stops all ROS publishers and services.
     void stop_ros();
-
-    // ENDPOINT CONVERSION
-    /// \brief Converts a ROS endpoint to an ASIO endpoint.
-    /// \param endpoint_ros The ROS endpoint to convert.
-    /// \returns The converted ASIO endpoint.
-    boost::asio::ip::tcp::endpoint endpoint_asio(const driver_modem_msgs::endpoint& endpoint_ros) const;
-    /// \brief Converts an ASIO endpoint to a ROS endpoint.
-    /// \param endpoint_asio The ASIO endpoint to convert.
-    /// \returns The converted ROS endpoint.
-    driver_modem_msgs::endpoint endpoint_ros(const boost::asio::ip::tcp::endpoint& endpoint_asio) const;
 };
 
 }
