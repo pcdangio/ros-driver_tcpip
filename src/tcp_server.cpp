@@ -106,12 +106,6 @@ void tcp_server_t::async_accept()
 }
 void tcp_server_t::accept_callback(const boost::system::error_code &error)
 {
-    // Check if acceptor is still open. Closing an acceptor stops async operations, but handlers still exist in the event handler.
-    if(!tcp_server_t::m_acceptor.is_open())
-    {
-        return;
-    }
-
     // Check if there was an error.
     if(!error)
     {

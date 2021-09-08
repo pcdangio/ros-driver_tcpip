@@ -112,12 +112,6 @@ void udp_socket_t::async_rx()
 }
 void udp_socket_t::rx_callback(const boost::system::error_code& error, std::size_t bytes_read)
 {
-    // Check if socket is still open. Closing a socket stops async operations, but handlers still exist in the event handler.
-    if(!udp_socket_t::m_socket.is_open())
-    {
-        return;
-    }
-
     // Check for recieve errors.
     if(!error)
     {
